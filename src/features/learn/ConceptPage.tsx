@@ -16,6 +16,7 @@ import { Pagination } from '@/components/ui/Pagination'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { CommandCard } from '@/components/cards'
 import { cardClassName } from '@/components/ui/Card'
+import { cn } from '@/utils/cn'
 import { Link } from 'react-router-dom'
 
 export default function ConceptPage() {
@@ -34,7 +35,7 @@ export default function ConceptPage() {
   const relatedCommands = getConceptRelatedCommands(concept)
 
   return (
-    <div className="flex max-w-3xl flex-col gap-8">
+    <div className={cn('flex max-w-3xl flex-col gap-8', levelConcepts.length > 1 && 'pb-24')}>
       <Breadcrumbs items={[{ label: 'Learn', to: '/learn' }, { label: level.title, to: `/learn/${level.slug}` }, { label: concept.term }]} />
 
       <div className="flex flex-col gap-3">
@@ -127,7 +128,7 @@ export default function ConceptPage() {
             const target = levelConcepts[page - 1]
             if (target) navigate(`/learn/${level.slug}/${target.slug}`)
           }}
-          className="self-center"
+          className="fixed inset-x-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-header mx-auto w-fit shadow-lg"
         />
       )}
     </div>

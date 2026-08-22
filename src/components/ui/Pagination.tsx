@@ -10,7 +10,11 @@ export interface PaginationProps {
   className?: string
 }
 
-/** Floating, frosted-glass prev/next control with a subtle progress ring (Section 16, 21). */
+/**
+ * Frosted-glass prev/next control with a subtle progress ring (Section 16, 21).
+ * Sits inline by default; pass a `fixed`/`bottom-*` className at the call
+ * site to pin it as a floating reading-progress bar (see ConceptPage).
+ */
 export function Pagination({ page, totalPages, onPageChange, className }: PaginationProps) {
   return (
     <nav

@@ -60,7 +60,7 @@ export function Layout() {
         Skip to content
       </a>
 
-      <header className="safe-top glass sticky top-0 z-header border-b">
+      <header className="safe-top glass sticky top-0 z-header border-b shadow-sm">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6">
           <IconButton
             icon={menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
@@ -101,7 +101,7 @@ export function Layout() {
         </div>
 
         {menuOpen && (
-          <nav aria-label="Primary" className="glass border-t px-4 py-3 md:hidden">
+          <nav aria-label="Primary" className="glass border-t px-4 py-3 shadow-sm md:hidden">
             <ul className="flex flex-col gap-1">
               {primaryNav.map((item) => (
                 <li key={item.to}>

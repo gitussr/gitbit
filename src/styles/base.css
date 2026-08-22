@@ -83,12 +83,14 @@ video {
   opacity: 0.6;
 }
 
-/* Frosted glass — pagination, floating controls, overlays (Section 16) */
+/* Frosted glass — pagination, floating controls, overlays (Section 16).
+   Tuned for a classic, more vibrant "Apple-style" vibrancy: a more
+   translucent surface plus stronger blur/saturation than a typical web
+   frosted panel, so content scrolling behind genuinely reads through. */
 @utility glass {
-  background: color-mix(in oklab, var(--color-surface) 72%, transparent);
-  backdrop-filter: blur(16px) saturate(1.4);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  border: 1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 60%, transparent);
+  backdrop-filter: blur(24px) saturate(1.8);
+  border: 1px solid color-mix(in oklab, var(--color-border-strong) 55%, transparent);
 }
 
 /* Safe-area utilities for notches/home indicators (Section 23) */
