@@ -116,12 +116,17 @@ how Learn/Quiz/Aha read the same underlying `content/` data. Delivery
 (Web Push) is explicitly out of scope for the MVP and is not stubbed out
 prematurely (Section 40).
 
-## What's deliberately not built yet
+## Current status
 
-- Real Git content (Phase 4) — content modules currently export typed
-  empty arrays; feature pages are still unstyled placeholders.
-- PWA manifest/service worker wiring (Phase 6) — `vite-plugin-pwa` is
-  installed but not yet configured in `vite.config.ts`.
+All ten phases from the development brief are complete: Design System
+(Phase 3, see [`docs/DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md)), the content
+model (Phase 4), every product module's UI (Phase 5), PWA support
+(Phase 6), and responsive/accessibility/performance QA (Phases 7-9) —
+each with real findings fixed, not just reviewed. See the README's
+roadmap section for what's intentionally deferred to GitBit 2.0/3.0.
 
-The Design System (tokens, theming, component primitives) was completed
-in Phase 3 — see [`docs/DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md).
+One known content gap: Learn's Level 4 (Collaboration) and Level 6
+(Advanced Git) are thin — one concept and one command each — since
+Phase 4 deliberately prioritized breadth across fundamentals over full
+depth on every level. Worth a follow-up content pass before the levels
+feel as complete as Levels 0-3.

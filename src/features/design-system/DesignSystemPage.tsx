@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/Button'
 import { IconButton } from '@/components/ui/IconButton'
 import { Badge, DangerBadge } from '@/components/ui/Badge'
 import { Tag } from '@/components/ui/Tag'
-import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { SearchInput } from '@/components/ui/SearchInput'
 import { CodeBlock } from '@/components/ui/CodeBlock'
@@ -282,8 +281,11 @@ export default function DesignSystemPage() {
           <AhaTile aha={sampleAha} />
           <QuizCard quiz={sampleQuiz} />
           <SosCard guide={sampleSos} />
-          <Card className="flex items-center justify-center text-foreground-tertiary">Daily card — Phase 5</Card>
         </div>
+        <Text variant="body-sm" tone="tertiary">
+          Daily items don't have a dedicated card component — DailyPage composes Card, Badge, and an icon directly,
+          since the layout differs enough (hero + feed) that a shared card wouldn't pull its weight.
+        </Text>
       </Section>
     </div>
   )

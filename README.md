@@ -53,14 +53,18 @@ npm run dev       # start the dev server
 npm run build     # type-check and produce a production build
 npm run preview   # preview the production build locally
 npm run lint      # lint the codebase
+npm run icons     # regenerate PWA/touch icons from public/icon*.svg
 ```
 
 ## PWA
 
-GitBit is built to be installable and to keep its core learning content
-usable offline. PWA wiring (manifest, service worker, icons) lands once
-the core screens exist — see `docs/ARCHITECTURE.md` for the current
-status of that work.
+GitBit is a genuine installable PWA. A service worker (`vite-plugin-pwa`,
+generated at build time) precaches the entire app — since there are no
+API calls, everything including all Git content works fully offline
+after the first visit, not just previously-viewed pages. The manifest,
+icons (192/512/512-maskable + Apple touch icon), theme colors, and
+safe-area handling are all wired up; see `docs/DESIGN_SYSTEM.md` for how
+the icon set is generated and kept replaceable.
 
 ## Roadmap
 
