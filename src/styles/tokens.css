@@ -122,6 +122,13 @@
   --duration-base: 200ms;
   --duration-slow: 360ms;
 
+  /* Hero aurora gradient stops (Section 15) — pastel, high-lightness so
+     foreground text keeps AA contrast no matter where the slide lands. */
+  --gb-hero-1: #ece9ff;
+  --gb-hero-2: #e3f0ff;
+  --gb-hero-3: #ffe9f5;
+  --gb-hero-4: #e3fbf4;
+
   color-scheme: light;
 }
 
@@ -159,6 +166,11 @@
     --gb-code-bg: #1a1a21;
     --gb-code-text: #e2e2e8;
 
+    --gb-hero-1: #241f42;
+    --gb-hero-2: #1c2b46;
+    --gb-hero-3: #3a1f3a;
+    --gb-hero-4: #163a34;
+
     color-scheme: dark;
   }
 }
@@ -195,6 +207,11 @@
 
   --gb-code-bg: #1a1a21;
   --gb-code-text: #e2e2e8;
+
+  --gb-hero-1: #241f42;
+  --gb-hero-2: #1c2b46;
+  --gb-hero-3: #3a1f3a;
+  --gb-hero-4: #163a34;
 
   color-scheme: dark;
 }

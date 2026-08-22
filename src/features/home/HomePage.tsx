@@ -20,7 +20,7 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col gap-16">
-      <section className="relative -mx-4 overflow-hidden rounded-2xl px-4 py-16 text-center sm:-mx-6 sm:px-6 sm:py-24">
+      <section className="relative left-1/2 right-1/2 -mx-[50vw] flex min-h-[calc(100svh-56px)] w-screen flex-col items-center justify-center overflow-hidden px-4 py-16 text-center sm:px-6">
         <div className="bg-grid absolute inset-0" aria-hidden="true" />
         <div className="hero-gradient absolute inset-0" aria-hidden="true" />
         <div className="relative flex flex-col items-center gap-6">
