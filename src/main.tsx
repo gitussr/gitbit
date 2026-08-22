@@ -1,11 +1,14 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import '@fontsource/manrope/400.css'
-import '@fontsource/manrope/500.css'
-import '@fontsource/manrope/600.css'
-import '@fontsource/manrope/700.css'
-import '@fontsource/ubuntu-mono/400.css'
-import '@fontsource/ubuntu-mono/700.css'
+// Latin-only subsets: GitBit's content is English, and the "latin" subset's
+// unicode-range (U+2000-206F) already covers the em dashes/curly quotes used
+// throughout the copy — no need to ship Cyrillic/Greek/Vietnamese/latin-ext glyphs.
+import '@fontsource/manrope/latin-400.css'
+import '@fontsource/manrope/latin-500.css'
+import '@fontsource/manrope/latin-600.css'
+import '@fontsource/manrope/latin-700.css'
+import '@fontsource/ubuntu-mono/latin-400.css'
+import '@fontsource/ubuntu-mono/latin-700.css'
 import './index.css'
 import { App } from './app/App'
 

@@ -32,7 +32,10 @@ export default defineConfig({
       workbox: {
         // Everything the app needs is already in the bundle (no API calls),
         // so precaching the build output is enough for full offline use.
-        globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2}'],
+        // woff2 only — every PWA-capable browser supports it, and the legacy
+        // .woff fallback @fontsource ships alongside it would otherwise
+        // double the precached font payload for nothing.
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         navigateFallback: '/index.html',
       },
     }),
