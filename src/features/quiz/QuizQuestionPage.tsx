@@ -45,7 +45,7 @@ export default function QuizQuestionPage() {
         </Heading>
       </div>
 
-      <div role="radiogroup" aria-label="Answer choices" className="flex flex-col gap-2">
+      <div role="group" aria-label="Answer choices" className="flex flex-col gap-2">
         {quiz.choices.map((choice, choiceIndex) => {
           const isSelected = selected === choiceIndex
           const isRightAnswer = choiceIndex === quiz.correctIndex
@@ -55,8 +55,7 @@ export default function QuizQuestionPage() {
             <button
               key={choice}
               type="button"
-              role="radio"
-              aria-checked={isSelected}
+              aria-pressed={isSelected}
               disabled={answered}
               onClick={() => setSelected(choiceIndex)}
               className={cn(
