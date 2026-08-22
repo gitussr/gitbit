@@ -36,7 +36,7 @@ export default function LevelPage() {
 
       {levelConcepts.length > 0 && (
         <div className="flex flex-col gap-3">
-          <Heading level={3}>Concepts</Heading>
+          <Heading level={2}>Concepts</Heading>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {levelConcepts.map((concept) => (
               <LessonCard key={concept.slug} concept={concept} levelSlug={level.slug} />
@@ -47,7 +47,7 @@ export default function LevelPage() {
 
       {levelCommands.length > 0 && (
         <div className="flex flex-col gap-3">
-          <Heading level={3}>Commands</Heading>
+          <Heading level={2}>Commands</Heading>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {levelCommands.map((command) => (
               <CommandCard key={command.slug} command={command} />

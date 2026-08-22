@@ -21,7 +21,7 @@ const primaryNav = [
  */
 export function Layout() {
   return (
-    <div className="flex min-h-svh flex-col bg-background">
+    <div className="safe-x flex min-h-svh flex-col bg-background">
       <a
         href="#main-content"
         className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-3 focus-visible:left-3 focus-visible:z-tooltip focus-visible:rounded-md focus-visible:bg-accent focus-visible:px-3 focus-visible:py-2 focus-visible:text-sm focus-visible:text-foreground-inverse"
@@ -29,7 +29,7 @@ export function Layout() {
         Skip to content
       </a>
 
-      <header className="glass sticky top-0 z-header border-b">
+      <header className="safe-top glass sticky top-0 z-header border-b">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6">
           <NavLink to="/" className="shrink-0">
             <GitBitLogo />
@@ -71,7 +71,7 @@ export function Layout() {
         </div>
       </header>
 
-      <main id="main-content" className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
+      <main id="main-content" className="safe-bottom mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
         <Outlet />
       </main>
     </div>

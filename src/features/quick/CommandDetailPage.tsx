@@ -24,7 +24,9 @@ export default function CommandDetailPage() {
 
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <code className="font-mono text-2xl font-semibold text-foreground">{command.command}</code>
+          <Heading level={1} size={2} className="font-mono">
+            {command.command}
+          </Heading>
           <DangerBadge level={command.dangerLevel} />
         </div>
         <Text variant="body-lg" tone="secondary">
@@ -38,16 +40,22 @@ export default function CommandDetailPage() {
 
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <Heading level={4}>When to use it</Heading>
+          <Heading level={2} size={4}>
+            When to use it
+          </Heading>
           <Text tone="secondary">{command.whenToUse}</Text>
         </div>
         <div className="flex flex-col gap-1.5">
-          <Heading level={4}>Mental model</Heading>
+          <Heading level={2} size={4}>
+            Mental model
+          </Heading>
           <Text tone="secondary">{command.mentalModel}</Text>
         </div>
         {command.whatHappens && (
           <div className="flex flex-col gap-1.5 sm:col-span-2">
-            <Heading level={4}>What actually happens</Heading>
+            <Heading level={2} size={4}>
+              What actually happens
+            </Heading>
             <Text tone="secondary">{command.whatHappens}</Text>
           </div>
         )}
@@ -61,7 +69,9 @@ export default function CommandDetailPage() {
 
       {related.length > 0 && (
         <div className="flex flex-col gap-3">
-          <Heading level={4}>Related commands</Heading>
+          <Heading level={2} size={4}>
+            Related commands
+          </Heading>
           <div className="grid gap-4 sm:grid-cols-2">
             {related.map((r) => (
               <CommandCard key={r.slug} command={r} />

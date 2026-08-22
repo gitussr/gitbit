@@ -27,7 +27,7 @@ export default function HomePage() {
           <Text variant="caption" className="font-mono tracking-wide text-accent uppercase">
             Git, one bit at a time.
           </Text>
-          <Heading level={1} className="max-w-2xl text-4xl sm:text-5xl">
+          <Heading level={1} className="max-w-2xl text-4xl md:text-5xl">
             Finally understand what Git is doing.
           </Heading>
           <Text variant="body-lg" tone="secondary" className="max-w-xl">
@@ -53,7 +53,9 @@ export default function HomePage() {
           {modules.map((mod) => (
             <Link key={mod.to} to={mod.to} className={cardClassName(true, 'flex flex-col gap-3')}>
               <mod.icon className="size-6 text-accent" aria-hidden="true" />
-              <Heading level={4}>{mod.title}</Heading>
+              <Heading level={4} as="p">
+                {mod.title}
+              </Heading>
               <Text variant="body-sm" tone="secondary">
                 {mod.description}
               </Text>

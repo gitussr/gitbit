@@ -50,7 +50,9 @@ export default function SosDetailPage() {
 
       {guide.relatedConcepts && guide.relatedConcepts.length > 0 && (
         <div className="flex flex-col gap-3">
-          <Heading level={4}>Worth understanding</Heading>
+          <Heading level={2} size={4}>
+            Worth understanding
+          </Heading>
           <div className="flex flex-wrap gap-2">
             {guide.relatedConcepts.map((slug) => {
               const concept = getConceptBySlug(slug)

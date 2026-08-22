@@ -17,7 +17,7 @@ export function LessonCard({ concept, levelSlug }: { concept: GitConcept; levelS
         <Badge variant="accent">{concept.category}</Badge>
         <Badge variant="neutral">{difficultyLabel[concept.difficulty]}</Badge>
       </div>
-      <Heading level={4} className="text-base">
+      <Heading level={4} as="p" className="text-base">
         {concept.term}
       </Heading>
       <Text variant="body-sm" tone="secondary" className="line-clamp-2">

@@ -57,7 +57,9 @@ export default function ConceptPage() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Heading level={4}>The technical explanation</Heading>
+        <Heading level={2} size={4}>
+          The technical explanation
+        </Heading>
         <Text tone="secondary">{concept.technicalExplanation}</Text>
       </div>
 
@@ -66,13 +68,17 @@ export default function ConceptPage() {
       <div className="grid gap-6 sm:grid-cols-2">
         {concept.whenToUse && (
           <div className="flex flex-col gap-1.5">
-            <Heading level={4}>When it matters</Heading>
+            <Heading level={2} size={4}>
+              When it matters
+            </Heading>
             <Text tone="secondary">{concept.whenToUse}</Text>
           </div>
         )}
         {concept.whatHappens && (
           <div className="flex flex-col gap-1.5">
-            <Heading level={4}>What actually happens</Heading>
+            <Heading level={2} size={4}>
+              What actually happens
+            </Heading>
             <Text tone="secondary">{concept.whatHappens}</Text>
           </div>
         )}
@@ -86,7 +92,9 @@ export default function ConceptPage() {
 
       {(relatedConcepts.length > 0 || relatedCommands.length > 0) && (
         <div className="flex flex-col gap-3">
-          <Heading level={4}>Related</Heading>
+          <Heading level={2} size={4}>
+            Related
+          </Heading>
           <div className="flex flex-wrap gap-4">
             {relatedConcepts.length > 0 && (
               <div className="flex flex-wrap gap-2">

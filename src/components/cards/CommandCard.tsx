@@ -11,7 +11,7 @@ export function CommandCard({ command }: { command: GitCommand }) {
         <code className="font-mono text-sm font-semibold text-accent">{command.command}</code>
         <DangerBadge level={command.dangerLevel} />
       </div>
-      <Heading level={4} className="text-base">
+      <Heading level={4} as="p" className="text-base">
         {command.humanMeaning}
       </Heading>
       <Text variant="body-sm" tone="secondary" className="line-clamp-2">

@@ -12,7 +12,7 @@ export function SosCard({ guide }: { guide: SosGuide }) {
         <LifeBuoy className="size-5 text-accent" aria-hidden="true" />
         <DangerBadge level={guide.dangerLevel} />
       </div>
-      <Heading level={4} className="text-base">
+      <Heading level={4} as="p" className="text-base">
         {guide.situation}
       </Heading>
       <Text variant="body-sm" tone="secondary" className="line-clamp-2">

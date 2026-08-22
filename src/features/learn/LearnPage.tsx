@@ -25,7 +25,9 @@ export default function LearnPage() {
                   {itemCount} {itemCount === 1 ? 'topic' : 'topics'}
                 </Text>
               </div>
-              <Heading level={3}>{level.title}</Heading>
+              <Heading level={3} as="p">
+                {level.title}
+              </Heading>
               <Text tone="secondary">{level.description}</Text>
             </Link>
           )

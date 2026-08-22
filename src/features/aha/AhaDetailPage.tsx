@@ -2,7 +2,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Lightbulb, ArrowRight } from 'lucide-react'
 import { ahaCards, getAhaBySlug, getConceptBySlug, getLevelForConcept } from '@/services/content'
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
-import { Text } from '@/components/ui/Typography'
+import { Heading, Text } from '@/components/ui/Typography'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cardClassName } from '@/components/ui/Card'
@@ -25,9 +25,9 @@ export default function AhaDetailPage() {
 
       <div className="flex flex-col gap-4 rounded-xl border border-accent-border bg-accent-subtle p-8">
         <Lightbulb className="size-8 text-accent-strong" aria-hidden="true" />
-        <Text variant="body-lg" className="text-2xl leading-snug font-semibold text-foreground">
+        <Heading level={1} size={2} className="leading-snug">
           {aha.statement}
-        </Text>
+        </Heading>
       </div>
 
       <Text variant="body-lg" tone="secondary">

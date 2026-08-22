@@ -40,7 +40,9 @@ export default function QuizQuestionPage() {
             {quiz.scenario}
           </Text>
         )}
-        <Heading level={2}>{quiz.prompt}</Heading>
+        <Heading level={1} size={2}>
+          {quiz.prompt}
+        </Heading>
       </div>
 
       <div role="radiogroup" aria-label="Answer choices" className="flex flex-col gap-2">

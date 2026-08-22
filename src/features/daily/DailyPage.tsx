@@ -46,7 +46,7 @@ export default function DailyPage() {
             </Text>
             <Badge variant="accent">{typeMeta[today.type].label}</Badge>
           </div>
-          <Heading level={3}>{today.title}</Heading>
+          <Heading level={2}>{today.title}</Heading>
           <Text variant="body-lg" className="whitespace-pre-line text-foreground">
             {today.body}
           </Text>

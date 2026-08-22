@@ -11,15 +11,18 @@ const headingStyles: Record<HeadingLevel, string> = {
 }
 
 export interface HeadingProps extends HTMLAttributes<HTMLHeadingElement> {
+  /** Semantic level — picks the rendered tag (h1-h4) and must stay sequential in a page's reading order (Section 24). */
   level: HeadingLevel
-  /** Render a different tag than the visual level implies (keep heading order correct — Section 24). */
+  /** Visual size, when it needs to differ from the semantic level (e.g. an h2 that should look smaller). Defaults to `level`. */
+  size?: HeadingLevel
+  /** Render a different tag than `level` implies, while keeping the same visual size. */
   as?: ElementType
 }
 
 /** The only place heading sizes are defined — never hard-code a font size for a title. */
-export function Heading({ level, as, className, ...props }: HeadingProps) {
+export function Heading({ level, size, as, className, ...props }: HeadingProps) {
   const Tag = as ?? (`h${level}` as ElementType)
-  return <Tag className={cn('text-foreground', headingStyles[level], className)} {...props} />
+  return <Tag className={cn('text-foreground', headingStyles[size ?? level], className)} {...props} />
 }
 
 type TextVariant = 'body-lg' | 'body' | 'body-sm' | 'caption'

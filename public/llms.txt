@@ -1,0 +1,11 @@
+# GitBit
+
+> Git, one bit at a time. A mental-model-first Git learning and reference PWA — bridges Git terminology, plain English, and real mental models so commands stop being magic incantations.
+
+- [GitBit Quick](/quick): Searchable Git command cheat sheet — human meaning, technical meaning, danger level, and command anatomy for every command.
+- [GitBit Learn](/learn): A structured learning path from Git basics through branching, collaboration, and undoing mistakes.
+- [GitBit Aha](/aha): Short conceptual explanations that fix common wrong mental models about Git.
+- [GitBit Quiz](/quiz): Knowledge checks that test understanding of Git concepts, not memorization.
+- [GitBit SOS](/sos): Calm, step-by-step recovery guides for common Git mistakes.
+- [GitBit Terminal](/terminal): A terminal-inspired view of what Git commands actually do.
+- [GitBit Daily](/daily): Daily micro-learning content about Git.
