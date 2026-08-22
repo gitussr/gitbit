@@ -1,0 +1,200 @@
+/**
+ * GitBit design tokens (Section 35).
+ *
+ * Semantic CSS custom properties are defined once here and mapped into
+ * Tailwind's theme so every utility class (bg-*, text-*, rounded-*,
+ * shadow-*, ease-*, font-*) resolves back to a token. Components must
+ * never hard-code raw color/spacing/shadow values — extend this file
+ * instead.
+ *
+ * Theming: light values live on :root. Dark values are applied twice —
+ * once under prefers-color-scheme for the "system" default, and again
+ * under [data-theme="dark"] so an explicit user choice always wins.
+ */
+
+@theme {
+  /* Typography */
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Ubuntu Mono', ui-monospace, 'Cascadia Code', monospace;
+
+  /* Semantic color tokens -> CSS variables defined below */
+  --color-background: var(--gb-bg);
+  --color-background-subtle: var(--gb-bg-subtle);
+  --color-surface: var(--gb-surface);
+  --color-surface-hover: var(--gb-surface-hover);
+  --color-border: var(--gb-border);
+  --color-border-strong: var(--gb-border-strong);
+
+  --color-foreground: var(--gb-text);
+  --color-foreground-secondary: var(--gb-text-secondary);
+  --color-foreground-tertiary: var(--gb-text-tertiary);
+  --color-foreground-inverse: var(--gb-text-inverse);
+
+  --color-accent: var(--gb-accent);
+  --color-accent-strong: var(--gb-accent-strong);
+  --color-accent-subtle: var(--gb-accent-subtle);
+  --color-accent-border: var(--gb-accent-border);
+
+  --color-safe: var(--gb-safe);
+  --color-safe-subtle: var(--gb-safe-subtle);
+  --color-safe-border: var(--gb-safe-border);
+
+  --color-caution: var(--gb-caution);
+  --color-caution-subtle: var(--gb-caution-subtle);
+  --color-caution-border: var(--gb-caution-border);
+
+  --color-danger: var(--gb-danger);
+  --color-danger-subtle: var(--gb-danger-subtle);
+  --color-danger-border: var(--gb-danger-border);
+
+  --color-code-bg: var(--gb-code-bg);
+  --color-code-text: var(--gb-code-text);
+
+  --color-terminal-bg: var(--gb-terminal-bg);
+  --color-terminal-text: var(--gb-terminal-text);
+  --color-terminal-prompt: var(--gb-terminal-prompt);
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+
+  /* Shadows (elevation) */
+  --shadow-xs: 0 1px 2px rgb(15 15 20 / 0.05);
+  --shadow-sm: 0 1px 3px rgb(15 15 20 / 0.08), 0 1px 2px rgb(15 15 20 / 0.05);
+  --shadow-md: 0 4px 12px rgb(15 15 20 / 0.1), 0 2px 4px rgb(15 15 20 / 0.06);
+  --shadow-lg: 0 12px 32px rgb(15 15 20 / 0.14), 0 4px 8px rgb(15 15 20 / 0.06);
+
+  /* Motion easing */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out-soft: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-soft: cubic-bezier(0.4, 0, 1, 1);
+}
+
+:root {
+  --gb-bg: #ffffff;
+  --gb-bg-subtle: #f6f6f8;
+  --gb-surface: #ffffff;
+  --gb-surface-hover: #f6f6f8;
+  --gb-border: #e6e6eb;
+  --gb-border-strong: #d4d4dc;
+
+  --gb-text: #15151b;
+  --gb-text-secondary: #55565f;
+  --gb-text-tertiary: #8a8b96;
+  --gb-text-inverse: #ffffff;
+
+  --gb-accent: #6552f5;
+  --gb-accent-strong: #5340e0;
+  --gb-accent-subtle: #f1efff;
+  --gb-accent-border: #d9d3ff;
+
+  --gb-safe: #1a8f5f;
+  --gb-safe-subtle: #eaf8f1;
+  --gb-safe-border: #bfe9d5;
+
+  --gb-caution: #a2660a;
+  --gb-caution-subtle: #fdf3e0;
+  --gb-caution-border: #f2ddab;
+
+  --gb-danger: #c22b3a;
+  --gb-danger-subtle: #fdecee;
+  --gb-danger-border: #f3c3ca;
+
+  --gb-code-bg: #f4f3f8;
+  --gb-code-text: #2a2a33;
+
+  --gb-terminal-bg: #131318;
+  --gb-terminal-text: #e7e7ed;
+  --gb-terminal-prompt: #8ee6a8;
+
+  /* Stacking order — not theme-dependent, kept here as the single source of truth */
+  --z-header: 40;
+  --z-dropdown: 50;
+  --z-overlay: 60;
+  --z-modal: 70;
+  --z-toast: 80;
+  --z-tooltip: 90;
+
+  /* Motion duration — referenced directly by components (see docs/DESIGN_SYSTEM.md) */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 360ms;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --gb-bg: #0d0d12;
+    --gb-bg-subtle: #131318;
+    --gb-surface: #17171e;
+    --gb-surface-hover: #1d1d25;
+    --gb-border: #2a2a34;
+    --gb-border-strong: #383843;
+
+    --gb-text: #f2f2f5;
+    --gb-text-secondary: #a9a9b5;
+    --gb-text-tertiary: #75757f;
+    --gb-text-inverse: #0d0d12;
+
+    --gb-accent: #9d8bff;
+    --gb-accent-strong: #b6a8ff;
+    --gb-accent-subtle: #221f3a;
+    --gb-accent-border: #3c3670;
+
+    --gb-safe: #4ad391;
+    --gb-safe-subtle: #102b1f;
+    --gb-safe-border: #1f4a34;
+
+    --gb-caution: #f0b23e;
+    --gb-caution-subtle: #2e2410;
+    --gb-caution-border: #55431a;
+
+    --gb-danger: #f26478;
+    --gb-danger-subtle: #341419;
+    --gb-danger-border: #5c2530;
+
+    --gb-code-bg: #1a1a21;
+    --gb-code-text: #e2e2e8;
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --gb-bg: #0d0d12;
+  --gb-bg-subtle: #131318;
+  --gb-surface: #17171e;
+  --gb-surface-hover: #1d1d25;
+  --gb-border: #2a2a34;
+  --gb-border-strong: #383843;
+
+  --gb-text: #f2f2f5;
+  --gb-text-secondary: #a9a9b5;
+  --gb-text-tertiary: #75757f;
+  --gb-text-inverse: #0d0d12;
+
+  --gb-accent: #9d8bff;
+  --gb-accent-strong: #b6a8ff;
+  --gb-accent-subtle: #221f3a;
+  --gb-accent-border: #3c3670;
+
+  --gb-safe: #4ad391;
+  --gb-safe-subtle: #102b1f;
+  --gb-safe-border: #1f4a34;
+
+  --gb-caution: #f0b23e;
+  --gb-caution-subtle: #2e2410;
+  --gb-caution-border: #55431a;
+
+  --gb-danger: #f26478;
+  --gb-danger-subtle: #341419;
+  --gb-danger-border: #5c2530;
+
+  --gb-code-bg: #1a1a21;
+  --gb-code-text: #e2e2e8;
+
+  color-scheme: dark;
+}

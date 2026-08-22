@@ -116,10 +116,12 @@ how Learn/Quiz/Aha read the same underlying `content/` data. Delivery
 (Web Push) is explicitly out of scope for the MVP and is not stubbed out
 prematurely (Section 40).
 
-## What Phase 2 deliberately does not include
+## What's deliberately not built yet
 
-- Visual design, tokens, or styled components (Phase 3).
 - Real Git content (Phase 4) — content modules currently export typed
-  empty arrays.
+  empty arrays; feature pages are still unstyled placeholders.
 - PWA manifest/service worker wiring (Phase 6) — `vite-plugin-pwa` is
   installed but not yet configured in `vite.config.ts`.
+
+The Design System (tokens, theming, component primitives) was completed
+in Phase 3 — see [`docs/DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md).

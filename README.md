@@ -27,7 +27,10 @@ to close that gap through:
 - **GitBit Daily** — daily micro-learning (future push notifications).
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full
-information architecture, routing, and codebase structure.
+information architecture, routing, and codebase structure, and
+[`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) for the design tokens,
+theming, and component primitives everything is built from — also
+viewable live at the `/design-system` route.
 
 ## Technology
 

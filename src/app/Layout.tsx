@@ -1,4 +1,9 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import { Search } from 'lucide-react'
+import { GitBitLogo } from '@/components/GitBitLogo'
+import { ThemeToggle } from '@/components/ThemeToggle'
+import { IconButton } from '@/components/ui/IconButton'
+import { cn } from '@/utils/cn'
 
 const primaryNav = [
   { to: '/quick', label: 'Quick' },
@@ -11,27 +16,56 @@ const primaryNav = [
 ]
 
 /**
- * App shell: skip link, header nav, and routed content.
- * Visual design arrives with the Design System (Phase 3) — this only
- * establishes structure and landmarks.
+ * App shell: skip link, sticky glass header, and routed content.
+ * Every visual decision here comes from design tokens (styles/tokens.css)
+ * and Design System primitives (components/ui) — no one-off styling.
  */
 export function Layout() {
   return (
-    <div>
-      <a href="#main-content">Skip to content</a>
-      <header>
-        <NavLink to="/">GitBit</NavLink>
-        <nav aria-label="Primary">
-          <ul>
-            {primaryNav.map((item) => (
-              <li key={item.to}>
-                <NavLink to={item.to}>{item.label}</NavLink>
-              </li>
-            ))}
-          </ul>
-        </nav>
+    <div className="flex min-h-svh flex-col bg-background">
+      <a
+        href="#main-content"
+        className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-3 focus-visible:left-3 focus-visible:z-tooltip focus-visible:rounded-md focus-visible:bg-accent focus-visible:px-3 focus-visible:py-2 focus-visible:text-sm focus-visible:text-foreground-inverse"
+      >
+        Skip to content
+      </a>
+
+      <header className="glass sticky top-0 z-header border-b">
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6">
+          <NavLink to="/" className="shrink-0">
+            <GitBitLogo />
+          </NavLink>
+
+          <nav aria-label="Primary" className="min-w-0 flex-1 overflow-x-auto">
+            <ul className="flex items-center gap-1 whitespace-nowrap">
+              {primaryNav.map((item) => (
+                <li key={item.to}>
+                  <NavLink
+                    to={item.to}
+                    className={({ isActive }) =>
+                      cn(
+                        'inline-flex items-center rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors duration-150 ease-standard',
+                        isActive
+                          ? 'bg-accent-subtle text-accent-strong'
+                          : 'text-foreground-secondary hover:bg-surface-hover hover:text-foreground',
+                      )
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <IconButton icon={<Search aria-hidden="true" />} label="Search" size="sm" />
+            <ThemeToggle />
+          </div>
+        </div>
       </header>
-      <main id="main-content">
+
+      <main id="main-content" className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
         <Outlet />
       </main>
     </div>
