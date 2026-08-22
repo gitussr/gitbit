@@ -51,7 +51,7 @@ export const learnLevels: LearnLevel[] = [
     order: 4,
     title: 'Collaboration',
     description: 'What happens when two people change the same project at once.',
-    conceptSlugs: ['merge-conflict'],
+    conceptSlugs: ['merge-conflict', 'pull-request'],
     commandSlugs: ['git-rebase'],
   },
   {
@@ -68,6 +68,6 @@ export const learnLevels: LearnLevel[] = [
     title: 'Advanced Git',
     description: 'For when you\'re comfortable with the everyday flow and want to go deeper.',
     conceptSlugs: ['head', 'detached-head'],
-    commandSlugs: ['git-reflog'],
+    commandSlugs: ['git-reflog', 'git-cherry-pick', 'git-rebase-interactive', 'git-tag', 'git-bisect', 'git-worktree'],
   },
 ]

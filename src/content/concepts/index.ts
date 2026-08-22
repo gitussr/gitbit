@@ -214,4 +214,20 @@ export const concepts: GitConcept[] = [
     relatedCommands: ['git merge', 'git status', 'git diff'],
     relatedConcepts: ['branch'],
   },
+  {
+    slug: 'pull-request',
+    term: 'Pull Request',
+    category: 'collaboration',
+    plainEnglish: "A request to merge your branch into someone else's, with a place to discuss and review the changes first.",
+    mentalModel: 'Raising your hand before merging — "here\'s what I changed, can someone take a look?"',
+    technicalExplanation:
+      "A pull request (PR) is a feature GitHub, GitLab, and similar hosts add on top of Git — it is not a Git command, and Git itself has no built-in concept of one. A PR is a structured request, built on a pushed branch, that lets collaborators review the diff, leave comments, run automated checks, and approve before the branch is merged into another (usually main). Merging a PR just runs an ordinary merge on the host's servers.",
+    whenToUse: "When your work is ready for feedback, or ready to become part of the main project, and other people need visibility before it does.",
+    whatHappens: "Nothing changes in Git's own history when a PR opens — it only points at two branches on the remote and tracks their diff. History only changes once the PR is actually merged.",
+    commonMistake: "Assuming 'pull request' is a Git command you can run. It isn't — it's a workflow layer hosting services add on top of push, branch, and merge.",
+    difficulty: 'intermediate',
+    relatedCommands: ['git push', 'git merge'],
+    relatedConcepts: ['branch', 'merge-conflict', 'git-vs-github'],
+    ahaPotential: true,
+  },
 ]
