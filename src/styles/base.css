@@ -74,24 +74,35 @@ video {
   opacity: 0.5;
 }
 
-/* Hero radial gradient — one muted color, slow drift (Section 15) */
+/**
+ * Hero gradient — one muted color, sliding slowly edge to edge (Section 15).
+ *
+ * Animates `background-position`, a standard animatable property, instead
+ * of a plain CSS custom property. Custom properties only interpolate
+ * smoothly in @keyframes when registered via @property; left unregistered
+ * (as --hero-x/--hero-y previously were), the browser can't tween between
+ * two percentage strings and just flips discretely at the midpoint — which
+ * reads as "not animating" rather than a slow drift.
+ */
 @utility hero-gradient {
-  background: radial-gradient(
-    50% 50% at var(--hero-x, 50%) var(--hero-y, 30%),
-    var(--color-accent-subtle) 0%,
-    transparent 70%
+  background-image: linear-gradient(
+    100deg,
+    transparent 0%,
+    var(--color-accent-subtle) 35%,
+    var(--color-accent-subtle) 65%,
+    transparent 100%
   );
-  animation: hero-drift 22s var(--ease-standard) infinite alternate;
+  background-size: 250% 100%;
+  background-position: 0% 50%;
+  animation: hero-drift 26s var(--ease-standard) infinite alternate;
 }
 
 @keyframes hero-drift {
-  0% {
-    --hero-x: 42%;
-    --hero-y: 28%;
+  from {
+    background-position: 0% 50%;
   }
-  100% {
-    --hero-x: 58%;
-    --hero-y: 36%;
+  to {
+    background-position: 100% 50%;
   }
 }
 
@@ -147,7 +158,6 @@ video {
 
   .hero-gradient {
     animation: none;
-    --hero-x: 50%;
-    --hero-y: 30%;
+    background-position: 50% 50%;
   }
 }
