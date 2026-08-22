@@ -1,0 +1,125 @@
+# GitBit — Product & Technical Architecture
+
+This document defines the information architecture, routing, and codebase
+boundaries GitBit is built from. It is the reference for Phase 3 (Design
+System) and Phase 4+ (content and feature work) so that decisions stay
+consistent instead of ad hoc.
+
+## Tech stack
+
+| Concern     | Choice                                        | Why |
+|-------------|------------------------------------------------|-----|
+| Framework   | React 19 + TypeScript                          | Typed content model (Section 5) needs a typed UI layer. |
+| Build tool  | Vite                                            | Required by the brief; fast dev/build, first-class PWA plugin. |
+| Routing     | react-router-dom (data router, lazy routes)     | Standard, code-split per route out of the box. |
+| Styling     | Tailwind CSS v4 (`@tailwindcss/vite`)           | CSS-first `@theme` config maps directly onto the design-token requirement (Section 35) without a separate config file. |
+| Fonts       | `@fontsource/manrope`, `@fontsource/ubuntu-mono`| Self-hosted → works offline in the PWA, no third-party network dependency. |
+| PWA         | `vite-plugin-pwa`                               | Installed now, wired up in Phase 6 per the brief's phase order. |
+| Content     | Plain typed TS modules under `src/content`      | No CMS/database needed for an MVP; fully static, tree-shakeable, typed. |
+
+No backend, database, auth, or paid API is used anywhere (Section 40).
+
+## Information architecture / routes
+
+```
+/                          Home
+/quick                     GitBit Quick — searchable command cheat sheet
+/quick/:commandSlug        Command detail
+/learn                     GitBit Learn — level index
+/learn/:levelSlug          Level detail (e.g. level-1-everyday-git)
+/learn/:levelSlug/:conceptSlug   Concept lesson within a level
+/aha                       GitBit Aha — list
+/aha/:slug                 Aha detail
+/quiz                      GitBit Quiz — index
+/quiz/:slug                Single question / quiz session
+/sos                       GitBit SOS — situation index
+/sos/:slug                 Recovery guide
+/terminal                  GitBit Terminal — simulated command explainer
+/daily                     GitBit Daily — micro-learning feed
+/search                    Cross-content search results
+/design-system             Internal component/token showcase (Phase 3)
+*                          Not found
+```
+
+Route ownership: each product module (Quick, Learn, Aha, Quiz, SOS,
+Terminal, Daily, Search) is a **feature boundary** — its routes, page
+components, and any feature-only UI live together under
+`src/features/<name>/`. Route components are lazy-loaded so no feature's
+code ships on another feature's page.
+
+## Codebase structure
+
+```
+src/
+  app/                 Router config, root layout/shell, app-level providers
+  components/          Design System primitives (Phase 3) — shared, presentational, content-agnostic
+  features/            One folder per product module; owns its routes + feature-specific UI
+    home/
+    quick/
+    learn/
+    aha/
+    quiz/
+    sos/
+    terminal/
+    daily/
+    search/
+    design-system/
+    not-found/
+  content/             Typed Git knowledge base (Section 5/33) — no JSX, no UI
+    types.ts           Shared content interfaces (GitCommand, GitConcept, AhaCard, QuizQuestion, SosGuide, DailyContentItem, Comparison)
+    commands/
+    concepts/
+    aha/
+    quiz/
+    sos/
+    daily/
+    comparisons/
+  data/                Derived/aggregated views over content (e.g. search index) — built in Phase 4/5
+  hooks/               Shared React hooks (theme, reduced-motion, search, etc.)
+  services/            Framework-agnostic logic (search matching, notification content selection) — no React imports
+  styles/              Design tokens / global CSS (Phase 3)
+  utils/               Small pure helpers
+```
+
+**Rule:** UI components never hard-code Git explanations. They read from
+`content/`. Content authors never touch component code. This is what
+lets Learn, Quiz, and Daily all reuse the same underlying knowledge base
+(Section 5, Section 6).
+
+## Component architecture (established fully in Phase 3)
+
+- `components/` holds only generic, reusable, content-agnostic primitives
+  (Button, Card, Badge, CommandBlock, Tabs, Modal, etc. — the list in
+  Section 34).
+- `features/<name>/` may compose those primitives into feature-specific
+  layouts (e.g. a `CommandCard` that renders a `GitCommand` using generic
+  `Card`/`Badge`/`CommandBlock` primitives), but must not redefine visual
+  primitives that already exist.
+- If a screen needs something the Design System doesn't have yet, the
+  primitive is added to `components/` first, then used — never a one-off
+  page-local style (Section 11).
+
+## State & data flow
+
+No global client state library. Per-feature local state (`useState`) plus
+a few small hooks (`useTheme`, `useReducedMotion`, `useSearchIndex`) are
+sufficient — there is no server data to synchronize. Theme preference and
+any future local progress data (Section 41, GitBit 2.0) will live in
+`localStorage`, read through a hook, never reached into directly from
+components.
+
+## Notification-ready content boundary (Section 9)
+
+`content/daily/` and `services/` are structured so a future notification
+engine can select and format `DailyContentItem`s without any change to
+how Learn/Quiz/Aha read the same underlying `content/` data. Delivery
+(Web Push) is explicitly out of scope for the MVP and is not stubbed out
+prematurely (Section 40).
+
+## What Phase 2 deliberately does not include
+
+- Visual design, tokens, or styled components (Phase 3).
+- Real Git content (Phase 4) — content modules currently export typed
+  empty arrays.
+- PWA manifest/service worker wiring (Phase 6) — `vite-plugin-pwa` is
+  installed but not yet configured in `vite.config.ts`.
