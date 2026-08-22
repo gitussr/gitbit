@@ -20,9 +20,8 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col gap-16">
-      <section className="relative left-1/2 right-1/2 -mx-[50vw] flex min-h-[calc(100svh-56px)] w-screen flex-col items-center justify-center overflow-hidden px-4 py-16 text-center sm:px-6">
+      <section className="relative left-1/2 right-1/2 -mx-[50vw] w-screen overflow-hidden bg-accent-subtle px-4 py-16 text-center sm:px-6 sm:py-20">
         <div className="bg-grid absolute inset-0" aria-hidden="true" />
-        <div className="hero-gradient absolute inset-0" aria-hidden="true" />
         <div className="relative flex flex-col items-center gap-6">
           <Text variant="caption" className="font-mono tracking-wide text-accent uppercase">
             Git, one bit at a time.
