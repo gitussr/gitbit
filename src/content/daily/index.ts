@@ -1,4 +1,154 @@
 import type { DailyContentItem } from '@/content/types'
 
-/** Populated in Phase 4 (content model). Feeds the future notification engine (Section 6). */
-export const dailyContent: DailyContentItem[] = []
+/**
+ * GitBit Daily's micro-learning feed (Section 6/7/8) — the same
+ * knowledge base as Learn/Quick/Aha, reformatted for quick reads.
+ * Feeds the future notification engine; `notificationEligible: false`
+ * marks items too long for a push banner (kept for the in-app feed only).
+ */
+export const dailyContent: DailyContentItem[] = [
+  {
+    slug: 'vocab-head',
+    type: 'vocabulary',
+    title: 'HEAD',
+    body: 'Think: "Where am I currently standing in Git history?"',
+    relatedConcepts: ['head'],
+    notificationEligible: true,
+  },
+  {
+    slug: 'command-git-status',
+    type: 'command',
+    title: 'git status',
+    body: 'git status is basically Git answering:\n"What\'s going on right now?"',
+    relatedConcepts: ['staging-area'],
+    notificationEligible: true,
+  },
+  {
+    slug: 'mistake-add-does-not-save',
+    type: 'common-mistake',
+    title: "git add isn't a save button",
+    body: 'git add does not permanently save your work.\nIt prepares changes for your next commit.',
+    relatedConcepts: ['staging-area'],
+    notificationEligible: true,
+  },
+  {
+    slug: 'compare-clone-pull',
+    type: 'comparison',
+    title: 'clone vs. pull',
+    body: 'git clone → "I need the project."\ngit pull → "I already have it. Give me the latest changes."',
+    relatedConcepts: ['remote'],
+    notificationEligible: true,
+  },
+  {
+    slug: 'dyk-git-without-github',
+    type: 'did-you-know',
+    title: 'Did you know?',
+    body: 'You can use Git without GitHub.',
+    relatedConcepts: ['git-vs-github'],
+    notificationEligible: true,
+  },
+  {
+    slug: 'recall-staging-vs-commit',
+    type: 'recall',
+    title: 'Quick recall',
+    body: "What's the difference between the staging area and a commit? (Hint: one of them is just a waiting room.)",
+    relatedConcepts: ['staging-area', 'commit'],
+    notificationEligible: true,
+  },
+  {
+    slug: 'aha-commit-not-save',
+    type: 'aha',
+    title: 'Aha',
+    body: "A commit is not a save button. It's a snapshot you chose to remember.",
+    relatedConcepts: ['commit'],
+    notificationEligible: true,
+  },
+  {
+    slug: 'challenge-explain-status',
+    type: 'mini-challenge',
+    title: 'Mini challenge',
+    body: 'Open any repo and run git status. Can you explain, in one sentence, everything it just told you?',
+    relatedConcepts: ['staging-area'],
+    notificationEligible: false,
+  },
+  {
+    slug: 'vocab-staging-area',
+    type: 'vocabulary',
+    title: 'Staging Area',
+    body: 'Think: "The waiting room for my next snapshot."',
+    relatedConcepts: ['staging-area'],
+    notificationEligible: true,
+  },
+  {
+    slug: 'command-git-diff',
+    type: 'command',
+    title: 'git diff',
+    body: 'git diff is Git answering:\n"Show me exactly what\'s different, line by line."',
+    relatedConcepts: ['working-directory'],
+    notificationEligible: true,
+  },
+  {
+    slug: 'mistake-force-push-habit',
+    type: 'common-mistake',
+    title: 'Force-push, carefully',
+    body: "git push --force can overwrite a teammate's commits without warning.\nReach for it only on branches nobody else is using.",
+    relatedCommands: ['git push --force'],
+    notificationEligible: true,
+  },
+  {
+    slug: 'compare-reset-revert',
+    type: 'comparison',
+    title: 'reset vs. revert',
+    body: 'git reset → rewrites history to say it never happened.\ngit revert → adds a new commit that cancels it out.',
+    relatedConcepts: ['commit'],
+    notificationEligible: true,
+  },
+  {
+    slug: 'dyk-deleted-branch-keeps-commits',
+    type: 'did-you-know',
+    title: 'Did you know?',
+    body: "Deleting a branch doesn't delete its commits right away — the bookmark's gone, not the history.",
+    relatedConcepts: ['branch'],
+    notificationEligible: true,
+  },
+  {
+    slug: 'recall-detached-head',
+    type: 'recall',
+    title: 'Quick recall',
+    body: 'Earlier you learned what HEAD points to. Can you explain detached HEAD without looking it up?',
+    relatedConcepts: ['head', 'detached-head'],
+    notificationEligible: true,
+  },
+  {
+    slug: 'scenario-typo-in-commit-message',
+    type: 'scenario',
+    title: 'Real-world scenario',
+    body: "You just noticed a typo in your last commit message, and you haven't pushed yet. No need to start over — git commit --amend lets you fix the message in place.",
+    relatedConcepts: ['commit'],
+    notificationEligible: false,
+  },
+  {
+    slug: 'aha-branch-not-a-copy',
+    type: 'aha',
+    title: 'Aha',
+    body: "A branch isn't a copy of your whole project. It's a bookmark that moves forward as you commit.",
+    relatedConcepts: ['branch'],
+    notificationEligible: true,
+  },
+  {
+    slug: 'challenge-stage-and-unstage',
+    type: 'mini-challenge',
+    title: 'Mini challenge',
+    body: 'Stage one file, then run git restore --staged on it. Watch what changes (and what doesn\'t) in git status between the two.',
+    relatedConcepts: ['staging-area'],
+    notificationEligible: false,
+  },
+  {
+    slug: 'vocab-merge-conflict',
+    type: 'vocabulary',
+    title: 'Merge Conflict',
+    body: 'Think: "Git found two answers to the same question and needs me to pick."',
+    relatedConcepts: ['merge-conflict'],
+    notificationEligible: true,
+  },
+]

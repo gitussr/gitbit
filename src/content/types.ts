@@ -102,6 +102,7 @@ export interface DailyContentItem {
   title: string
   body: string
   relatedConcepts?: string[]
+  relatedCommands?: string[]
   notificationEligible: boolean
 }
 
