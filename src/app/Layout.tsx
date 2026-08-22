@@ -2,7 +2,6 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import { GitBitLogo } from '@/components/GitBitLogo'
 import { ThemeToggle } from '@/components/ThemeToggle'
-import { IconButton } from '@/components/ui/IconButton'
 import { cn } from '@/utils/cn'
 
 const primaryNav = [
@@ -59,7 +58,14 @@ export function Layout() {
           </nav>
 
           <div className="flex shrink-0 items-center gap-2">
-            <IconButton icon={<Search aria-hidden="true" />} label="Search" size="sm" />
+            <NavLink
+              to="/search"
+              aria-label="Search"
+              title="Search"
+              className="inline-flex size-8 items-center justify-center rounded-md text-foreground-secondary transition-colors duration-150 ease-standard hover:bg-surface-hover hover:text-foreground"
+            >
+              <Search className="size-4" aria-hidden="true" />
+            </NavLink>
             <ThemeToggle />
           </div>
         </div>

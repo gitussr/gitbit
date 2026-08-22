@@ -201,7 +201,7 @@ export default function DesignSystemPage() {
         <TerminalBlock
           command="git status"
           gitSays="You have changed 2 files."
-          humanTranslation="Something changed after your last checkpoint."
+          humanTranslation='"Something changed after your last checkpoint."'
         />
       </Section>
 
