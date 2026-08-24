@@ -16,6 +16,15 @@ function isPushCapable() {
  */
 let initPromise: Promise<void> | null = null
 
+/**
+ * OneSignal rejects init() outright when the page origin doesn't match the
+ * app's configured Site URL — true for localhost dev and every Vercel
+ * preview deployment, not just misconfiguration. That's not a transient
+ * failure, so it's surfaced as the 'unavailable' state rather than a
+ * generic error (see NotificationOptIn).
+ */
+let unavailable = false
+
 function initialize() {
   if (!APP_ID || !isPushCapable()) return Promise.resolve()
   if (!initPromise) {
@@ -24,6 +33,8 @@ function initialize() {
       serviceWorkerPath: 'onesignal/OneSignalSDKWorker.js',
       serviceWorkerParam: { scope: '/onesignal/' },
       allowLocalhostAsSecureOrigin: import.meta.env.DEV,
+    }).catch(() => {
+      unavailable = true
     })
   }
   return initPromise
@@ -40,12 +51,14 @@ export const oneSignalAdapter: NotificationProviderAdapter = {
 
   getPermissionState() {
     if (!isPushCapable()) return 'unsupported'
+    if (unavailable) return 'unavailable'
     return Notification.permission as NotificationPermissionState
   },
 
   async requestPermission() {
     if (!isPushCapable()) return 'unsupported'
     await initialize()
+    if (unavailable) return 'unavailable'
     await OneSignal.Notifications.requestPermission()
     return Notification.permission as NotificationPermissionState
   },

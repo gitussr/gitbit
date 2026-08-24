@@ -39,6 +39,14 @@ export function NotificationOptIn() {
     )
   }
 
+  if (state === 'unavailable') {
+    return (
+      <Alert variant="info" icon={<BellOff className="size-4.5" aria-hidden="true" />}>
+        GitBit Daily notifications aren't available in this environment — they're live on the deployed app.
+      </Alert>
+    )
+  }
+
   if (error) {
     return (
       <Alert variant="danger" title="Something went wrong">

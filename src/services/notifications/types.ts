@@ -7,7 +7,7 @@
  * GitBit Daily, permission UX, or content.
  */
 
-export type NotificationPermissionState = 'unsupported' | 'default' | 'granted' | 'denied'
+export type NotificationPermissionState = 'unsupported' | 'unavailable' | 'default' | 'granted' | 'denied'
 
 /** The seam a real provider (currently OneSignal) plugs into. */
 export interface NotificationProviderAdapter {

@@ -13,9 +13,11 @@ function readDismissed() {
  * browser permission prompt on its own — only `requestPermission()`,
  * called from an explicit user action, does that; `initialize()` on
  * mount only loads the provider SDK so an already-subscribed returning
- * visitor's subscription stays current. `dismissed` persists so a user
- * who says "not now" isn't asked again on every visit (Section 14: do
- * not repeatedly ask).
+ * visitor's subscription stays current. State is re-read after init
+ * resolves, since the provider can flip it to 'unavailable' (e.g. an
+ * origin OneSignal isn't configured for) without throwing. `dismissed`
+ * persists so a user who says "not now" isn't asked again on every visit
+ * (Section 14: do not repeatedly ask).
  */
 export function useNotificationPermission() {
   const [state, setState] = useState<NotificationPermissionState>(() => NotificationService.getPermissionState())
@@ -23,7 +25,15 @@ export function useNotificationPermission() {
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    NotificationService.initialize().catch(() => setError(true))
+    let cancelled = false
+    NotificationService.initialize()
+      .catch(() => {})
+      .then(() => {
+        if (!cancelled) setState(NotificationService.getPermissionState())
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const requestPermission = useCallback(async () => {
