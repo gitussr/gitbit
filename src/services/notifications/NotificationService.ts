@@ -1,4 +1,4 @@
-import { nativeAdapter } from './nativeAdapter'
+import { oneSignalAdapter } from './oneSignalAdapter'
 import type { NotificationPermissionState, NotificationProviderAdapter } from './types'
 
 /**
@@ -7,9 +7,12 @@ import type { NotificationPermissionState, NotificationProviderAdapter } from '.
  * Swapping providers later means changing the one line below, not every
  * call site.
  */
-const activeAdapter: NotificationProviderAdapter = nativeAdapter
+const activeAdapter: NotificationProviderAdapter = oneSignalAdapter
 
 export const NotificationService = {
+  initialize(): Promise<void> {
+    return activeAdapter.initialize()
+  },
   isSupported(): boolean {
     return activeAdapter.isSupported()
   },

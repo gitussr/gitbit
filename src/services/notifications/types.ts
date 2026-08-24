@@ -9,9 +9,11 @@
 
 export type NotificationPermissionState = 'unsupported' | 'default' | 'granted' | 'denied'
 
-/** The seam a real provider (OneSignal, FCM, native Web Push) plugs into. */
+/** The seam a real provider (currently OneSignal) plugs into. */
 export interface NotificationProviderAdapter {
   readonly id: string
+  /** Loads/registers the provider SDK. Never shows a permission prompt by itself. Safe to call repeatedly. */
+  initialize(): Promise<void>
   isSupported(): boolean
   getPermissionState(): NotificationPermissionState
   requestPermission(): Promise<NotificationPermissionState>
