@@ -4,6 +4,7 @@ import type { DailyContentType } from '@/content/types'
 import { Heading, Text } from '@/components/ui/Typography'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
+import { NotificationOptIn } from '@/components/NotificationOptIn'
 
 const typeMeta: Record<DailyContentType, { label: string; icon: typeof Lightbulb }> = {
   aha: { label: 'Aha', icon: Lightbulb },
@@ -37,6 +38,8 @@ export default function DailyPage() {
           One small, useful thing about Git — every day.
         </Text>
       </div>
+
+      <NotificationOptIn />
 
       {today && (
         <div className="flex flex-col gap-3 rounded-xl border border-accent-border bg-accent-subtle p-6">
