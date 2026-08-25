@@ -17,14 +17,14 @@ function isPushCapable() {
 let initPromise: Promise<void> | null = null
 
 /**
- * OneSignal rejects init() outright when the page origin doesn't match the
- * app's configured Site URL — expected on localhost dev and Vercel preview
- * deployments, but init() also rejects for real misconfiguration (wrong
- * app ID, Site URL not matching prod, OneSignal outage). Those look
- * identical to the promise — there's no distinct error code to branch on
- * — so we can't silently relabel one as an "environment limitation" and
- * drop it. Log the real error so a prod failure is diagnosable instead of
- * vanishing into the 'unavailable' state (see NotificationOptIn).
+ * init() rejects for several unrelated reasons that look identical to the
+ * promise — origin not matching the app's configured Site URL (localhost
+ * dev, Vercel previews), a wrong app ID, or (observed in prod) an ad
+ * blocker/privacy extension blocking the cdn.onesignal.com script itself.
+ * There's no distinct error code to branch on, so we can't relabel one
+ * cause as an "environment limitation" and drop it. Log the real error so
+ * the actual cause is diagnosable instead of vanishing into the
+ * 'unavailable' state (see NotificationOptIn).
  */
 let unavailable = false
 
