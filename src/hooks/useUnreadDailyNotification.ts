@@ -7,6 +7,13 @@ async function getSwRegistration() {
   return (await navigator.serviceWorker.getRegistration(SW_SCOPE)) ?? null
 }
 
+/** Home-screen icon badge (Android/desktop installed PWAs). No-op where unsupported (iOS Safari, Firefox). */
+function setBadge(unread: boolean) {
+  if (typeof navigator === 'undefined' || !('setAppBadge' in navigator)) return
+  const result = unread ? navigator.setAppBadge(1) : navigator.clearAppBadge()
+  result.catch(() => {})
+}
+
 /**
  * Whether GitBit Daily has a push notification still sitting undismissed
  * in the OS notification tray, for the header logo's red dot. Backed by
@@ -24,7 +31,9 @@ export function useUnreadDailyNotification() {
     const registration = await getSwRegistration()
     if (!registration) return
     const notifications = await registration.getNotifications()
-    setUnread(notifications.length > 0)
+    const hasUnread = notifications.length > 0
+    setUnread(hasUnread)
+    setBadge(hasUnread)
   }, [])
 
   useEffect(() => {
@@ -56,6 +65,7 @@ export function useUnreadDailyNotification() {
     const notifications = await registration.getNotifications()
     notifications.forEach((notification) => notification.close())
     setUnread(false)
+    setBadge(false)
   }, [])
 
   return { unread, markRead }
