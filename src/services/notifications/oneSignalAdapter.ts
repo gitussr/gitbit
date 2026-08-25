@@ -18,10 +18,13 @@ let initPromise: Promise<void> | null = null
 
 /**
  * OneSignal rejects init() outright when the page origin doesn't match the
- * app's configured Site URL — true for localhost dev and every Vercel
- * preview deployment, not just misconfiguration. That's not a transient
- * failure, so it's surfaced as the 'unavailable' state rather than a
- * generic error (see NotificationOptIn).
+ * app's configured Site URL — expected on localhost dev and Vercel preview
+ * deployments, but init() also rejects for real misconfiguration (wrong
+ * app ID, Site URL not matching prod, OneSignal outage). Those look
+ * identical to the promise — there's no distinct error code to branch on
+ * — so we can't silently relabel one as an "environment limitation" and
+ * drop it. Log the real error so a prod failure is diagnosable instead of
+ * vanishing into the 'unavailable' state (see NotificationOptIn).
  */
 let unavailable = false
 
@@ -33,8 +36,9 @@ function initialize() {
       serviceWorkerPath: 'onesignal/OneSignalSDKWorker.js',
       serviceWorkerParam: { scope: '/onesignal/' },
       allowLocalhostAsSecureOrigin: import.meta.env.DEV,
-    }).catch(() => {
+    }).catch((err: unknown) => {
       unavailable = true
+      console.error('[GitBit] OneSignal.init() failed — GitBit Daily notifications unavailable:', err)
     })
   }
   return initPromise
