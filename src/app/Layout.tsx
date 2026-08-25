@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Menu, Search, X } from 'lucide-react'
 import { GitBitLogo } from '@/components/GitBitLogo'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { NotificationBell } from '@/components/NotificationBell'
 import { IconButton } from '@/components/ui/IconButton'
 import { cn } from '@/utils/cn'
 
@@ -96,6 +97,7 @@ export function Layout() {
             >
               <Search className="size-4" aria-hidden="true" />
             </NavLink>
+            <NotificationBell />
             <ThemeToggle />
           </div>
         </div>
