@@ -5,7 +5,6 @@ import { GitBitLogo } from '@/components/GitBitLogo'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { NotificationBell } from '@/components/NotificationBell'
 import { IconButton } from '@/components/ui/IconButton'
-import { useUnreadDailyNotification } from '@/hooks/useUnreadDailyNotification'
 import { cn } from '@/utils/cn'
 
 const primaryNav = [
@@ -38,7 +37,6 @@ export function Layout() {
   const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
   const [lastPathname, setLastPathname] = useState(location.pathname)
-  const { unread, markRead } = useUnreadDailyNotification()
 
   if (location.pathname !== lastPathname) {
     setLastPathname(location.pathname)
@@ -74,17 +72,8 @@ export function Layout() {
             onClick={() => setMenuOpen((open) => !open)}
           />
 
-          <NavLink to="/" className="relative shrink-0" onClick={markRead}>
+          <NavLink to="/" className="shrink-0">
             <GitBitLogo />
-            {unread && (
-              <>
-                <span
-                  aria-hidden="true"
-                  className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-danger ring-2 ring-background"
-                />
-                <span className="sr-only">Unread GitBit Daily notification</span>
-              </>
-            )}
           </NavLink>
 
           <nav aria-label="Primary" className="hidden min-w-0 flex-1 md:block">

@@ -16,7 +16,7 @@ function setBadge(unread: boolean) {
 
 /**
  * Whether GitBit Daily has a push notification still sitting undismissed
- * in the OS notification tray, for the header logo's red dot. Backed by
+ * in the OS notification tray, for the header bell's red dot. Backed by
  * `ServiceWorkerRegistration.getNotifications()` — the browser's own record
  * of what it displayed via the OneSignal worker at scope '/onesignal/' —
  * so it can't drift from what the user actually sees. `OneSignalSDKWorker.js`
