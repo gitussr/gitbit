@@ -14,7 +14,7 @@ radius, or shadow value in a component — extend `tokens.css` instead.
 
 | Category   | Where |
 |------------|-------|
-| Color      | Semantic tokens: `background`, `background-subtle`, `surface`, `surface-hover`, `border`, `border-strong`, `foreground` (+`-secondary`/`-tertiary`/`-inverse`), `accent` (+`-strong`/`-subtle`/`-border`), `safe`/`caution`/`danger` (+`-subtle`/`-border` each), `code-bg`/`code-text`, `terminal-bg`/`terminal-text`/`terminal-prompt`. |
+| Color      | Semantic tokens: `background`, `background-subtle`, `surface`, `surface-hover`, `border`, `border-strong`, `foreground` (+`-secondary`/`-tertiary`/`-inverse`), `accent` (+`-strong`/`-subtle`/`-border`), `info` (+`-subtle`/`-border`), `safe`/`caution`/`danger` (+`-subtle`/`-border` each), `code-bg`/`code-text`, `terminal-bg`/`terminal-text`/`terminal-prompt`. |
 | Typography | `--font-sans` (Manrope), `--font-mono` (Ubuntu Mono). Type scale lives in `components/ui/Typography.tsx` (`Heading` levels 1-4, `Text` variants `body-lg`/`body`/`body-sm`/`caption`) — never set a raw `text-*` size on a heading/paragraph outside that file. `Heading`'s `level` prop picks the semantic tag (h1-h4) and must stay sequential in a page's reading order; its `size` prop picks the visual size when it needs to differ (e.g. a real h2 subsection that should look smaller) — never fake a size by adding a conflicting `text-*` className, since Tailwind's responsive variants (`md:text-*`) won't get cancelled that way. Card/grid item titles reused at different depths (e.g. `CommandCard`) are rendered `as="p"` — not a heading at all — since they can't have one correct semantic level across every page that embeds them. |
 | Spacing    | Tailwind's default spacing scale (0.25rem increments) is used as-is — it's already a centralized token system; no need to reinvent one. |
 | Radius     | `--radius-sm/md/lg/xl` → `rounded-sm/md/lg/xl`. |
@@ -23,6 +23,31 @@ radius, or shadow value in a component — extend `tokens.css` instead.
 | Z-index    | Semantic, not numeric: `--z-header/dropdown/overlay/modal/toast/tooltip`, applied via the `z-header`/`z-dropdown`/… utilities defined in `styles/base.css`. |
 | Opacity    | Tailwind's default opacity scale, used by convention: `disabled:opacity-45` for disabled controls. |
 | Breakpoints| Tailwind defaults (`sm`640 / `md`768 / `lg`1024 / `xl`1280) — chosen because they line up exactly with the brief's required test widths; 320/375/390 are the unprefixed mobile-first base. |
+
+## Palette
+
+Source: Color Hunt `362f4f-5b23ff-008bff-e4ff30`. Four colours, each with
+one job:
+
+| Colour | Role |
+|--------|------|
+| `#5b23ff` violet | `accent` — brand: buttons, links, focus ring, `.bg-grid`, selection |
+| `#008bff` azure  | `info` — informational messaging (`Alert variant="info"`), deliberately separate from the brand accent so "this is GitBit" and "this is a note" don't look identical |
+| `#362f4f` indigo | the dark theme's whole neutral ramp (bg/surface/border are tints and shades of it), used at full strength as its `border` |
+| `#e4ff30` lime   | `terminal-prompt` and the app icon glyph — a high-energy accent that only reads well on a dark ground, so it's used only where the ground is always dark |
+
+Each colour appears at full strength where contrast allows, and is
+darkened or lightened per theme where it doesn't: `--gb-accent` is
+literally `#5b23ff` in light mode but a lighter tint in dark mode, and
+`--gb-info` is a darkened azure in light mode so it clears AA as text.
+
+`safe`/`caution`/`danger` keep conventional green/amber/red. They are
+semantic signals rather than brand colour, and a four-colour palette has
+no distinguishable "success" and "error" pair — recolouring them would
+cost more in comprehension than it wins in cohesion.
+
+Every foreground/background pair in both themes meets WCAG AA (verified
+numerically, not by eye).
 
 ## Theming
 

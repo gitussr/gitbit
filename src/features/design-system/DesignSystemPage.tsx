@@ -114,6 +114,7 @@ export default function DesignSystemPage() {
           <Swatch name="background-subtle" className="bg-background-subtle" />
           <Swatch name="surface" className="bg-surface" />
           <Swatch name="accent" className="bg-accent" />
+          <Swatch name="info" className="bg-info" />
           <Swatch name="safe" className="bg-safe-subtle border-safe-border" />
           <Swatch name="caution" className="bg-caution-subtle border-caution-border" />
           <Swatch name="danger" className="bg-danger-subtle border-danger-border" />

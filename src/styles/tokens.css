@@ -10,6 +10,19 @@
  * Theming: light values live on :root. Dark values are applied twice —
  * once under prefers-color-scheme for the "system" default, and again
  * under [data-theme="dark"] so an explicit user choice always wins.
+ *
+ * Palette (Color Hunt 362f4f-5b23ff-008bff-e4ff30):
+ *   #5b23ff violet  -> accent (brand: buttons, links, focus, grid)
+ *   #008bff azure   -> info (informational messaging, distinct from brand)
+ *   #362f4f indigo  -> the dark theme's neutral ramp, and its border at
+ *                      full strength
+ *   #e4ff30 lime    -> terminal prompt and the app icon glyph, where a
+ *                      high-energy accent reads well on a dark ground
+ *
+ * safe/caution/danger deliberately keep their conventional green/amber/red
+ * hues: those are semantic signals, not brand colour, and recolouring them
+ * from a four-colour palette would cost more in comprehension than it wins
+ * in cohesion. Every foreground/background pair below meets WCAG AA.
  */
 
 @theme {
@@ -34,6 +47,10 @@
   --color-accent-strong: var(--gb-accent-strong);
   --color-accent-subtle: var(--gb-accent-subtle);
   --color-accent-border: var(--gb-accent-border);
+
+  --color-info: var(--gb-info);
+  --color-info-subtle: var(--gb-info-subtle);
+  --color-info-border: var(--gb-info-border);
 
   --color-safe: var(--gb-safe);
   --color-safe-subtle: var(--gb-safe-subtle);
@@ -60,11 +77,12 @@
   --radius-lg: 16px;
   --radius-xl: 22px;
 
-  /* Shadows (elevation) */
-  --shadow-xs: 0 1px 2px rgb(15 15 20 / 0.05);
-  --shadow-sm: 0 1px 3px rgb(15 15 20 / 0.08), 0 1px 2px rgb(15 15 20 / 0.05);
-  --shadow-md: 0 4px 12px rgb(15 15 20 / 0.1), 0 2px 4px rgb(15 15 20 / 0.06);
-  --shadow-lg: 0 12px 32px rgb(15 15 20 / 0.14), 0 4px 8px rgb(15 15 20 / 0.06);
+  /* Shadows (elevation) — tinted with the palette's indigo rather than a
+     neutral grey, so elevation sits in the same colour family as the UI. */
+  --shadow-xs: 0 1px 2px rgb(25 20 45 / 0.05);
+  --shadow-sm: 0 1px 3px rgb(25 20 45 / 0.08), 0 1px 2px rgb(25 20 45 / 0.05);
+  --shadow-md: 0 4px 12px rgb(25 20 45 / 0.1), 0 2px 4px rgb(25 20 45 / 0.06);
+  --shadow-lg: 0 12px 32px rgb(25 20 45 / 0.14), 0 4px 8px rgb(25 20 45 / 0.06);
 
   /* Motion easing */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
@@ -74,21 +92,27 @@
 
 :root {
   --gb-bg: #ffffff;
-  --gb-bg-subtle: #f6f6f8;
+  --gb-bg-subtle: #f6f5fa;
   --gb-surface: #ffffff;
-  --gb-surface-hover: #f6f6f8;
-  --gb-border: #e6e6eb;
-  --gb-border-strong: #d4d4dc;
+  --gb-surface-hover: #f5f4f9;
+  --gb-border: #e7e4f0;
+  --gb-border-strong: #d2cee2;
 
-  --gb-text: #15151b;
-  --gb-text-secondary: #55565f;
-  --gb-text-tertiary: #6b6b76;
+  --gb-text: #191426;
+  --gb-text-secondary: #55506b;
+  --gb-text-tertiary: #6d6885;
   --gb-text-inverse: #ffffff;
 
-  --gb-accent: #6552f5;
-  --gb-accent-strong: #5340e0;
-  --gb-accent-subtle: #f1efff;
-  --gb-accent-border: #d9d3ff;
+  /* #5b23ff at full strength; -strong darkens it for text on -subtle. */
+  --gb-accent: #5b23ff;
+  --gb-accent-strong: #4a15d6;
+  --gb-accent-subtle: #f1ecff;
+  --gb-accent-border: #d6c8ff;
+
+  /* #008bff darkened to clear AA as text on white and on -subtle. */
+  --gb-info: #0069c7;
+  --gb-info-subtle: #e6f4ff;
+  --gb-info-border: #b3daff;
 
   --gb-safe: #0f7a4f;
   --gb-safe-subtle: #eaf8f1;
@@ -102,12 +126,13 @@
   --gb-danger-subtle: #fdecee;
   --gb-danger-border: #f3c3ca;
 
-  --gb-code-bg: #f4f3f8;
-  --gb-code-text: #2a2a33;
+  --gb-code-bg: #f4f2fa;
+  --gb-code-text: #2a2540;
 
-  --gb-terminal-bg: #131318;
-  --gb-terminal-text: #e7e7ed;
-  --gb-terminal-prompt: #8ee6a8;
+  /* Terminal is always dark, in both themes — defined once, never overridden. */
+  --gb-terminal-bg: #14121f;
+  --gb-terminal-text: #e8e6f2;
+  --gb-terminal-prompt: #e4ff30;
 
   /* Stacking order — not theme-dependent, kept here as the single source of truth */
   --z-header: 40;
@@ -127,22 +152,26 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --gb-bg: #0d0d12;
-    --gb-bg-subtle: #131318;
-    --gb-surface: #17171e;
-    --gb-surface-hover: #1d1d25;
-    --gb-border: #2a2a34;
-    --gb-border-strong: #383843;
+    --gb-bg: #14121f;
+    --gb-bg-subtle: #191627;
+    --gb-surface: #1e1a2e;
+    --gb-surface-hover: #262138;
+    --gb-border: #362f4f;
+    --gb-border-strong: #493f6b;
 
-    --gb-text: #f2f2f5;
-    --gb-text-secondary: #a9a9b5;
-    --gb-text-tertiary: #8a8a94;
-    --gb-text-inverse: #0d0d12;
+    --gb-text: #f2f0f8;
+    --gb-text-secondary: #aea8c4;
+    --gb-text-tertiary: #8f89a6;
+    --gb-text-inverse: #14121f;
 
-    --gb-accent: #9d8bff;
-    --gb-accent-strong: #b6a8ff;
-    --gb-accent-subtle: #221f3a;
-    --gb-accent-border: #3c3670;
+    --gb-accent: #a68bff;
+    --gb-accent-strong: #c0adff;
+    --gb-accent-subtle: #251b4a;
+    --gb-accent-border: #3f2f80;
+
+    --gb-info: #4dabff;
+    --gb-info-subtle: #0d2b47;
+    --gb-info-border: #17507f;
 
     --gb-safe: #4ad391;
     --gb-safe-subtle: #102b1f;
@@ -156,30 +185,34 @@
     --gb-danger-subtle: #341419;
     --gb-danger-border: #5c2530;
 
-    --gb-code-bg: #1a1a21;
-    --gb-code-text: #e2e2e8;
+    --gb-code-bg: #1c182e;
+    --gb-code-text: #e5e2f0;
 
     color-scheme: dark;
   }
 }
 
 :root[data-theme='dark'] {
-  --gb-bg: #0d0d12;
-  --gb-bg-subtle: #131318;
-  --gb-surface: #17171e;
-  --gb-surface-hover: #1d1d25;
-  --gb-border: #2a2a34;
-  --gb-border-strong: #383843;
+  --gb-bg: #14121f;
+  --gb-bg-subtle: #191627;
+  --gb-surface: #1e1a2e;
+  --gb-surface-hover: #262138;
+  --gb-border: #362f4f;
+  --gb-border-strong: #493f6b;
 
-  --gb-text: #f2f2f5;
-  --gb-text-secondary: #a9a9b5;
-  --gb-text-tertiary: #8a8a94;
-  --gb-text-inverse: #0d0d12;
+  --gb-text: #f2f0f8;
+  --gb-text-secondary: #aea8c4;
+  --gb-text-tertiary: #8f89a6;
+  --gb-text-inverse: #14121f;
 
-  --gb-accent: #9d8bff;
-  --gb-accent-strong: #b6a8ff;
-  --gb-accent-subtle: #221f3a;
-  --gb-accent-border: #3c3670;
+  --gb-accent: #a68bff;
+  --gb-accent-strong: #c0adff;
+  --gb-accent-subtle: #251b4a;
+  --gb-accent-border: #3f2f80;
+
+  --gb-info: #4dabff;
+  --gb-info-subtle: #0d2b47;
+  --gb-info-border: #17507f;
 
   --gb-safe: #4ad391;
   --gb-safe-subtle: #102b1f;
@@ -193,8 +226,8 @@
   --gb-danger-subtle: #341419;
   --gb-danger-border: #5c2530;
 
-  --gb-code-bg: #1a1a21;
-  --gb-code-text: #e2e2e8;
+  --gb-code-bg: #1c182e;
+  --gb-code-text: #e5e2f0;
 
   color-scheme: dark;
 }
