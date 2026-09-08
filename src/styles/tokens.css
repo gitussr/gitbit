@@ -67,6 +67,9 @@
   --color-code-bg: var(--gb-code-bg);
   --color-code-text: var(--gb-code-text);
 
+  --color-brand: var(--gb-brand);
+  --color-brand-mark: var(--gb-brand-mark);
+
   --color-terminal-bg: var(--gb-terminal-bg);
   --color-terminal-text: var(--gb-terminal-text);
   --color-terminal-prompt: var(--gb-terminal-prompt);
@@ -128,6 +131,13 @@
 
   --gb-code-bg: #f4f2fa;
   --gb-code-text: #2a2540;
+
+  /* The brand mark is fixed in both themes, so the header logo always matches
+     the installed app icon (public/icon.svg). Deriving it from --gb-accent
+     instead would recolour it in dark mode, where the lighter violet leaves
+     too little contrast under the lime glyph. */
+  --gb-brand: #5b23ff;
+  --gb-brand-mark: #e4ff30;
 
   /* Terminal is always dark, in both themes — defined once, never overridden. */
   --gb-terminal-bg: #14121f;
