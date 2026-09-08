@@ -17,6 +17,18 @@ import { selectDailyItem } from '../src/services/dailySelection.js'
 
 const ONESIGNAL_API = 'https://api.onesignal.com/notifications'
 
+/**
+ * Must match a segment in OneSignal > Audience > Segments *exactly*. The
+ * default differs by app age — newer apps get "Total Subscriptions", older
+ * ones "Subscribed Users" — and a name that matches nothing is not an error
+ * OneSignal reports as one (see the delivery check below), so it's an env
+ * var rather than a constant to guess at. Read per request, like the other
+ * env vars, so changing it in Vercel doesn't depend on module load order.
+ */
+function segment() {
+  return process.env.ONESIGNAL_SEGMENT ?? 'Total Subscriptions'
+}
+
 /** Push banners collapse newlines anyway; do it up front so the text reads as one sentence. */
 function toBannerText(body: string): string {
   return body.replace(/\s*\n+\s*/g, ' ').trim()
@@ -67,10 +79,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const site = siteUrl()
+  const SEGMENT = segment()
 
   const payload = {
     app_id: appId,
-    included_segments: ['Subscribed Users'],
+    included_segments: [SEGMENT],
     headings: { en: today.title },
     contents: { en: toBannerText(today.body) },
     url: `${site}/daily`,
@@ -89,15 +102,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     body: JSON.stringify(payload),
   })
 
-  const result = (await response.json().catch(() => null)) as { id?: string; errors?: unknown } | null
+  const result = (await response.json().catch(() => null)) as
+    | { id?: string; recipients?: number; errors?: unknown }
+    | null
 
-  if (!response.ok) {
-    // Surfaced in `vercel logs` — OneSignal returns 200 with an `errors`
-    // array for some rejections, so the body matters more than the status.
-    console.error('[GitBit] OneSignal rejected the daily push:', response.status, JSON.stringify(result))
-    return res.status(502).json({ error: 'OneSignal rejected the notification', status: response.status, result })
+  const notificationId = result?.id || null
+  const recipients = typeof result?.recipients === 'number' ? result.recipients : null
+
+  /**
+   * A 2xx is NOT evidence of delivery. When a send matches nobody OneSignal
+   * answers 200 with a blank `id` and an `errors` array — "All included
+   * players are not subscribed" — which is what a SEGMENT that names no real
+   * segment looks like. Treating that as success is how a broken push
+   * reports itself as sent, so every one of those shapes fails loudly here.
+   */
+  const delivered = response.ok && !result?.errors && Boolean(notificationId) && recipients !== 0
+
+  if (!delivered) {
+    console.error(
+      `[GitBit] Daily push NOT delivered (segment "${SEGMENT}", HTTP ${response.status}):`,
+      JSON.stringify(result),
+    )
+    return res.status(502).json({
+      error: 'OneSignal did not deliver the notification',
+      status: response.status,
+      segment: SEGMENT,
+      result,
+    })
   }
 
-  console.log(`[GitBit] Daily push sent: "${today.slug}" (OneSignal id ${result?.id ?? 'unknown'})`)
-  return res.status(200).json({ sent: today.slug, notificationId: result?.id ?? null, result })
+  console.log(`[GitBit] Daily push sent: "${today.slug}" to ${recipients ?? 'unknown'} recipients (id ${notificationId})`)
+  return res.status(200).json({ sent: today.slug, notificationId, recipients, segment: SEGMENT })
 }

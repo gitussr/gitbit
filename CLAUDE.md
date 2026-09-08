@@ -87,7 +87,10 @@ Spans several files under `src/services/notifications/`,
   client-side date calculation and was never evidence that delivery
   worked. It needs three server env vars in the Vercel project:
   `ONESIGNAL_REST_API_KEY`, `CRON_SECRET`, and optionally
-  `ONESIGNAL_APP_ID` (falls back to `VITE_ONESIGNAL_APP_ID`). Never add a
+  `ONESIGNAL_APP_ID` (falls back to `VITE_ONESIGNAL_APP_ID`) plus
+  `ONESIGNAL_SEGMENT` (defaults to `Total Subscriptions`; must match
+  OneSignal > Audience > Segments exactly — the classic default name
+  `Subscribed Users` silently matches nobody in newer apps). Never add a
   `VITE_` prefix to the REST key — that would inline it into the client
   bundle. Crons run on Production deployments only, and the route returns
   401 unless `CRON_SECRET` matches, so it can't be triggered by anyone
@@ -109,6 +112,11 @@ Spans several files under `src/services/notifications/`,
   function with esbuild does *not* reproduce the failure — it resolves
   these specifiers at build time. To check it for real, run
   `@vercel/node`'s own `build()` and execute the emitted lambda.
+- **A OneSignal 2xx is not proof of delivery.** A send that matches nobody
+  comes back `200 {"id":"","errors":["All included players are not
+  subscribed"]}`, so `api/daily-push.ts` treats a blank `id`, any `errors`,
+  or `recipients: 0` as failure and returns 502 with OneSignal's own body.
+  Without that check a wrong `ONESIGNAL_SEGMENT` reports itself as sent.
 - The OneSignal service worker is self-hosted at
   `public/onesignal/OneSignalSDKWorker.js`, registered at scope
   `/onesignal/` specifically so it coexists with the `vite-plugin-pwa`
