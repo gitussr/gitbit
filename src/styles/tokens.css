@@ -73,6 +73,7 @@
   --color-terminal-bg: var(--gb-terminal-bg);
   --color-terminal-text: var(--gb-terminal-text);
   --color-terminal-prompt: var(--gb-terminal-prompt);
+  --color-terminal-accent: var(--gb-terminal-accent);
 
   /* Radius */
   --radius-sm: 6px;
@@ -143,6 +144,11 @@
   --gb-terminal-bg: #14121f;
   --gb-terminal-text: #e8e6f2;
   --gb-terminal-prompt: #e4ff30;
+  /* The prompt glyph is a single character, so it carries full-chroma lime
+     well. The human-translation line is a whole sentence, where that same
+     lime is tiring to read — this is the same hue held back to roughly half
+     saturation, so the two still read as one family. */
+  --gb-terminal-accent: #d3e28d;
 
   /* Stacking order — not theme-dependent, kept here as the single source of truth */
   --z-header: 40;

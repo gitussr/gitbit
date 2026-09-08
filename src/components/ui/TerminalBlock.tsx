@@ -40,7 +40,7 @@ export function TerminalBlock({ command, gitSays, humanTranslation, className }:
         {humanTranslation && (
           <div className="flex flex-col gap-1 border-t border-white/10 pt-3">
             <p className="text-xs tracking-wide text-white/55 uppercase">Human translation</p>
-            <p className="text-terminal-prompt italic">{humanTranslation}</p>
+            <p className="text-terminal-accent italic">{humanTranslation}</p>
           </div>
         )}
       </div>
