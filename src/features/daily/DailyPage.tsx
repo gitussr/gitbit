@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Lightbulb, BookOpen, Terminal, GitCompare, AlertTriangle, MapPin, Sparkles, Brain, Trophy } from 'lucide-react'
 import { dailyContent } from '@/services/content'
 import { selectDailyItem } from '@/services/dailySelection'
@@ -6,6 +7,7 @@ import { Heading, Text } from '@/components/ui/Typography'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { NotificationOptIn } from '@/components/NotificationOptIn'
+import { useUnreadDailyNotification } from '@/hooks/useUnreadDailyNotification'
 
 const typeMeta: Record<DailyContentType, { label: string; icon: typeof Lightbulb }> = {
   aha: { label: 'Aha', icon: Lightbulb },
@@ -20,6 +22,15 @@ const typeMeta: Record<DailyContentType, { label: string; icon: typeof Lightbulb
 }
 
 export default function DailyPage() {
+  const { markRead } = useUnreadDailyNotification()
+
+  // Reaching this page is the point the day's bit has actually been read, so
+  // it dismisses the tray notification, the header bell's dot and the
+  // home-screen badge together.
+  useEffect(() => {
+    void markRead()
+  }, [markRead])
+
   // Shared with the cron job that pushes it (api/daily-push.ts) so the
   // notification and this card never name different bits.
   const today = selectDailyItem(dailyContent)

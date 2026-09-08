@@ -141,7 +141,8 @@ Spans several files under `src/services/notifications/`,
   service worker at root scope `/` (offline app caching). Push delivery
   isn't scope-bound, so this only affects which pages each worker
   controls.
-- Unread state (header bell red dot + home-screen icon badge,
+- Unread state (header bell red dot + home-screen icon badge, cleared
+  by opening the bell panel or visiting /daily,
   `useUnreadDailyNotification.ts`) is read directly from
   `ServiceWorkerRegistration.getNotifications()` on the `/onesignal/`
   scope rather than a separate store, so it can't drift from what's
