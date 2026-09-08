@@ -1,14 +1,20 @@
-import type { DailyContentItem } from '@/content/types'
+import type { DailyContentItem } from '../content/types.js'
 
 /**
  * Which GitBit is "today's" — shared by the in-app Daily feed and the cron
  * job that pushes it (`api/daily-push.ts`), so the notification always
  * names the same bit the page shows.
  *
- * IMPORTANT: every import in this file (and in `@/content/daily`, which the
- * cron job also pulls in) must stay type-only. The Vercel function bundles
- * these modules with esbuild, which erases `import type` but cannot resolve
- * the `@/*` path alias.
+ * IMPORTANT: this file and `src/content/daily` are compiled a second time,
+ * by Vercel, as part of the cron function — per-file with `tsc` under
+ * `moduleResolution: node16`, NOT bundled. Two rules follow, and breaking
+ * either one fails only at runtime in production (ERR_MODULE_NOT_FOUND,
+ * surfacing as FUNCTION_INVOCATION_FAILED):
+ *   - no `@/*` alias imports; Vercel resolves neither the types nor the
+ *     emit, so use relative paths here even though the rest of `src/` uses
+ *     the alias
+ *   - relative imports need an explicit `.js` extension, which is also what
+ *     the app's own `moduleResolution: bundler` expects
  */
 
 /** Whole days since the Unix epoch, in UTC. */

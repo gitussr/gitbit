@@ -95,9 +95,20 @@ Spans several files under `src/services/notifications/`,
 - `src/services/dailySelection.ts` decides which bit is "today's" and is
   imported by *both* the `/daily` page and the cron function, so the push
   and the page can't disagree. Its day index is UTC-pinned deliberately.
-  Every import in that file and in `src/content/daily` must stay
-  type-only — Vercel bundles them with esbuild, which erases `import
-  type` but cannot resolve the `@/*` alias.
+- **Vercel compiles `api/` and everything it imports a second time**, and
+  not the way Vite does: per-file with `tsc` under `moduleResolution:
+  node16`, *not* bundled. Because `package.json` sets `"type": "module"`,
+  the emitted lambda is ESM, and Node's ESM resolver does no extension or
+  directory-index inference. So in `api/*` and any `src/` file the
+  function pulls in (`services/dailySelection.ts`,
+  `content/daily/index.ts`): relative imports need an explicit `.js`
+  extension, and `@/*` alias imports don't work at all — Vercel resolves
+  them in neither the type-check nor the emit. Getting this wrong builds
+  clean and fails only at runtime in production, as
+  `FUNCTION_INVOCATION_FAILED` on every request. Note that bundling the
+  function with esbuild does *not* reproduce the failure — it resolves
+  these specifiers at build time. To check it for real, run
+  `@vercel/node`'s own `build()` and execute the emitted lambda.
 - The OneSignal service worker is self-hosted at
   `public/onesignal/OneSignalSDKWorker.js`, registered at scope
   `/onesignal/` specifically so it coexists with the `vite-plugin-pwa`

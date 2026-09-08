@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { dailyContent } from '../src/content/daily'
-import { selectDailyItem } from '../src/services/dailySelection'
+import { dailyContent } from '../src/content/daily/index.js'
+import { selectDailyItem } from '../src/services/dailySelection.js'
 
 /**
  * The sender half of GitBit Daily (Product Spec Section 9 — "notification

@@ -1,4 +1,6 @@
-import type { DailyContentItem } from '@/content/types'
+// Relative, not `@/`: this file is also compiled by Vercel for the daily-push
+// cron function, which cannot resolve the alias (see services/dailySelection.ts).
+import type { DailyContentItem } from '../types.js'
 
 /**
  * GitBit Daily's micro-learning feed (Section 6/7/8) — the same

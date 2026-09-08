@@ -140,6 +140,12 @@ tier both cover it). Two consequences worth knowing:
 
 - **Crons only run on Production deployments.** Preview deploys never
   fire the push, which is intended — one push a day, not one per branch.
+- **Imports into the function obey Vercel's compiler, not Vite's.**
+  Vercel transpiles `api/` and every `src/` file it reaches per-file with
+  `tsc` (`moduleResolution: node16`), without bundling, into an ESM
+  lambda. Relative imports therefore need explicit `.js` extensions and
+  `@/*` aliases don't resolve — both fail only at runtime, as
+  `FUNCTION_INVOCATION_FAILED`.
 - **The route is guarded by `CRON_SECRET`.** Vercel sends it as
   `Authorization: Bearer <secret>` on cron runs. If the env var is unset
   the route refuses to send rather than sitting there as an open
