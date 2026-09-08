@@ -146,6 +146,12 @@ tier both cover it). Two consequences worth knowing:
   lambda. Relative imports therefore need explicit `.js` extensions and
   `@/*` aliases don't resolve — both fail only at runtime, as
   `FUNCTION_INVOCATION_FAILED`.
+- **`dryRun=1` verifies without sending.** It exercises every step except
+  OneSignal's response and makes no outbound call at all, so confirming a
+  rotated `CRON_SECRET` no longer costs a push to every subscriber.
+- **`message=` sends a one-off announcement** in place of the day's bit,
+  on its own `web_push_topic`. Note Product Spec Section 8 — "every
+  notification should teach something useful" — before reaching for it.
 - **The route is guarded by `CRON_SECRET`.** Vercel sends it as
   `Authorization: Bearer <secret>` on cron runs. If the env var is unset
   the route refuses to send rather than sitting there as an open

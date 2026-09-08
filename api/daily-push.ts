@@ -97,6 +97,35 @@ async function readDeliveryStats(id: string, appId: string, apiKey: string): Pro
   }
 }
 
+const MAX_MESSAGE_LENGTH = 400
+
+interface RequestOptions {
+  dryRun: boolean
+  title?: string
+  message?: string
+}
+
+/**
+ * Options come from the query string or a JSON body, so both a quick
+ * `curl -G -d` and a scripted POST work. The cron itself sends neither and
+ * gets the defaults.
+ */
+function readOptions(req: VercelRequest): RequestOptions {
+  const body = (typeof req.body === 'object' && req.body !== null ? req.body : {}) as Record<string, unknown>
+  const pick = (key: string) => {
+    const fromQuery = req.query[key]
+    const raw = fromQuery ?? body[key]
+    const value = Array.isArray(raw) ? raw[0] : raw
+    return typeof value === 'string' ? value.trim() || undefined : undefined
+  }
+  const dryRunRaw = pick('dryRun') ?? (body.dryRun === true ? '1' : undefined)
+  return {
+    dryRun: dryRunRaw === '1' || dryRunRaw === 'true',
+    title: pick('title'),
+    message: pick('message'),
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -117,25 +146,78 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'OneSignal is not configured' })
   }
 
-  const today = selectDailyItem(dailyContent)
-  if (!today) {
-    console.error('[GitBit] No notification-eligible daily content — nothing to send.')
-    return res.status(500).json({ error: 'No sendable daily content' })
+  const { dryRun, title, message } = readOptions(req)
+
+  if (message && message.length > MAX_MESSAGE_LENGTH) {
+    return res.status(400).json({ error: `message must be ${MAX_MESSAGE_LENGTH} characters or fewer`, length: message.length })
+  }
+  if (title && !message) {
+    return res.status(400).json({ error: 'title is only valid alongside message' })
   }
 
   const site = siteUrl()
   const SEGMENT = segment()
 
+  /**
+   * A one-off announcement gets its own `web_push_topic`, so it can't collapse
+   * an unread daily bit (or be collapsed by one — sharing a topic means the
+   * newer notification replaces the older), and it links to the site root,
+   * since an announcement is rarely about the Daily feed specifically.
+   */
+  let notification: { heading: string; body: string; url: string; topic: string; label: string }
+
+  if (message) {
+    notification = {
+      heading: title ?? 'GitBit',
+      body: message,
+      url: site,
+      topic: 'gitbit-announcement',
+      label: 'announcement',
+    }
+  } else {
+    const today = selectDailyItem(dailyContent)
+    if (!today) {
+      console.error('[GitBit] No notification-eligible daily content — nothing to send.')
+      return res.status(500).json({ error: 'No sendable daily content' })
+    }
+    notification = {
+      heading: today.title,
+      body: today.body,
+      url: `${site}/daily`,
+      // Collapses an undismissed previous day's bit instead of stacking a new
+      // one on top of it — the feed is always "today", never a backlog.
+      topic: 'gitbit-daily',
+      label: today.slug,
+    }
+  }
+
   const payload = {
     app_id: appId,
     included_segments: [SEGMENT],
-    headings: { en: today.title },
-    contents: { en: toBannerText(today.body) },
-    url: `${site}/daily`,
+    headings: { en: notification.heading },
+    contents: { en: toBannerText(notification.body) },
+    url: notification.url,
     chrome_web_icon: `${site}/icons/icon-192.png`,
-    // Collapses an undismissed previous day's bit instead of stacking a new
-    // one on top of it — the feed is always "today", never a backlog.
-    web_push_topic: 'gitbit-daily',
+    web_push_topic: notification.topic,
+  }
+
+  /**
+   * Everything above this line is the real path — auth, config, content
+   * selection, payload — so a dry run answers "would a live call have
+   * worked?" for every step except OneSignal's own response. It exists
+   * because the only other way to exercise the auth path is to push to every
+   * subscriber, which makes verifying something like a rotated CRON_SECRET
+   * unnecessarily expensive.
+   */
+  if (dryRun) {
+    console.log(`[GitBit] Dry run OK — would send ${notification.label} to segment "${SEGMENT}". Nothing was sent.`)
+    return res.status(200).json({
+      dryRun: true,
+      sent: null,
+      wouldSend: notification.label,
+      segment: SEGMENT,
+      payload,
+    })
   }
 
   const response = await fetch(ONESIGNAL_API, {
@@ -163,7 +245,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
    */
   if (!response.ok || result?.errors || !notificationId || recipients === 0) {
     console.error(
-      `[GitBit] Daily push NOT delivered (segment "${SEGMENT}", HTTP ${response.status}):`,
+      `[GitBit] Push NOT delivered (${notification.label}, segment "${SEGMENT}", HTTP ${response.status}):`,
       JSON.stringify(result),
     )
     return res.status(502).json({
@@ -184,7 +266,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       : null
 
   console.log(
-    `[GitBit] Daily push sent: "${today.slug}" (id ${notificationId}, segment "${SEGMENT}")` +
+    `[GitBit] Push sent: ${notification.label} (id ${notificationId}, segment "${SEGMENT}")` +
       (delivery
         ? ` — audience ${audience ?? 'unknown'}, delivered ${delivery.successful ?? 0}, failed ${delivery.failed ?? 0},` +
           ` errored ${delivery.errored ?? 0}, confirmed ${delivery.received ?? 0},` +
@@ -192,5 +274,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         : ' — delivery stats unavailable'),
   )
 
-  return res.status(200).json({ sent: today.slug, notificationId, recipients, segment: SEGMENT, audience, delivery })
+  return res.status(200).json({
+    sent: notification.label,
+    notificationId,
+    recipients,
+    segment: SEGMENT,
+    audience,
+    delivery,
+  })
 }

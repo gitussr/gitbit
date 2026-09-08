@@ -95,6 +95,17 @@ Spans several files under `src/services/notifications/`,
   bundle. Crons run on Production deployments only, and the route returns
   401 unless `CRON_SECRET` matches, so it can't be triggered by anyone
   who finds the URL.
+- Two options on that route, both behind the same `CRON_SECRET` and
+  accepted as query params or a JSON body. `dryRun=1` runs the whole real
+  path — auth, config, selection, payload — and returns what it *would*
+  send without calling OneSignal, which is the only way to verify
+  something like a rotated secret without pushing to every subscriber
+  (Vercel binds env vars at deploy time, so a rotation needs a redeploy
+  before the function sees it). `message=` (with optional `title=`) sends
+  a one-off announcement instead of the day's bit; it uses a separate
+  `web_push_topic` so it can't collapse an unread daily bit, and links to
+  the site root rather than /daily. Sending neither — what the cron
+  does — is the normal daily push.
 - `src/services/dailySelection.ts` decides which bit is "today's" and is
   imported by *both* the `/daily` page and the cron function, so the push
   and the page can't disagree. Its day index is UTC-pinned deliberately.
