@@ -67,6 +67,13 @@
   --color-code-bg: var(--gb-code-bg);
   --color-code-text: var(--gb-code-text);
 
+  /* The four source colours, exposed so /design-system can show the palette
+     itself rather than only the semantic tokens derived from it. */
+  --color-palette-indigo: var(--gb-palette-indigo);
+  --color-palette-violet: var(--gb-palette-violet);
+  --color-palette-azure: var(--gb-palette-azure);
+  --color-palette-lime: var(--gb-palette-lime);
+
   --color-brand: var(--gb-brand);
   --color-brand-mark: var(--gb-brand-mark);
 
@@ -95,6 +102,15 @@
 }
 
 :root {
+  /* Source palette (Color Hunt 362f4f-5b23ff-008bff-e4ff30). Semantic tokens
+     reference these wherever a colour is used at full strength, and state
+     their own value where a theme needs a lighter or darker variant to stay
+     legible — which is why e.g. --gb-info is not literally the azure below. */
+  --gb-palette-indigo: #362f4f;
+  --gb-palette-violet: #5b23ff;
+  --gb-palette-azure: #008bff;
+  --gb-palette-lime: #e4ff30;
+
   --gb-bg: #ffffff;
   --gb-bg-subtle: #f6f5fa;
   --gb-surface: #ffffff;
@@ -108,7 +124,7 @@
   --gb-text-inverse: #ffffff;
 
   /* #5b23ff at full strength; -strong darkens it for text on -subtle. */
-  --gb-accent: #5b23ff;
+  --gb-accent: var(--gb-palette-violet);
   --gb-accent-strong: #4a15d6;
   --gb-accent-subtle: #f1ecff;
   --gb-accent-border: #d6c8ff;
@@ -137,13 +153,13 @@
      the installed app icon (public/icon.svg). Deriving it from --gb-accent
      instead would recolour it in dark mode, where the lighter violet leaves
      too little contrast under the lime glyph. */
-  --gb-brand: #5b23ff;
-  --gb-brand-mark: #e4ff30;
+  --gb-brand: var(--gb-palette-violet);
+  --gb-brand-mark: var(--gb-palette-lime);
 
   /* Terminal is always dark, in both themes — defined once, never overridden. */
   --gb-terminal-bg: #14121f;
   --gb-terminal-text: #e8e6f2;
-  --gb-terminal-prompt: #e4ff30;
+  --gb-terminal-prompt: var(--gb-palette-lime);
   /* The prompt glyph is a single character, so it carries full-chroma lime
      well. The human-translation line is a whole sentence, where that same
      lime is tiring to read — this is the same hue held back to roughly half
@@ -172,7 +188,7 @@
     --gb-bg-subtle: #191627;
     --gb-surface: #1e1a2e;
     --gb-surface-hover: #262138;
-    --gb-border: #362f4f;
+    --gb-border: var(--gb-palette-indigo);
     --gb-border-strong: #493f6b;
 
     --gb-text: #f2f0f8;
@@ -213,7 +229,7 @@
   --gb-bg-subtle: #191627;
   --gb-surface: #1e1a2e;
   --gb-surface-hover: #262138;
-  --gb-border: #362f4f;
+  --gb-border: var(--gb-palette-indigo);
   --gb-border-strong: #493f6b;
 
   --gb-text: #f2f0f8;

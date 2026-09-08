@@ -80,6 +80,20 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
+function PaletteSwatch({ hex, role, className }: { hex: string; role: string; className: string }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className={`h-20 rounded-md border border-border ${className}`} />
+      <Text variant="caption" className="font-mono font-semibold">
+        {hex}
+      </Text>
+      <Text variant="caption" tone="tertiary">
+        {role}
+      </Text>
+    </div>
+  )
+}
+
 function Swatch({ name, className }: { name: string; className: string }) {
   return (
     <div className="flex flex-col gap-2">
@@ -107,6 +121,19 @@ export default function DesignSystemPage() {
           extend this system first.
         </Text>
       </div>
+
+      <Section title="Palette">
+        <Text tone="secondary" className="mb-4">
+          The four source colours. Each is used at full strength where contrast allows, and adjusted per
+          theme where it doesn't — the azure never appears raw, because it fails AA as text on white.
+        </Text>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <PaletteSwatch hex="#5b23ff" role="accent — brand, buttons, links, focus" className="bg-palette-violet" />
+          <PaletteSwatch hex="#008bff" role="info — notes, distinct from brand" className="bg-palette-azure" />
+          <PaletteSwatch hex="#362f4f" role="dark theme neutrals + border" className="bg-palette-indigo" />
+          <PaletteSwatch hex="#e4ff30" role="logo mark + terminal prompt" className="bg-palette-lime" />
+        </div>
+      </Section>
 
       <Section title="Color tokens">
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">

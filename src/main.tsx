@@ -11,6 +11,9 @@ import '@fontsource/ubuntu-mono/latin-400.css'
 import '@fontsource/ubuntu-mono/latin-700.css'
 import './index.css'
 import { App } from './app/App'
+import { registerServiceWorker } from './registerServiceWorker'
+
+registerServiceWorker()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

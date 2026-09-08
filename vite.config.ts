@@ -11,6 +11,11 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      // We register the worker ourselves via `virtual:pwa-register`
+      // (src/registerServiceWorker.ts) so updates actually reach users. The
+      // default injected registerSW.js only registers, never re-checks or
+      // reloads, which left deploys stuck behind the precache.
+      injectRegister: null,
       includeAssets: ['favicon.svg', 'icon.svg', 'icon-maskable.svg'],
       manifest: {
         id: '/',
