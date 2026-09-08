@@ -52,6 +52,51 @@ function isAuthorized(req: VercelRequest): boolean {
   return req.headers.authorization === `Bearer ${secret}`
 }
 
+interface DeliveryStats {
+  successful: number | null
+  failed: number | null
+  errored: number | null
+  received: number | null
+  remaining: number | null
+}
+
+/**
+ * Reads the notification back so a run records what happened to the push, not
+ * merely that OneSignal accepted the request.
+ *
+ * Best-effort by design: the push has already gone out by the time this runs,
+ * so anything that fails here is logged and ignored rather than turned into a
+ * failed run — the alternative is reporting a delivered push as broken.
+ *
+ * Delivery is asynchronous, so straight after a send most of the audience is
+ * still counted in `remaining` (and `remaining` is null while OneSignal is
+ * still processing). The figure that is meaningful immediately is the
+ * audience size, which is why the caller sums the four buckets.
+ */
+async function readDeliveryStats(id: string, appId: string, apiKey: string): Promise<DeliveryStats | null> {
+  try {
+    const response = await fetch(`${ONESIGNAL_API}/${id}?app_id=${encodeURIComponent(appId)}`, {
+      headers: { Authorization: `Key ${apiKey}` },
+    })
+    if (!response.ok) {
+      console.error(`[GitBit] Could not read delivery stats for ${id}: HTTP ${response.status}`)
+      return null
+    }
+    const body = (await response.json()) as Record<string, unknown>
+    const count = (value: unknown) => (typeof value === 'number' ? value : null)
+    return {
+      successful: count(body.successful),
+      failed: count(body.failed),
+      errored: count(body.errored),
+      received: count(body.received),
+      remaining: count(body.remaining),
+    }
+  } catch (err) {
+    console.error(`[GitBit] Could not read delivery stats for ${id}:`, err)
+    return null
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -116,9 +161,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
    * segment looks like. Treating that as success is how a broken push
    * reports itself as sent, so every one of those shapes fails loudly here.
    */
-  const delivered = response.ok && !result?.errors && Boolean(notificationId) && recipients !== 0
-
-  if (!delivered) {
+  if (!response.ok || result?.errors || !notificationId || recipients === 0) {
     console.error(
       `[GitBit] Daily push NOT delivered (segment "${SEGMENT}", HTTP ${response.status}):`,
       JSON.stringify(result),
@@ -131,6 +174,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
   }
 
-  console.log(`[GitBit] Daily push sent: "${today.slug}" to ${recipients ?? 'unknown'} recipients (id ${notificationId})`)
-  return res.status(200).json({ sent: today.slug, notificationId, recipients, segment: SEGMENT })
+  const delivery = await readDeliveryStats(notificationId, appId, apiKey)
+  // `remaining: null` means OneSignal is still processing the send, so the
+  // buckets don't add up to the audience yet — report unknown rather than
+  // summing to a number that would read as "nobody".
+  const audience =
+    delivery && delivery.remaining !== null
+      ? (delivery.successful ?? 0) + (delivery.failed ?? 0) + (delivery.errored ?? 0) + delivery.remaining
+      : null
+
+  console.log(
+    `[GitBit] Daily push sent: "${today.slug}" (id ${notificationId}, segment "${SEGMENT}")` +
+      (delivery
+        ? ` — audience ${audience ?? 'unknown'}, delivered ${delivery.successful ?? 0}, failed ${delivery.failed ?? 0},` +
+          ` errored ${delivery.errored ?? 0}, confirmed ${delivery.received ?? 0},` +
+          ` remaining ${delivery.remaining ?? 'still processing'}`
+        : ' — delivery stats unavailable'),
+  )
+
+  return res.status(200).json({ sent: today.slug, notificationId, recipients, segment: SEGMENT, audience, delivery })
 }

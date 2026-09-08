@@ -112,6 +112,13 @@ Spans several files under `src/services/notifications/`,
   function with esbuild does *not* reproduce the failure — it resolves
   these specifiers at build time. To check it for real, run
   `@vercel/node`'s own `build()` and execute the emitted lambda.
+- After a successful send the function reads the notification back
+  (`GET /notifications/{id}?app_id=`) and logs audience/delivered/failed/
+  errored/confirmed counts, so a run records what happened to the push
+  rather than just that OneSignal accepted it. That read is best-effort —
+  the push has already gone out, so a failure there is logged and ignored.
+  Delivery is asynchronous, so a `remaining` of `null` means "still
+  processing" and the audience total is reported as unknown, not zero.
 - **A OneSignal 2xx is not proof of delivery.** A send that matches nobody
   comes back `200 {"id":"","errors":["All included players are not
   subscribed"]}`, so `api/daily-push.ts` treats a blank `id`, any `errors`,
