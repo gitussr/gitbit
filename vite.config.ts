@@ -37,6 +37,10 @@ export default defineConfig({
         // double the precached font payload for nothing.
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         navigateFallback: '/index.html',
+        // /api/* is server-only (the daily-push cron route). Without this the
+        // SPA fallback would answer it with index.html when hit from a
+        // controlled tab.
+        navigateFallbackDenylist: [/^\/api\//],
       },
     }),
   ],

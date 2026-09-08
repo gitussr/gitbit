@@ -1,5 +1,6 @@
 import { Lightbulb, BookOpen, Terminal, GitCompare, AlertTriangle, MapPin, Sparkles, Brain, Trophy } from 'lucide-react'
 import { dailyContent } from '@/services/content'
+import { selectDailyItem } from '@/services/dailySelection'
 import type { DailyContentType } from '@/content/types'
 import { Heading, Text } from '@/components/ui/Typography'
 import { Badge } from '@/components/ui/Badge'
@@ -18,17 +19,11 @@ const typeMeta: Record<DailyContentType, { label: string; icon: typeof Lightbulb
   'mini-challenge': { label: 'Mini challenge', icon: Trophy },
 }
 
-function dayOfYear() {
-  const now = new Date()
-  const start = new Date(now.getFullYear(), 0, 0)
-  const diff = now.getTime() - start.getTime()
-  return Math.floor(diff / 86_400_000)
-}
-
 export default function DailyPage() {
-  const todayIndex = dailyContent.length > 0 ? dayOfYear() % dailyContent.length : 0
-  const today = dailyContent[todayIndex]
-  const rest = dailyContent.filter((_, i) => i !== todayIndex)
+  // Shared with the cron job that pushes it (api/daily-push.ts) so the
+  // notification and this card never name different bits.
+  const today = selectDailyItem(dailyContent)
+  const rest = dailyContent.filter((item) => item.slug !== today?.slug)
 
   return (
     <div className="flex max-w-2xl flex-col gap-8">

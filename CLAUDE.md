@@ -30,9 +30,11 @@ gh api repos/gitussr/gitbit/commits/<sha>/status --jq '.state'
 
 ## Architecture
 
-GitBit is a static, content-driven PWA — no backend, database, auth, or
-paid API. Three docs are the canonical reference and should be read before
-structural changes:
+GitBit is a static, content-driven PWA — no database, auth, or paid API.
+The one piece of server code is `api/daily-push.ts`, a Vercel cron
+function that sends the daily push (see below); everything else is
+client-side. Three docs are the canonical reference and should be read
+before structural changes:
 
 - `docs/ARCHITECTURE.md` — routing, codebase structure, the content/UI
   separation rule
@@ -78,6 +80,24 @@ Spans several files under `src/services/notifications/`,
   and reused by three surfaces — the embedded `/daily` card
   (`NotificationOptIn`), the header bell (`NotificationBell`), and its
   auto-opening landing popup — so they can't drift out of sync.
+- **Sending** is `api/daily-push.ts`, invoked once a day by the `crons`
+  entry in `vercel.json`. Before it existed nothing in the repo ever
+  called OneSignal, so pushes only went out when someone clicked Send in
+  the OneSignal dashboard — the `/daily` page's rotating card is a
+  client-side date calculation and was never evidence that delivery
+  worked. It needs three server env vars in the Vercel project:
+  `ONESIGNAL_REST_API_KEY`, `CRON_SECRET`, and optionally
+  `ONESIGNAL_APP_ID` (falls back to `VITE_ONESIGNAL_APP_ID`). Never add a
+  `VITE_` prefix to the REST key — that would inline it into the client
+  bundle. Crons run on Production deployments only, and the route returns
+  401 unless `CRON_SECRET` matches, so it can't be triggered by anyone
+  who finds the URL.
+- `src/services/dailySelection.ts` decides which bit is "today's" and is
+  imported by *both* the `/daily` page and the cron function, so the push
+  and the page can't disagree. Its day index is UTC-pinned deliberately.
+  Every import in that file and in `src/content/daily` must stay
+  type-only — Vercel bundles them with esbuild, which erases `import
+  type` but cannot resolve the `@/*` alias.
 - The OneSignal service worker is self-hosted at
   `public/onesignal/OneSignalSDKWorker.js`, registered at scope
   `/onesignal/` specifically so it coexists with the `vite-plugin-pwa`

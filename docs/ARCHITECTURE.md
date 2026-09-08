@@ -76,7 +76,7 @@ src/
     comparisons/
   data/                Derived/aggregated views over content (e.g. search index) — built in Phase 4/5
   hooks/               Shared React hooks (theme, reduced-motion, search, etc.)
-  services/            Framework-agnostic logic (search matching, notification content selection) — no React imports
+  services/            Framework-agnostic logic (search matching, daily selection, notifications) — no React imports
   styles/              Design tokens / global CSS (Phase 3)
   utils/               Small pure helpers
 ```
@@ -108,13 +108,46 @@ any future local progress data (Section 41, GitBit 2.0) will live in
 `localStorage`, read through a hook, never reached into directly from
 components.
 
-## Notification-ready content boundary (Section 9)
+## Notification pipeline (Section 9)
 
-`content/daily/` and `services/` are structured so a future notification
-engine can select and format `DailyContentItem`s without any change to
-how Learn/Quiz/Aha read the same underlying `content/` data. Delivery
-(Web Push) is explicitly out of scope for the MVP and is not stubbed out
-prematurely (Section 40).
+Section 9's four boxes — content, generation, scheduling, delivery — are
+now all present and kept decoupled:
+
+| Box | Where it lives |
+| --- | --- |
+| Content | `content/daily/` — plain typed `DailyContentItem`s |
+| Generation | `services/dailySelection.ts` — picks today's item |
+| Scheduling | the `crons` entry in `vercel.json` |
+| Delivery | `api/daily-push.ts` → OneSignal → Web Push |
+
+`services/dailySelection.ts` is the single source of truth for "which bit
+is today's", imported by both the `/daily` page and the cron function, so
+a push can never name a different bit than the page shows. Its day index
+is **UTC-pinned**: the cron function has no local timezone, and a
+local-time index would hand users east or west of the server a different
+item than the one that was pushed.
+
+Only items with `notificationEligible: true` enter the rotation — the
+flag's purpose is to keep items too long for a push banner out of the
+headline slot. Those items still render in the feed below "Today's
+GitBit", so nothing is hidden from the app.
+
+`api/daily-push.ts` is the one server-side file in the project. It exists
+because delivery cannot be done from a static client — something has to
+call OneSignal once a day. It still honours Section 9's MVP constraints:
+no database, no auth, no paid service (Vercel cron and the OneSignal free
+tier both cover it). Two consequences worth knowing:
+
+- **Crons only run on Production deployments.** Preview deploys never
+  fire the push, which is intended — one push a day, not one per branch.
+- **The route is guarded by `CRON_SECRET`.** Vercel sends it as
+  `Authorization: Bearer <secret>` on cron runs. If the env var is unset
+  the route refuses to send rather than sitting there as an open
+  "push to every subscriber" endpoint.
+
+The SPA rewrite in `vercel.json` excludes `/api/` (`/((?!api/).*)`), and
+the Workbox `navigateFallbackDenylist` excludes it too, so neither the
+static fallback nor the offline service worker can swallow the route.
 
 ## Current status
 
