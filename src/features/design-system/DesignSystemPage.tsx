@@ -124,8 +124,9 @@ export default function DesignSystemPage() {
 
       <Section title="Palette">
         <Text tone="secondary" className="mb-4">
-          The four source colours. Each is used at full strength where contrast allows, and adjusted per
-          theme where it doesn't — the azure never appears raw, because it fails AA as text on white.
+          The four source colours, each shown at full strength. Where a colour has to carry small text it
+          hands off to a <code className="font-mono">-strong</code> variant instead: Alert's info copy is a
+          darker azure than the swatch, because #008bff reaches only 3.4:1 on white.
         </Text>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <PaletteSwatch hex="#5b23ff" role="accent — brand, buttons, links, focus" className="bg-palette-violet" />

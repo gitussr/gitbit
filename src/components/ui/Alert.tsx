@@ -11,7 +11,7 @@ export interface AlertProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const variantStyles: Record<AlertVariant, string> = {
-  info: 'bg-info-subtle border-info-border text-info',
+  info: 'bg-info-subtle border-info-border text-info-strong',
   success: 'bg-safe-subtle border-safe-border text-safe',
   warning: 'bg-caution-subtle border-caution-border text-caution',
   danger: 'bg-danger-subtle border-danger-border text-danger',

@@ -10,11 +10,13 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
-      // We register the worker ourselves via `virtual:pwa-register`
-      // (src/registerServiceWorker.ts) so updates actually reach users. The
-      // default injected registerSW.js only registers, never re-checks or
-      // reloads, which left deploys stuck behind the precache.
+      // 'prompt', not 'autoUpdate': a new build must not reload the page out
+      // from under a reader mid-quiz. The waiting worker is surfaced as a
+      // toast by ServiceWorkerUpdatePrompt, which registers via
+      // `virtual:pwa-register` — hence injectRegister: null, since the
+      // default injected registerSW.js only registers and never re-checks,
+      // which left deploys stuck behind the precache.
+      registerType: 'prompt',
       injectRegister: null,
       includeAssets: ['favicon.svg', 'icon.svg', 'icon-maskable.svg'],
       manifest: {

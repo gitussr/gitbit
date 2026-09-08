@@ -14,7 +14,7 @@ radius, or shadow value in a component — extend `tokens.css` instead.
 
 | Category   | Where |
 |------------|-------|
-| Color      | Semantic tokens: `background`, `background-subtle`, `surface`, `surface-hover`, `border`, `border-strong`, `foreground` (+`-secondary`/`-tertiary`/`-inverse`), `accent` (+`-strong`/`-subtle`/`-border`), `info` (+`-subtle`/`-border`), `safe`/`caution`/`danger` (+`-subtle`/`-border` each), `code-bg`/`code-text`, `brand`/`brand-mark` (fixed in both themes), `terminal-bg`/`terminal-text`/`terminal-prompt`/`terminal-accent`. |
+| Color      | Semantic tokens: `background`, `background-subtle`, `surface`, `surface-hover`, `border`, `border-strong`, `foreground` (+`-secondary`/`-tertiary`/`-inverse`), `accent` (+`-strong`/`-subtle`/`-border`), `info` (+`-strong`/`-subtle`/`-border`), `safe`/`caution`/`danger` (+`-subtle`/`-border` each), `code-bg`/`code-text`, `brand`/`brand-mark` (fixed in both themes), `terminal-bg`/`terminal-text`/`terminal-prompt`/`terminal-accent`. |
 | Typography | `--font-sans` (Manrope), `--font-mono` (Ubuntu Mono). Type scale lives in `components/ui/Typography.tsx` (`Heading` levels 1-4, `Text` variants `body-lg`/`body`/`body-sm`/`caption`) — never set a raw `text-*` size on a heading/paragraph outside that file. `Heading`'s `level` prop picks the semantic tag (h1-h4) and must stay sequential in a page's reading order; its `size` prop picks the visual size when it needs to differ (e.g. a real h2 subsection that should look smaller) — never fake a size by adding a conflicting `text-*` className, since Tailwind's responsive variants (`md:text-*`) won't get cancelled that way. Card/grid item titles reused at different depths (e.g. `CommandCard`) are rendered `as="p"` — not a heading at all — since they can't have one correct semantic level across every page that embeds them. |
 | Spacing    | Tailwind's default spacing scale (0.25rem increments) is used as-is — it's already a centralized token system; no need to reinvent one. |
 | Radius     | `--radius-sm/md/lg/xl` → `rounded-sm/md/lg/xl`. |
@@ -32,14 +32,24 @@ one job:
 | Colour | Role |
 |--------|------|
 | `#5b23ff` violet | `accent` — brand: buttons, links, focus ring, `.bg-grid`, selection |
-| `#008bff` azure  | `info` — informational messaging (`Alert variant="info"`), deliberately separate from the brand accent so "this is GitBit" and "this is a note" don't look identical |
+| `#008bff` azure  | `info` — informational messaging (`Alert variant="info"`), deliberately separate from the brand accent so "this is GitBit" and "this is a note" don't look identical. `info` is the raw azure in both themes (a fill, never small text); `info-strong` is the per-theme variant that carries text, since #008bff reaches only ~3.3:1 on the light `-subtle` ground. |
 | `#362f4f` indigo | the dark theme's whole neutral ramp (bg/surface/border are tints and shades of it), used at full strength as its `border` |
 | `#e4ff30` lime   | `brand-mark` (the logo glyph) and `terminal-prompt` — a high-energy accent that only reads well on a dark ground, so it's used only where the ground is always dark, and only for a glyph or a single character. `terminal-accent` is the same hue at about half saturation, for running text (the terminal's human-translation line). |
 
-Each colour appears at full strength where contrast allows, and is
-darkened or lightened per theme where it doesn't: `--gb-accent` is
-literally `#5b23ff` in light mode but a lighter tint in dark mode, and
-`--gb-info` is a darkened azure in light mode so it clears AA as text.
+Each colour appears at full strength where contrast allows, and the
+`-strong` variant carries the cases where it can't: `--gb-accent` is
+literally `#5b23ff` in light mode but a lighter tint in dark, while
+`--gb-info` stays the raw azure in both themes and `--gb-info-strong`
+takes over wherever the colour has to carry small text.
+
+## Service worker updates
+
+The build is fully precached, so a shipped change does not reach a
+returning visitor on its own. `registerType: 'prompt'` leaves a new
+worker waiting and `ServiceWorkerUpdatePrompt` surfaces it as a toast
+with a Reload action — deliberately not `autoUpdate`, which would reload
+the page out from under someone mid-quiz. Toasts carrying an `action`
+can pass `duration: null` to stay until acted on or dismissed.
 
 `safe`/`caution`/`danger` keep conventional green/amber/red. They are
 semantic signals rather than brand colour, and a four-colour palette has

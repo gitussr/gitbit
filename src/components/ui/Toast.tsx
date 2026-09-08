@@ -1,17 +1,32 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
-import { CheckCircle2, Info, AlertTriangle, OctagonAlert } from 'lucide-react'
+import { CheckCircle2, Info, AlertTriangle, OctagonAlert, X } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { Button } from './Button'
+import { IconButton } from './IconButton'
 
 type ToastVariant = 'info' | 'success' | 'warning' | 'danger'
+
+interface ToastAction {
+  label: string
+  onClick: () => void
+}
 
 interface ToastItem {
   id: string
   description: string
   title?: string
   variant: ToastVariant
+  action?: ToastAction
+  /** ms before it auto-dismisses; `null` keeps it until acted on or dismissed. */
+  duration: number | null
 }
 
-type ToastInput = Omit<ToastItem, 'id' | 'variant'> & { variant?: ToastVariant }
+type ToastInput = Omit<ToastItem, 'id' | 'variant' | 'duration'> & {
+  variant?: ToastVariant
+  duration?: number | null
+}
+
+const DEFAULT_DURATION = 4000
 
 const ToastContext = createContext<((toast: ToastInput) => void) | null>(null)
 
@@ -33,13 +48,23 @@ const variantIcons: Record<ToastVariant, ReactNode> = {
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([])
 
-  const showToast = useCallback((input: ToastInput) => {
-    const id = crypto.randomUUID()
-    setToasts((prev) => [...prev, { id, variant: 'info', ...input }])
-    window.setTimeout(() => {
-      setToasts((prev) => prev.filter((toast) => toast.id !== id))
-    }, 4000)
+  const dismiss = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id))
   }, [])
+
+  const showToast = useCallback(
+    (input: ToastInput) => {
+      const id = crypto.randomUUID()
+      const toast: ToastItem = { id, variant: 'info', duration: DEFAULT_DURATION, ...input }
+      setToasts((prev) => [...prev, toast])
+      // A toast carrying an action can opt out of auto-dismissal (duration:
+      // null) — four seconds is not long enough to notice and act on one.
+      if (toast.duration !== null) {
+        window.setTimeout(() => dismiss(id), toast.duration)
+      }
+    },
+    [dismiss],
+  )
 
   return (
     <ToastContext.Provider value={showToast}>
@@ -55,10 +80,32 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             className="glass flex items-start gap-2.5 rounded-lg px-4 py-3 shadow-md"
           >
             <span className={cn('mt-0.5 shrink-0', variantStyles[toast.variant])}>{variantIcons[toast.variant]}</span>
-            <div className="flex flex-col gap-0.5">
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               {toast.title && <p className="text-sm font-semibold text-foreground">{toast.title}</p>}
               <p className="text-sm text-foreground-secondary">{toast.description}</p>
+              {toast.action && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="mt-2 self-start"
+                  onClick={() => {
+                    dismiss(toast.id)
+                    toast.action?.onClick()
+                  }}
+                >
+                  {toast.action.label}
+                </Button>
+              )}
             </div>
+            {toast.duration === null && (
+              <IconButton
+                icon={<X aria-hidden="true" />}
+                label="Dismiss"
+                size="sm"
+                className="-mt-1 -mr-1.5 shrink-0"
+                onClick={() => dismiss(toast.id)}
+              />
+            )}
           </div>
         ))}
       </div>

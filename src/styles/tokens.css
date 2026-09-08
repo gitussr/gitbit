@@ -49,6 +49,7 @@
   --color-accent-border: var(--gb-accent-border);
 
   --color-info: var(--gb-info);
+  --color-info-strong: var(--gb-info-strong);
   --color-info-subtle: var(--gb-info-subtle);
   --color-info-border: var(--gb-info-border);
 
@@ -129,8 +130,13 @@
   --gb-accent-subtle: #f1ecff;
   --gb-accent-border: #d6c8ff;
 
-  /* #008bff darkened to clear AA as text on white and on -subtle. */
-  --gb-info: #0069c7;
+  /* `info` is the palette azure itself, in both themes — it's a fill/swatch
+     colour, so it never has to carry small text. `info-strong` is the
+     per-theme variant that does (Alert's body copy), because #008bff only
+     reaches ~3.3:1 on the light -subtle ground. Same split as
+     accent/accent-strong. */
+  --gb-info: var(--gb-palette-azure);
+  --gb-info-strong: #0069c7;
   --gb-info-subtle: #e6f4ff;
   --gb-info-border: #b3daff;
 
@@ -201,7 +207,7 @@
     --gb-accent-subtle: #251b4a;
     --gb-accent-border: #3f2f80;
 
-    --gb-info: #4dabff;
+    --gb-info-strong: #4dabff;
     --gb-info-subtle: #0d2b47;
     --gb-info-border: #17507f;
 
@@ -242,7 +248,7 @@
   --gb-accent-subtle: #251b4a;
   --gb-accent-border: #3f2f80;
 
-  --gb-info: #4dabff;
+  --gb-info-strong: #4dabff;
   --gb-info-subtle: #0d2b47;
   --gb-info-border: #17507f;
 
