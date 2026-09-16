@@ -117,10 +117,11 @@ export function Layout() {
         )}
       </header>
 
+      {/* Bottom padding adds the safe-area inset rather than using `safe-bottom`, which would replace it with 0 on most phones. */}
       <main
         id="main-content"
         tabIndex={-1}
-        className="safe-bottom mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8 focus:outline-none"
+        className="mx-auto w-full max-w-6xl flex-1 px-4 pt-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-8 sm:pb-[calc(3rem+env(safe-area-inset-bottom))] focus:outline-none"
       >
         <Outlet />
       </main>

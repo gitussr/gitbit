@@ -19,8 +19,8 @@
  *   #e4ff30 lime    -> highlight: never text on a light ground (~1.1:1).
  *                      Only as a fill carrying dark ink (highlight/-ink),
  *                      or as text/glyphs on the always-dark `feature`
- *                      ground — the hero, today's bit, featured Aha, the
- *                      terminal prompt and the logo glyph.
+ *                      ground — the hero, today's bit, featured Aha and the
+ *                      terminal prompt. (The logo is a raster, see GitBitLogo.)
  *
  * safe/caution/danger deliberately keep their conventional green/amber/red
  * hues: those are semantic signals, not brand colour, and recolouring them
@@ -96,8 +96,6 @@
   --color-palette-azure: var(--gb-palette-azure);
   --color-palette-lime: var(--gb-palette-lime);
 
-  --color-brand: var(--gb-brand);
-  --color-brand-mark: var(--gb-brand-mark);
 
   --color-terminal-bg: var(--gb-terminal-bg);
   --color-terminal-text: var(--gb-terminal-text);
@@ -186,13 +184,6 @@
   --gb-feature-border: #2b2540;
   --gb-feature-text: #f2f0f8;
   --gb-feature-text-secondary: #b9b3cf;
-
-  /* The brand mark is fixed in both themes, so the header logo always matches
-     the installed app icon (public/icon.svg). Deriving it from --gb-accent
-     instead would recolour it in dark mode, where the lighter violet leaves
-     too little contrast under the lime glyph. */
-  --gb-brand: var(--gb-palette-violet);
-  --gb-brand-mark: var(--gb-palette-lime);
 
   /* Terminal is always dark, in both themes — defined once, never overridden. */
   --gb-terminal-bg: #14121f;

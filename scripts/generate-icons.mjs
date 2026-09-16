@@ -1,25 +1,27 @@
-// Regenerates PWA/touch icons from public/icon.svg and public/icon-maskable.svg.
-// Run after editing either source SVG: npm run icons
+// Regenerates every PWA/touch/favicon icon from the one logo source,
+// src/assets/gitbit-logo.png (512x512). Run after replacing it: npm run icons
+//
+// The maskable icon reuses the same art: its lime circle stays within 197px
+// of the centre, inside the 80% safe zone (205px) that Android masks keep.
 import sharp from 'sharp'
 import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 
 const root = path.resolve(import.meta.dirname, '..')
+const source = path.join(root, 'src/assets/gitbit-logo.png')
 const publicDir = path.join(root, 'public')
-const iconsDir = path.join(publicDir, 'icons')
 
-await mkdir(iconsDir, { recursive: true })
+await mkdir(path.join(publicDir, 'icons'), { recursive: true })
 
 const targets = [
-  { src: 'icon.svg', out: 'icons/icon-192.png', size: 192 },
-  { src: 'icon.svg', out: 'icons/icon-512.png', size: 512 },
-  { src: 'icon-maskable.svg', out: 'icons/icon-maskable-512.png', size: 512 },
-  { src: 'icon.svg', out: 'apple-touch-icon.png', size: 180 },
+  { out: 'icons/icon-192.png', size: 192 },
+  { out: 'icons/icon-512.png', size: 512 },
+  { out: 'icons/icon-maskable-512.png', size: 512 },
+  { out: 'apple-touch-icon.png', size: 180 },
+  { out: 'favicon.png', size: 48 },
 ]
 
-for (const { src, out, size } of targets) {
-  const input = path.join(publicDir, src)
-  const output = path.join(publicDir, out)
-  await sharp(input, { density: 384 }).resize(size, size).png().toFile(output)
+for (const { out, size } of targets) {
+  await sharp(source).resize(size, size, { kernel: 'lanczos3' }).png().toFile(path.join(publicDir, out))
   console.log(`wrote ${out} (${size}x${size})`)
 }

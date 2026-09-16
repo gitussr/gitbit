@@ -14,7 +14,7 @@ radius, or shadow value in a component — extend `tokens.css` instead.
 
 | Category   | Where |
 |------------|-------|
-| Color      | Semantic tokens: `background`, `background-subtle`, `surface`, `surface-hover`, `border`, `border-strong`, `foreground` (+`-secondary`/`-tertiary`/`-inverse`), `accent` (+`-strong`/`-subtle`/`-border`), `info` (+`-strong`/`-subtle`/`-border`), `safe`/`caution`/`danger` (+`-subtle`/`-border` each), `code-bg`/`code-text`, `brand`/`brand-mark` (fixed in both themes), `terminal-bg`/`terminal-text`/`terminal-prompt`/`terminal-accent`. |
+| Color      | Semantic tokens: `background`, `background-subtle`, `surface`, `surface-hover`, `border`, `border-strong`, `foreground` (+`-secondary`/`-tertiary`/`-inverse`), `accent` (+`-strong`/`-subtle`/`-border`), `info` (+`-strong`/`-subtle`/`-border`), `safe`/`caution`/`danger` (+`-subtle`/`-border` each), `code-bg`/`code-text`, `highlight` (+`-hover`/`-ink`), `feature` (+`-hover`/`-border`/`-text`/`-text-secondary`), `terminal-bg`/`terminal-text`/`terminal-prompt`/`terminal-accent`. |
 | Typography | `--font-sans` (Manrope), `--font-mono` (Ubuntu Mono). Type scale lives in `components/ui/Typography.tsx` (`Heading` levels 1-4, `Text` variants `body-lg`/`body`/`body-sm`/`caption`). The scale is deliberately compact: body is 14px, `body-sm` 13px and `body-lg` 15px (`--text-body-sm`/`--text-body-lg` in `tokens.css`), h1 tops out at 30px. Every page title goes through `PageHeader` — never set a raw `text-*` size on a heading/paragraph outside that file. `Heading`'s `level` prop picks the semantic tag (h1-h4) and must stay sequential in a page's reading order; its `size` prop picks the visual size when it needs to differ (e.g. a real h2 subsection that should look smaller) — never fake a size by adding a conflicting `text-*` className, since Tailwind's responsive variants (`md:text-*`) won't get cancelled that way. Card/grid item titles reused at different depths (e.g. `CommandCard`) are rendered `as="p"` — not a heading at all — since they can't have one correct semantic level across every page that embeds them. |
 | Spacing    | Tailwind's default spacing scale (0.25rem increments) is used as-is — it's already a centralized token system; no need to reinvent one. |
 | Radius     | `--radius-sm/md/lg/xl` (6/8/12/16px) → `rounded-sm/md/lg/xl`. Buttons, inputs and icon chips are `md`; cards and alerts `lg`; dialogs `xl`; badges, tags and chip links are pills. |
@@ -34,7 +34,7 @@ one job:
 | `#5b23ff` violet | `accent` — brand: buttons, links, focus ring, `.bg-grid`, selection |
 | `#008bff` azure  | `info` — informational messaging (`Alert variant="info"`), deliberately separate from the brand accent so "this is GitBit" and "this is a note" don't look identical. `info` is the raw azure in both themes (a fill, never small text); `info-strong` is the per-theme variant that carries text, since #008bff reaches only ~3.3:1 on the light `-subtle` ground. |
 | `#362f4f` indigo | the dark theme's whole neutral ramp (bg/surface/border are tints and shades of it), used at full strength as its `border` |
-| `#e4ff30` lime   | `highlight` — the brand's energy, used sparingly. Lime is ~1.1:1 against white, so it is **never text on a light ground**. It appears in exactly two forms: as a **fill carrying dark ink** (`bg-highlight text-highlight-ink` — the `highlight` Button and Badge, `::selection`, `<mark>`), or as **text/glyphs on the always-dark `feature` ground** (the home hero, today's GitBit, the featured Aha, `brand-mark`, `terminal-prompt`). Budget: one `highlight` button per view, one `feature` card per view. `terminal-accent` is the same hue at about half saturation, for running text. |
+| `#e4ff30` lime   | `highlight` — the brand's energy, used sparingly. Lime is ~1.1:1 against white, so it is **never text on a light ground**. It appears in exactly two forms: as a **fill carrying dark ink** (`bg-highlight text-highlight-ink` — the `highlight` Button and Badge, `::selection`, `<mark>`), or as **text/glyphs on the always-dark `feature` ground** (the home hero, today's GitBit, the featured Aha, `terminal-prompt`). Budget: one `highlight` button per view, one `feature` card per view. `terminal-accent` is the same hue at about half saturation, for running text. |
 
 Each colour appears at full strength where contrast allows, and the
 `-strong` variant carries the cases where it can't: `--gb-accent` is
@@ -61,14 +61,15 @@ numerically, not by eye).
 
 ### The mark
 
-`brand` (`#5b23ff`) and `brand-mark` (`#e4ff30`) are fixed in both themes,
-unlike `accent`. The header logo (`components/GitBitLogo.tsx`) and the
-installed app icon (`public/icon.svg`, `icon-maskable.svg`, `favicon.svg`)
-use the same two colours in the same arrangement, so they read as one
-identity — **edit them together.** Deriving the chip from `accent` instead
-would recolour it in dark mode, where the lighter violet leaves too little
-contrast under the lime glyph. After editing any icon SVG, run
-`npm run icons` to regenerate the PNGs.
+The logo is one raster file, `src/assets/gitbit-logo.png` (512×512): a
+lime GitHub-mark circle on a near-black square. The header
+(`components/GitBitLogo.tsx`) imports it directly, and `npm run icons`
+(`scripts/generate-icons.mjs`) generates every other copy from it —
+`public/favicon.png`, `apple-touch-icon.png`, and the PWA's
+`icons/icon-192/512.png` and `icon-maskable-512.png`. **To change the
+logo, replace that one file and run `npm run icons`.** The maskable icon
+reuses the same art because the circle stays inside Android's 80% safe
+zone (197px of 205px from centre) — re-check that if the artwork changes.
 
 The glyph is the GitHub Octocat. It is GitHub's registered trademark, and
 GitHub's usage terms do not cover third-party products using it as their

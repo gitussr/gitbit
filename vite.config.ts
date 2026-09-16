@@ -18,7 +18,7 @@ export default defineConfig({
       // which left deploys stuck behind the precache.
       registerType: 'prompt',
       injectRegister: null,
-      includeAssets: ['favicon.svg', 'icon.svg', 'icon-maskable.svg'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png'],
       manifest: {
         id: '/',
         name: 'GitBit — Git, one bit at a time.',
