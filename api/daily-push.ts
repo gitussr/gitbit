@@ -183,7 +183,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     notification = {
       heading: today.title,
       body: today.body,
-      url: `${site}/daily`,
+      // Opens the pushed bit itself, not the feed it happens to head today.
+      url: `${site}/daily/${today.slug}`,
       // Collapses an undismissed previous day's bit instead of stacking a new
       // one on top of it — the feed is always "today", never a backlog.
       topic: 'gitbit-daily',

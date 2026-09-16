@@ -47,7 +47,7 @@ export function DailyNotificationList({ newestUnread = false, onNavigate }: Dail
           return (
             <li key={sentAt.getTime()}>
               <Link
-                to="/daily"
+                to={`/daily/${item.slug}`}
                 onClick={onNavigate}
                 className="flex gap-3 px-4 py-3 transition-colors hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
               >

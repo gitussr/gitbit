@@ -1,25 +1,12 @@
 import { useEffect } from 'react'
-import { Lightbulb, BookOpen, Terminal, GitCompare, AlertTriangle, MapPin, Sparkles, Brain, Trophy } from 'lucide-react'
 import { dailyContent } from '@/services/content'
 import { selectDailyItem } from '@/services/dailySelection'
-import type { DailyContentType } from '@/content/types'
+import { dailyTypeMeta as typeMeta } from './dailyTypeMeta'
 import { Heading, Text } from '@/components/ui/Typography'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { NotificationOptIn } from '@/components/NotificationOptIn'
 import { useUnreadDailyNotification } from '@/hooks/useUnreadDailyNotification'
-
-const typeMeta: Record<DailyContentType, { label: string; icon: typeof Lightbulb }> = {
-  aha: { label: 'Aha', icon: Lightbulb },
-  vocabulary: { label: 'Vocabulary', icon: BookOpen },
-  command: { label: 'Command', icon: Terminal },
-  comparison: { label: 'Compare', icon: GitCompare },
-  'common-mistake': { label: 'Common mistake', icon: AlertTriangle },
-  scenario: { label: 'Real-world scenario', icon: MapPin },
-  'did-you-know': { label: 'Did you know', icon: Sparkles },
-  recall: { label: 'Recall', icon: Brain },
-  'mini-challenge': { label: 'Mini challenge', icon: Trophy },
-}
 
 export default function DailyPage() {
   const { markRead } = useUnreadDailyNotification()

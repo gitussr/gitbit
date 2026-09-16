@@ -22,6 +22,10 @@ export function getAhaBySlug(slug: string) {
   return ahaCards.find((aha) => aha.slug === slug)
 }
 
+export function getDailyBySlug(slug: string) {
+  return dailyContent.find((item) => item.slug === slug)
+}
+
 export function getQuizBySlug(slug: string) {
   return quizQuestions.find((quiz) => quiz.slug === slug)
 }

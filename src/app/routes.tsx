@@ -15,6 +15,7 @@ import {
   SosDetailPage,
   TerminalPage,
   DailyPage,
+  DailyDetailPage,
   SearchPage,
   DesignSystemPage,
   NotFoundPage,
@@ -59,6 +60,7 @@ export const routes: RouteObject[] = [
 
       // GitBit Daily — micro-learning
       { path: 'daily', element: <DailyPage /> },
+      { path: 'daily/:slug', element: <DailyDetailPage /> },
 
       // Cross-cutting search
       { path: 'search', element: <SearchPage /> },
