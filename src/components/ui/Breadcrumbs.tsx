@@ -9,17 +9,18 @@ export interface BreadcrumbItem {
 export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
   return (
     <nav aria-label="Breadcrumb">
-      <ol className="flex flex-wrap items-center gap-1.5 text-sm text-foreground-tertiary">
+      {/* One line: parent crumbs keep their width and the current page (which repeats the h1 below) truncates. */}
+      <ol className="flex min-w-0 items-center gap-1.5 text-body-sm text-foreground-tertiary">
         {items.map((item, index) => {
           const isLast = index === items.length - 1
           return (
-            <li key={`${item.label}-${index}`} className="flex items-center gap-1.5">
+            <li key={`${item.label}-${index}`} className={isLast ? 'flex min-w-0 items-center' : 'flex shrink-0 items-center gap-1.5'}>
               {item.to && !isLast ? (
                 <Link to={item.to} className="transition-colors duration-150 hover:text-foreground">
                   {item.label}
                 </Link>
               ) : (
-                <span aria-current={isLast ? 'page' : undefined} className={isLast ? 'font-medium text-foreground' : undefined}>
+                <span aria-current={isLast ? 'page' : undefined} className={isLast ? 'truncate font-medium text-foreground' : undefined}>
                   {item.label}
                 </span>
               )}
