@@ -20,9 +20,9 @@ export default function HomePage() {
   const featuredAha = ahaCards[0]
 
   return (
-    <div className="flex flex-col gap-10">
-      {/* Full-bleed ink band: the one inverted surface, where lime carries text — the same ink/lime pair as the logo. */}
-      <section className="relative left-1/2 right-1/2 -mx-[50vw] -mt-6 w-screen overflow-hidden bg-feature px-4 py-10 text-center text-feature-text sm:-mt-8 sm:px-6 sm:py-14">
+    <div className="page-subgrid gap-y-10">
+      {/* Full-bleed ink band (see page-grid in base.css): the one inverted surface, where lime carries text — the same ink/lime pair as the logo. */}
+      <section className="full-bleed relative -mt-6 overflow-hidden bg-feature px-4 py-10 text-center text-feature-text sm:-mt-8 sm:px-6 sm:py-14">
         <div className="bg-grid bg-grid-feature absolute inset-0" aria-hidden="true" />
         <div className="relative mx-auto flex max-w-2xl flex-col items-center gap-4">
           <Text variant="caption" className="font-mono font-bold tracking-widest text-highlight uppercase">

@@ -119,7 +119,7 @@ export function Layout() {
       <main
         id="main-content"
         tabIndex={-1}
-        className="mx-auto w-full max-w-6xl flex-1 px-4 pt-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-8 sm:pb-[calc(3rem+env(safe-area-inset-bottom))] focus:outline-none"
+        className="page-grid w-full flex-1 pt-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] sm:pt-8 sm:pb-[calc(3rem+env(safe-area-inset-bottom))] focus:outline-none"
       >
         <Outlet />
       </main>

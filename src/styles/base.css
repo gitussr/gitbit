@@ -20,9 +20,9 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  /* Safety net for full-bleed sections that break out of the centered
-     max-width layout (e.g. the home hero) via 100vw + negative margins.
-     `clip` (not `hidden`/`auto`) so it can't disable the header's
+  /* Safety net against accidental horizontal overflow. Full-bleed bands no
+     longer need it (they use the page-grid tracks, not 100vw), but it stays
+     cheap insurance. `clip` (not `hidden`/`auto`) so it can't disable the header's
      `position: sticky` — only `visible` overflow leaves sticky intact,
      and `clip` is the one non-visible value that doesn't create a
      scroll container. */
@@ -100,6 +100,48 @@ mark {
 @utility glass {
   background: var(--color-surface);
   border: 2px solid var(--color-palette-ink);
+}
+
+/* Page layout as a three-track grid: gutter | content | gutter. Pages sit in
+   `content` (69rem max, the old max-w-6xl minus its padding); a `full-bleed`
+   child spans edge to edge. Unlike a 100vw breakout, `100%` here is the
+   page's real width *excluding* the scrollbar, so a full-bleed band never
+   overflows or sits off-centre on desktops with visible scrollbars.
+   The child rule is wrapped in :where() so it has zero specificity and
+   `full-bleed` always wins, whatever order the utilities are emitted in. */
+@utility page-grid {
+  --page-gutter: 1rem;
+  display: grid;
+  align-content: start;
+  grid-template-columns:
+    [full-start] minmax(var(--page-gutter), 1fr)
+    [content-start] min(69rem, 100% - 2 * var(--page-gutter))
+    [content-end] minmax(var(--page-gutter), 1fr)
+    [full-end];
+
+  @media (width >= 40rem) {
+    --page-gutter: 1.5rem;
+  }
+
+  :where(&) > * {
+    grid-column: content;
+  }
+}
+
+/* A page root that contains a full-bleed band: spans the whole grid and
+   passes the same tracks down, so its own children default to `content`. */
+@utility page-subgrid {
+  grid-column: full;
+  display: grid;
+  grid-template-columns: subgrid;
+
+  :where(&) > * {
+    grid-column: content;
+  }
+}
+
+@utility full-bleed {
+  grid-column: full;
 }
 
 /* Safe-area utilities for notches/home indicators (Section 23) */
