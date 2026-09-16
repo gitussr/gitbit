@@ -36,7 +36,14 @@ export default function HomePage() {
             incantations and start making sense.
           </Text>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-2.5">
-            <ButtonLink to="/learn" variant="highlight" size="lg" trailingIcon={<ArrowRight aria-hidden="true" />}>
+            {/* White border here only: the default ink border disappears into the ink hero, shrinking the lime by 2px a side next to "Browse commands". */}
+            <ButtonLink
+              to="/learn"
+              variant="highlight"
+              size="lg"
+              trailingIcon={<ArrowRight aria-hidden="true" />}
+              className="border-feature-text"
+            >
               Start learning
             </ButtonLink>
             <ButtonLink to="/quick" variant="inverse" size="lg">
