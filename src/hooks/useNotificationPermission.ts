@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { NotificationService, type NotificationPermissionState } from '@/services/notifications/NotificationService'
 
 const DISMISSED_KEY = 'gitbit-notification-prompt-dismissed'
@@ -6,6 +6,46 @@ const DISMISSED_KEY = 'gitbit-notification-prompt-dismissed'
 function readDismissed() {
   if (typeof window === 'undefined') return false
   return window.localStorage.getItem(DISMISSED_KEY) === '1'
+}
+
+/**
+ * Module-level store shared by every caller. The header bell (and its
+ * auto-opening landing popup) and the /daily card each call this hook; with
+ * per-instance `useState`, granting from the popup updated only the bell, so
+ * the /daily card kept asking until a remount. One store means one answer.
+ */
+let permissionState: NotificationPermissionState = NotificationService.getPermissionState()
+let dismissedState = readDismissed()
+const listeners = new Set<() => void>()
+
+function emit() {
+  for (const listener of listeners) listener()
+}
+
+function refreshPermission() {
+  const next = NotificationService.getPermissionState()
+  if (next === permissionState) return
+  permissionState = next
+  emit()
+}
+
+let watchingBrowserPermission = false
+
+/** Picks up changes made outside the app (browser site settings, another tab). */
+function watchBrowserPermission() {
+  if (watchingBrowserPermission || typeof navigator === 'undefined' || !navigator.permissions) return
+  watchingBrowserPermission = true
+  navigator.permissions
+    .query({ name: 'notifications' })
+    .then((status) => {
+      status.addEventListener('change', refreshPermission)
+    })
+    .catch(() => {})
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
 }
 
 /**
@@ -20,27 +60,23 @@ function readDismissed() {
  * (Section 14: do not repeatedly ask).
  */
 export function useNotificationPermission() {
-  const [state, setState] = useState<NotificationPermissionState>(() => NotificationService.getPermissionState())
-  const [dismissed, setDismissed] = useState(readDismissed)
+  const state = useSyncExternalStore(subscribe, () => permissionState)
+  const dismissed = useSyncExternalStore(subscribe, () => dismissedState)
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    let cancelled = false
+    watchBrowserPermission()
+    refreshPermission()
     NotificationService.initialize()
       .catch(() => {})
-      .then(() => {
-        if (!cancelled) setState(NotificationService.getPermissionState())
-      })
-    return () => {
-      cancelled = true
-    }
+      .then(refreshPermission)
   }, [])
 
   const requestPermission = useCallback(async () => {
     setError(false)
     try {
-      const result = await NotificationService.requestPermission()
-      setState(result)
+      await NotificationService.requestPermission()
+      refreshPermission()
     } catch {
       setError(true)
     }
@@ -48,7 +84,8 @@ export function useNotificationPermission() {
 
   const dismiss = useCallback(() => {
     window.localStorage.setItem(DISMISSED_KEY, '1')
-    setDismissed(true)
+    dismissedState = true
+    emit()
   }, [])
 
   return {
