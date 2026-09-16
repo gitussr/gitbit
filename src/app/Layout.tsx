@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Menu, Search, X } from 'lucide-react'
 import { GitBitLogo } from '@/components/GitBitLogo'
-import { ThemeToggle } from '@/components/ThemeToggle'
 import { NotificationBell } from '@/components/NotificationBell'
 import { IconButton, iconButtonClassName } from '@/components/ui/IconButton'
 import { cn } from '@/utils/cn'
@@ -19,14 +18,14 @@ const primaryNav = [
 
 const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
   cn(
-    'inline-flex h-8 items-center rounded-md px-2.5 text-body-sm font-semibold transition-colors duration-150 ease-standard',
+    'inline-flex h-8 items-center border-2 px-2.5 text-body-sm font-bold transition-colors duration-150 ease-standard',
     isActive
-      ? 'bg-accent-subtle text-accent-strong'
-      : 'text-foreground-secondary hover:bg-surface-hover hover:text-foreground',
+      ? 'border-accent bg-accent-subtle text-foreground'
+      : 'border-transparent text-foreground hover:border-accent',
   )
 
 /**
- * App shell: skip link, sticky glass header, and routed content.
+ * App shell: skip link, sticky header, and routed content.
  * Every visual decision here comes from design tokens (styles/tokens.css)
  * and Design System primitives (components/ui) — no one-off styling.
  *
@@ -56,12 +55,12 @@ export function Layout() {
     <div className="safe-x flex min-h-svh flex-col bg-background">
       <a
         href="#main-content"
-        className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-3 focus-visible:left-3 focus-visible:z-tooltip focus-visible:rounded-md focus-visible:bg-accent focus-visible:px-3 focus-visible:py-2 focus-visible:text-sm focus-visible:text-foreground-inverse"
+        className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-3 focus-visible:left-3 focus-visible:z-tooltip focus-visible:bg-accent focus-visible:px-3 focus-visible:py-2 focus-visible:text-sm focus-visible:text-highlight"
       >
         Skip to content
       </a>
 
-      <header className="safe-top glass sticky top-0 z-header border-b shadow-sm">
+      <header className="safe-top glass sticky top-0 z-header border-x-0 border-t-0">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6">
           <IconButton
             icon={menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
@@ -98,12 +97,11 @@ export function Layout() {
               <Search className="size-4" aria-hidden="true" />
             </NavLink>
             <NotificationBell />
-            <ThemeToggle />
           </div>
         </div>
 
         {menuOpen && (
-          <nav aria-label="Primary" className="glass border-t px-4 py-3 shadow-sm md:hidden">
+          <nav aria-label="Primary" className="glass border-x-0 border-b-0 px-4 py-3 md:hidden">
             <ul className="flex flex-col gap-1">
               {primaryNav.map((item) => (
                 <li key={item.to}>

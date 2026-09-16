@@ -12,12 +12,12 @@ export default function LearnPage() {
         description={'A structured path from "what is Git" to branching, collaboration, and undoing mistakes with confidence.'}
       />
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         {learnLevels.map((level) => {
           const itemCount = getConceptsForLevel(level).length + getCommandsForLevel(level).length
           return (
             <Link key={level.slug} to={`/learn/${level.slug}`} className={cardClassName(true, 'flex gap-3')}>
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent-subtle font-mono text-sm font-bold text-accent-strong">
+              <span className="flex size-9 shrink-0 items-center justify-center bg-accent font-mono text-sm font-bold text-highlight">
                 {level.order}
               </span>
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">

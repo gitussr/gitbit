@@ -36,7 +36,7 @@ export default function LevelPage() {
           <Heading level={2} size={4}>
             Concepts
           </Heading>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {levelConcepts.map((concept) => (
               <LessonCard key={concept.slug} concept={concept} levelSlug={level.slug} />
             ))}
@@ -49,7 +49,7 @@ export default function LevelPage() {
           <Heading level={2} size={4}>
             Commands
           </Heading>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {levelCommands.map((command) => (
               <CommandCard key={command.slug} command={command} />
             ))}

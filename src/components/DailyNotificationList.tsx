@@ -41,7 +41,7 @@ export function DailyNotificationList({ newestUnread = false, onNavigate }: Dail
       <Text variant="caption" tone="tertiary" className="font-semibold tracking-wide uppercase">
         Recent notifications
       </Text>
-      <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-lg border border-border">
+      <ul className="flex flex-col divide-y-2 divide-accent border-2 border-accent">
         {sent.map(({ item, sentAt }, index) => {
           const unread = newestUnread && index === 0
           return (
@@ -49,7 +49,7 @@ export function DailyNotificationList({ newestUnread = false, onNavigate }: Dail
               <Link
                 to={`/daily/${item.slug}`}
                 onClick={onNavigate}
-                className="flex gap-3 px-4 py-3 transition-colors hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
+                className="flex gap-3 px-4 py-3 transition-colors hover:bg-accent-subtle focus-visible:bg-accent-subtle focus-visible:outline-none"
               >
                 <span
                   aria-hidden="true"

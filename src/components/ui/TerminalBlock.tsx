@@ -15,7 +15,7 @@ export interface TerminalBlockProps {
 export function TerminalBlock({ command, gitSays, humanTranslation, className }: TerminalBlockProps) {
   return (
     <div
-      className={cn('overflow-hidden rounded-lg border border-white/10 bg-terminal-bg shadow-md', className)}
+      className={cn('overflow-hidden border-2 border-accent bg-terminal-bg shadow-brutal', className)}
       role="group"
       aria-label="Simulated terminal"
     >

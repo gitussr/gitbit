@@ -59,12 +59,12 @@ export default function QuizQuestionPage() {
               disabled={answered}
               onClick={() => setSelected(choiceIndex)}
               className={cn(
-                'flex items-center justify-between gap-3 rounded-lg border px-3.5 py-2.5 text-left text-sm font-semibold transition-colors duration-150 ease-standard',
+                'flex items-center justify-between gap-3 border-2 px-3.5 py-2.5 text-left text-sm font-bold transition-colors duration-150 ease-standard',
                 'disabled:cursor-default',
-                !answered && 'border-border bg-surface hover:border-border-strong hover:bg-surface-hover',
-                showState && isRightAnswer && 'border-safe-border bg-safe-subtle text-safe',
-                showState && isSelected && !isRightAnswer && 'border-danger-border bg-danger-subtle text-danger',
-                answered && !isSelected && !isRightAnswer && 'border-border bg-surface text-foreground-tertiary',
+                !answered && 'border-accent bg-surface shadow-brutal-sm hover:bg-accent-subtle',
+                showState && isRightAnswer && 'border-safe-border bg-safe-subtle text-foreground',
+                showState && isSelected && !isRightAnswer && 'border-danger-border bg-danger-subtle text-foreground',
+                answered && !isSelected && !isRightAnswer && 'border-accent bg-surface text-foreground-tertiary',
               )}
             >
               {choice}

@@ -3,6 +3,7 @@ import type { useNotificationPermission } from '@/hooks/useNotificationPermissio
 import { Button } from '@/components/ui/Button'
 import { IconButton } from '@/components/ui/IconButton'
 import { Alert } from '@/components/ui/Alert'
+import { cardClassName } from '@/components/ui/Card'
 import { Heading, Text } from '@/components/ui/Typography'
 
 export interface NotificationStatusProps extends ReturnType<typeof useNotificationPermission> {
@@ -86,7 +87,7 @@ export function NotificationStatus({
   }
 
   return (
-    <div className="relative flex flex-col gap-2.5 rounded-lg border border-accent-border bg-accent-subtle p-4">
+    <div className={cardClassName(false, 'relative flex flex-col gap-2.5')}>
       <IconButton
         icon={<X aria-hidden="true" />}
         label="Dismiss"
@@ -94,7 +95,7 @@ export function NotificationStatus({
         className="absolute top-3 right-3"
         onClick={dismiss}
       />
-      <Bell className="size-5 text-accent-strong" aria-hidden="true" />
+      <Bell className="size-5 text-foreground" aria-hidden="true" />
       <div className="flex flex-col gap-1 pr-8">
         <Heading level={2} size={4}>
           Get one useful GitBit a day

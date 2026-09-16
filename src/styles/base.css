@@ -36,23 +36,24 @@ video {
   max-width: 100%;
 }
 
+/* Ink, not lime: most text sits on lime cards, where a lime selection would vanish. */
 ::selection {
-  background: var(--color-highlight);
-  color: var(--color-highlight-ink);
+  background: var(--color-palette-ink);
+  color: var(--color-palette-lime);
 }
 
 mark {
   background: var(--color-highlight);
   color: var(--color-highlight-ink);
-  border-radius: var(--radius-sm);
   padding-inline: 0.2em;
 }
 
-/* Focus states — always visible, never suppressed (Section 24) */
+/* Focus states — always visible, never suppressed (Section 24). A lime
+   halo inside an ink ring, so it shows on white, lime and ink grounds alike. */
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 3px solid var(--color-palette-ink);
   outline-offset: 2px;
-  border-radius: var(--radius-sm);
+  box-shadow: 0 0 0 2px var(--color-palette-lime);
 }
 
 /* Thin, subtle, still-usable scrollbar (Section 19) */
@@ -72,13 +73,10 @@ mark {
 
 *::-webkit-scrollbar-thumb {
   background-color: var(--color-border-strong);
-  border-radius: 999px;
   border: 2px solid var(--color-background);
 }
 
-/* Subtle grid background signature (Section 15) — tinted with the theme's
-   purple accent so it reads as "on-brand" rather than a neutral texture.
-   Static: no animation. */
+/* Subtle grid background signature (Section 15). Static: no animation. */
 @utility bg-grid {
   /* A fallback rather than a declaration here, so bg-grid-feature wins regardless of utility order. */
   background-image:
@@ -91,19 +89,17 @@ mark {
   opacity: 0.6;
 }
 
-/* The same grid on the always-dark feature ground, where the light accent line would glare. */
+/* The same grid on the ink feature ground: faint lime lines. */
 @utility bg-grid-feature {
-  --grid-line: var(--color-feature-border);
+  --grid-line: color-mix(in oklab, var(--color-palette-lime) 18%, transparent);
 }
 
-/* Frosted glass — pagination, floating controls, overlays (Section 16).
-   Tuned for a classic, more vibrant "Apple-style" vibrancy: a more
-   translucent surface plus stronger blur/saturation than a typical web
-   frosted panel, so content scrolling behind genuinely reads through. */
+/* Floating chrome — header, pagination, toasts (Section 16). Once frosted
+   glass; now a solid white panel with the ink border, matching the cards.
+   The name is kept so call sites didn't need to change. */
 @utility glass {
-  background: color-mix(in oklab, var(--color-surface) 60%, transparent);
-  backdrop-filter: blur(24px) saturate(1.8);
-  border: 1px solid color-mix(in oklab, var(--color-border-strong) 55%, transparent);
+  background: var(--color-surface);
+  border: 2px solid var(--color-palette-ink);
 }
 
 /* Safe-area utilities for notches/home indicators (Section 23) */

@@ -10,7 +10,7 @@ import logoUrl from '@/assets/gitbit-logo.png'
 export function GitBitLogo({ className }: { className?: string }) {
   return (
     <span className={cn('inline-flex items-center gap-2 text-base font-bold tracking-tight text-foreground', className)}>
-      <img src={logoUrl} alt="" width={28} height={28} className="size-7 rounded-md" />
+      <img src={logoUrl} alt="" width={28} height={28} className="size-7 border-2 border-accent" />
       GitBit
     </span>
   )

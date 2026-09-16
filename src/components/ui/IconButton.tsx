@@ -12,11 +12,12 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
 }
 
 const variantStyles: Record<IconButtonVariant, string> = {
-  secondary: 'border border-border bg-surface text-foreground hover:border-border-strong hover:bg-surface-hover',
-  ghost: 'text-foreground-secondary hover:bg-surface-hover hover:text-foreground',
+  secondary:
+    'border-accent bg-surface text-foreground shadow-brutal-sm hover:-translate-x-0.5 hover:translate-y-0.5 hover:shadow-brutal-sm-pressed',
+  ghost: 'border-transparent text-foreground hover:border-accent hover:bg-accent-subtle',
 }
 
-/** Same heights and radius as `Button`, so an icon button sits flush beside a text one. */
+/** Same heights as `Button`, so an icon button sits flush beside a text one. */
 const sizeStyles: Record<ButtonSize, string> = {
   sm: 'size-8 [&_svg]:size-4',
   md: 'size-9 [&_svg]:size-4',
@@ -26,7 +27,7 @@ const sizeStyles: Record<ButtonSize, string> = {
 /** Also used by icon-only links (e.g. the header's search link) so they match the buttons beside them. */
 export function iconButtonClassName(variant: IconButtonVariant = 'ghost', size: ButtonSize = 'md', className?: string) {
   return cn(
-    'inline-flex shrink-0 items-center justify-center rounded-md transition-colors duration-200 ease-standard',
+    'inline-flex shrink-0 items-center justify-center border-2 transition-[background-color,box-shadow,transform] duration-150 ease-standard',
     'disabled:pointer-events-none disabled:opacity-45',
     variantStyles[variant],
     sizeStyles[size],

@@ -37,7 +37,7 @@ export default function SearchPage() {
       ) : results.length === 0 ? (
         <EmptyState title="No results" description="Try a different word." />
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-4">
           {results.map((result) => (
             <li key={`${result.type}-${result.slug}`}>
               <Link to={result.href} className={cardClassName(true, 'flex flex-col gap-1 p-3.5')}>

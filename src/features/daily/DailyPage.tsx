@@ -35,24 +35,24 @@ export default function DailyPage() {
       {today && (
         <Link
           to={`/daily/${today.slug}`}
-          className={cardClassName(true, 'group flex flex-col gap-2 p-5', 'feature')}
+          className={cardClassName(true, 'group flex flex-col gap-2 p-5')}
         >
           <div className="flex items-center gap-2">
-            <Badge variant="highlight">Today</Badge>
-            <Text as="span" variant="caption" className="font-semibold text-feature-text-secondary">
+            <Badge variant="accent">Today</Badge>
+            <Text as="span" variant="caption" className="font-bold">
               {typeMeta[today.type].label}
             </Text>
           </div>
-          <Heading level={2} size={3} className="text-feature-text">
+          <Heading level={2} size={3}>
             {today.title}
           </Heading>
-          <Text variant="body-lg" className="whitespace-pre-line text-feature-text-secondary">
+          <Text variant="body-lg" className="whitespace-pre-line">
             {today.body}
           </Text>
           <Text
             as="span"
             variant="body-sm"
-            className="mt-1 inline-flex items-center gap-1 font-semibold text-highlight"
+            className="mt-1 inline-flex items-center gap-1 font-bold"
           >
             Open
             <ArrowRight
@@ -63,7 +63,7 @@ export default function DailyPage() {
         </Link>
       )}
 
-      <section className="flex flex-col gap-2.5">
+      <section className="flex flex-col gap-4">
         <Heading level={2} size={4}>
           More GitBits
         </Heading>

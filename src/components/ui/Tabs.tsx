@@ -40,7 +40,7 @@ export function Tabs({ items, value, onChange, className }: TabsProps) {
       role="tablist"
       aria-orientation="horizontal"
       onKeyDown={handleKeyDown}
-      className={cn('inline-flex gap-1 rounded-lg border border-border bg-background-subtle p-1', className)}
+      className={cn('inline-flex gap-1 border-2 border-accent bg-surface p-1', className)}
     >
       {items.map((item) => {
         const selected = item.value === value
@@ -58,8 +58,8 @@ export function Tabs({ items, value, onChange, className }: TabsProps) {
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(item.value)}
             className={cn(
-              'rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-150 ease-standard',
-              selected ? 'bg-surface text-foreground shadow-xs' : 'text-foreground-secondary hover:text-foreground',
+              'px-3 py-1.5 text-sm font-bold transition-colors duration-150 ease-standard',
+              selected ? 'bg-accent text-highlight' : 'text-foreground hover:bg-accent-subtle',
             )}
           >
             {item.label}

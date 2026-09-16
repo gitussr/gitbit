@@ -9,13 +9,14 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-  neutral: 'bg-background-subtle text-foreground-secondary border-border',
-  accent: 'bg-accent-subtle text-accent-strong border-accent-border',
+  neutral: 'bg-surface text-foreground border-accent',
+  /** An ink chip with light text — the same treatment as code. */
+  accent: 'bg-accent text-feature-text border-accent',
   /** Lime fill with dark ink — reads on any ground. Sparingly: "new", "today". */
-  highlight: 'bg-highlight text-highlight-ink border-transparent',
-  safe: 'bg-safe-subtle text-safe border-safe-border',
-  caution: 'bg-caution-subtle text-caution border-caution-border',
-  danger: 'bg-danger-subtle text-danger border-danger-border',
+  highlight: 'bg-highlight text-highlight-ink border-accent',
+  safe: 'bg-safe-subtle text-foreground border-safe-border',
+  caution: 'bg-caution-subtle text-foreground border-caution-border',
+  danger: 'bg-danger-subtle text-foreground border-danger-border',
 }
 
 /** A small status/category label. Used directly, and to render danger levels via `dangerLevelToBadgeVariant`. */
@@ -23,7 +24,7 @@ export function Badge({ className, variant = 'neutral', ...props }: BadgeProps) 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full border px-2 py-px text-xs font-semibold whitespace-nowrap',
+        'inline-flex items-center gap-1 border-2 px-1.5 text-xs leading-5 font-bold whitespace-nowrap',
         variantStyles[variant],
         className,
       )}

@@ -66,7 +66,7 @@ export default function ConceptPage() {
 
       {concept.example && <CodeBlock code={concept.example} />}
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         {concept.whenToUse && (
           <div className="flex flex-col gap-1">
             <Heading level={2} size={4}>
@@ -111,7 +111,7 @@ export default function ConceptPage() {
             )}
           </div>
           {relatedCommands.length > 0 && (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               {relatedCommands.map((c) => (
                 <CommandCard key={c.slug} command={c} />
               ))}

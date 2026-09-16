@@ -77,7 +77,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className="glass flex items-start gap-2.5 rounded-lg px-4 py-3 shadow-md"
+            className="glass flex items-start gap-2.5 px-4 py-3 shadow-brutal"
           >
             <span className={cn('mt-0.5 shrink-0', variantStyles[toast.variant])}>{variantIcons[toast.variant]}</span>
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">

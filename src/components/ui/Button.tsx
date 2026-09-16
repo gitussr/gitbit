@@ -3,24 +3,31 @@ import { Link, type LinkProps } from 'react-router-dom'
 import { cn } from '@/utils/cn'
 
 /**
- * `highlight` is the lime call-to-action — at most one per view, for the
- * single most important action (e.g. the home hero). `inverse` is the
- * secondary action on the always-dark `feature` ground, where `secondary`
- * would read as a light slab.
+ * `primary` is ink with lime text, the default action. `highlight` is lime
+ * with ink text — at most one per view, for the single most important
+ * action. `inverse` is the secondary action on the ink `feature` ground.
  */
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'highlight' | 'inverse'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
+/**
+ * Raised variants carry the hard ink shadow and "press in" toward it on
+ * hover and click — the element moves by exactly the shadow it loses, so
+ * its shadow corner stays put.
+ */
+const raised =
+  'border-accent shadow-brutal-sm hover:-translate-x-0.5 hover:translate-y-0.5 hover:shadow-brutal-sm-pressed active:-translate-x-[3px] active:translate-y-[3px] active:shadow-none'
+
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: 'bg-accent text-foreground-inverse shadow-xs hover:bg-accent-strong',
-  secondary: 'border border-border bg-surface text-foreground shadow-xs hover:border-border-strong hover:bg-surface-hover',
-  ghost: 'text-foreground-secondary hover:bg-surface-hover hover:text-foreground',
-  danger: 'bg-danger text-foreground-inverse shadow-xs hover:brightness-95',
-  highlight: 'bg-highlight text-highlight-ink shadow-xs hover:bg-highlight-hover',
-  inverse: 'border border-feature-border text-feature-text hover:bg-feature-hover',
+  primary: cn(raised, 'bg-accent text-highlight'),
+  secondary: cn(raised, 'bg-surface text-foreground'),
+  danger: cn(raised, 'bg-danger-subtle text-foreground'),
+  highlight: cn(raised, 'bg-highlight text-highlight-ink'),
+  ghost: 'border-transparent text-foreground hover:border-accent hover:bg-accent-subtle',
+  inverse: 'border-feature-text-secondary text-feature-text hover:bg-feature-hover',
 }
 
-/** One radius and one weight at every size, so buttons read as one family wherever they appear. */
+/** One shape and one weight at every size, so buttons read as one family wherever they appear. */
 const sizeStyles: Record<ButtonSize, string> = {
   sm: 'h-8 gap-1.5 px-3 text-body-sm [&_svg]:size-3.5',
   md: 'h-9 gap-2 px-3.5 text-sm [&_svg]:size-4',
@@ -37,9 +44,9 @@ interface ButtonStyleProps {
 /** Shared by `Button` and `ButtonLink` only — extend the variants here rather than styling a button ad hoc. */
 export function buttonClassName(variant: ButtonVariant = 'primary', size: ButtonSize = 'md', className?: string) {
   return cn(
-    'inline-flex shrink-0 items-center justify-center rounded-md font-semibold whitespace-nowrap',
-    'transition-[background-color,border-color,color,transform] duration-200 ease-standard active:scale-[0.98]',
-    'disabled:pointer-events-none disabled:opacity-45',
+    'inline-flex shrink-0 items-center justify-center border-2 font-bold whitespace-nowrap',
+    'transition-[background-color,box-shadow,transform] duration-150 ease-standard',
+    'disabled:pointer-events-none disabled:opacity-45 disabled:shadow-none',
     variantStyles[variant],
     sizeStyles[size],
     className,

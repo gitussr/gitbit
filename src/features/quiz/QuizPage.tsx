@@ -7,7 +7,7 @@ export default function QuizPage() {
     <div className="flex flex-col gap-5">
       <PageHeader title="GitBit Quiz" description={'Quick checks that test understanding, not memorization.'} />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {quizQuestions.map((quiz) => (
           <QuizCard key={quiz.slug} quiz={quiz} />
         ))}

@@ -38,7 +38,7 @@ export default function CommandDetailPage() {
 
       <CommandBlock command={command.example} anatomy={command.anatomy} />
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1">
           <Heading level={2} size={4}>
             When to use it
@@ -72,7 +72,7 @@ export default function CommandDetailPage() {
           <Heading level={2} size={4}>
             Related commands
           </Heading>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             {related.map((r) => (
               <CommandCard key={r.slug} command={r} />
             ))}

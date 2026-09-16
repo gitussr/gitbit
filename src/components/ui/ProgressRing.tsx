@@ -25,7 +25,7 @@ export function ProgressRing({ value, size = 32, strokeWidth = 3, className, lab
       aria-label={label ?? `${Math.round(clamped)}% complete`}
       className={cn('-rotate-90', className)}
     >
-      <circle cx={size / 2} cy={size / 2} r={radius} strokeWidth={strokeWidth} className="stroke-border" fill="none" />
+      <circle cx={size / 2} cy={size / 2} r={radius} strokeWidth={strokeWidth} className="stroke-accent-subtle" fill="none" />
       <circle
         cx={size / 2}
         cy={size / 2}

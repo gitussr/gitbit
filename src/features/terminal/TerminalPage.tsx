@@ -28,7 +28,7 @@ export default function TerminalPage() {
       {results.length === 0 ? (
         <EmptyState title="No matching commands" description="Try a different word." />
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           {results.map((command) => (
             <TerminalBlock
               key={command.slug}

@@ -5,13 +5,14 @@ import { extendTailwindMerge } from 'tailwind-merge'
  * tailwind-merge only knows Tailwind's built-in font sizes. Without this, it
  * reads a custom size token like `text-body-sm` as a text *colour*, and drops
  * it the moment a real colour (`text-foreground-secondary`) follows — so the
- * text silently falls back to 16px. Every `--text-*` token in tokens.css
- * must be listed here.
+ * text silently falls back to 16px. Every custom `--text-*` and `--shadow-*`
+ * token in tokens.css must be listed here.
  */
 const twMerge = extendTailwindMerge({
   extend: {
     theme: {
       text: ['body-sm', 'body-lg'],
+      shadow: ['brutal', 'brutal-pressed', 'brutal-sm', 'brutal-sm-pressed'],
     },
   },
 })

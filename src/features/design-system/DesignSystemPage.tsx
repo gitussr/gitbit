@@ -124,15 +124,11 @@ export default function DesignSystemPage() {
 
       <Section title="Palette">
         <Text tone="secondary" className="mb-4">
-          The four source colours, each shown at full strength. Where a colour has to carry small text it
-          hands off to a <code className="font-mono">-strong</code> variant instead: Alert's info copy is a
-          darker azure than the swatch, because #008bff reaches only 3.4:1 on white.
+          Two colours on a white page. Ink carries text, borders, shadows and code; lime fills every card.
         </Text>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <PaletteSwatch hex="#5b23ff" role="accent — brand, buttons, links, focus" className="bg-palette-violet" />
-          <PaletteSwatch hex="#008bff" role="info — notes, distinct from brand" className="bg-palette-azure" />
-          <PaletteSwatch hex="#362f4f" role="dark theme neutrals + border" className="bg-palette-indigo" />
-          <PaletteSwatch hex="#e4ff30" role="logo mark + terminal prompt" className="bg-palette-lime" />
+        <div className="grid grid-cols-2 gap-4">
+          <PaletteSwatch hex="#1f2015" role="ink — text, borders, shadows, code, primary buttons" className="bg-palette-ink" />
+          <PaletteSwatch hex="#e4ff30" role="lime — every card, highlight buttons, selection" className="bg-palette-lime" />
         </div>
       </Section>
 

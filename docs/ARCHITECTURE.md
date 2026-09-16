@@ -75,7 +75,7 @@ src/
     daily/
     comparisons/
   data/                Derived/aggregated views over content (e.g. search index) — built in Phase 4/5
-  hooks/               Shared React hooks (theme, reduced-motion, search, etc.)
+  hooks/               Shared React hooks (notifications, reduced-motion, search, etc.)
   services/            Framework-agnostic logic (search matching, daily selection, notifications) — no React imports
   styles/              Design tokens / global CSS (Phase 3)
   utils/               Small pure helpers

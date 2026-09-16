@@ -56,7 +56,7 @@ export default function QuickPage() {
           description="Try a different word, or clear the filter above."
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {results.map((command) => (
             <CommandCard key={command.slug} command={command} />
           ))}

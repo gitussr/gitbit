@@ -20,8 +20,8 @@ export default function HomePage() {
   const featuredAha = ahaCards[0]
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* Full-bleed and always dark: the hero is the one place lime carries text, echoing the logo's lime-on-violet mark. */}
+    <div className="flex flex-col gap-10">
+      {/* Full-bleed ink band: the one inverted surface, where lime carries text — the same ink/lime pair as the logo. */}
       <section className="relative left-1/2 right-1/2 -mx-[50vw] -mt-6 w-screen overflow-hidden bg-feature px-4 py-10 text-center text-feature-text sm:-mt-8 sm:px-6 sm:py-14">
         <div className="bg-grid bg-grid-feature absolute inset-0" aria-hidden="true" />
         <div className="relative mx-auto flex max-w-2xl flex-col items-center gap-4">
@@ -50,7 +50,7 @@ export default function HomePage() {
         <Heading level={2} size={3}>
           Everything GitBit
         </Heading>
-        <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {modules.map((mod) => (
             <ModuleCard key={mod.to} {...mod} />
           ))}
@@ -60,21 +60,21 @@ export default function HomePage() {
       {featuredAha && (
         <Link
           to={`/aha/${featuredAha.slug}`}
-          className={cardClassName(true, 'group flex items-center gap-4 p-5 sm:p-6', 'feature')}
+          className={cardClassName(true, 'group flex items-center gap-4 p-5 sm:p-6')}
         >
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-highlight text-highlight-ink">
+          <span className="flex size-10 shrink-0 items-center justify-center bg-accent text-highlight">
             <Lightbulb className="size-5" aria-hidden="true" />
           </span>
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <Text as="span" variant="caption" className="font-bold tracking-widest text-highlight uppercase">
+            <Text as="span" variant="caption" className="font-bold tracking-widest uppercase">
               Aha of the moment
             </Text>
-            <Text as="span" variant="body-lg" className="font-semibold text-feature-text">
+            <Text as="span" variant="body-lg" className="font-bold">
               {featuredAha.statement}
             </Text>
           </span>
           <ArrowRight
-            className="size-4 shrink-0 text-feature-text-secondary transition-transform duration-200 ease-standard group-hover:translate-x-0.5"
+            className="size-4 shrink-0 text-foreground transition-transform duration-200 ease-standard group-hover:translate-x-0.5"
             aria-hidden="true"
           />
         </Link>

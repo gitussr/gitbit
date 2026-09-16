@@ -14,7 +14,7 @@ export function ErrorState({
   onRetry,
 }: ErrorStateProps) {
   return (
-    <div className="flex flex-col items-center gap-3 rounded-lg border border-border px-6 py-12 text-center">
+    <div className="flex flex-col items-center gap-3 border-2 border-accent px-6 py-12 text-center">
       <div className="flex flex-col gap-1">
         <p className="text-sm font-semibold text-foreground">{title}</p>
         <p className="text-sm text-foreground-tertiary">{description}</p>

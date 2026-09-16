@@ -10,7 +10,7 @@ export default function SosPage() {
         description={'"I messed up Git." Find your situation below — nothing here is as bad as it feels.'}
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {sosGuides.map((guide) => (
           <SosCard key={guide.slug} guide={guide} />
         ))}

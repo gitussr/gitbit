@@ -29,7 +29,7 @@ export function Alert({ className, variant = 'info', title, icon, children, ...p
   return (
     <div
       role={variant === 'danger' ? 'alert' : 'status'}
-      className={cn('flex gap-2.5 rounded-lg border px-3.5 py-3', variantStyles[variant], className)}
+      className={cn('flex gap-2.5 border-2 px-3.5 py-3 shadow-brutal-sm', variantStyles[variant], className)}
       {...props}
     >
       <div className="mt-0.5 shrink-0">{icon ?? variantIcons[variant]}</div>

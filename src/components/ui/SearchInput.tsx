@@ -17,8 +17,8 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(functi
   return (
     <div
       className={cn(
-        'flex h-10 items-center gap-2 rounded-md border border-border bg-surface px-3',
-        'transition-colors duration-150 ease-standard focus-within:border-accent-border',
+        'flex h-10 items-center gap-2 border-2 border-accent bg-surface px-3',
+        'transition-shadow duration-150 ease-standard focus-within:shadow-brutal-sm',
         className,
       )}
     >
@@ -37,13 +37,13 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(functi
           type="button"
           onClick={onClear}
           aria-label="Clear search"
-          className="shrink-0 rounded-md p-1 text-foreground-tertiary hover:bg-surface-hover hover:text-foreground"
+          className="shrink-0 p-1 text-foreground-tertiary hover:bg-accent-subtle hover:text-foreground"
         >
           <X className="size-3.5" aria-hidden="true" />
         </button>
       )}
       {!hasValue && shortcutHint && (
-        <kbd className="shrink-0 rounded border border-border bg-background-subtle px-1.5 py-0.5 font-mono text-[11px] text-foreground-tertiary">
+        <kbd className="shrink-0 border-2 border-accent bg-background-subtle px-1.5 py-0.5 font-mono text-[11px] text-foreground-secondary">
           {shortcutHint}
         </kbd>
       )}

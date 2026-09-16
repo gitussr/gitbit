@@ -7,34 +7,30 @@
  * never hard-code raw color/spacing/shadow values — extend this file
  * instead.
  *
- * Theming: light values live on :root. Dark values are applied twice —
- * once under prefers-color-scheme for the "system" default, and again
- * under [data-theme="dark"] so an explicit user choice always wins.
+ * Visual language: neo-brutalist. Two colours, ink #1f2015 and lime
+ * #e4ff30, on a white page. Cards are lime with a 2px ink border, square
+ * corners and a hard ink shadow offset down-left; code sits in ink chips.
  *
- * Palette (Color Hunt 362f4f-5b23ff-008bff-e4ff30):
- *   #5b23ff violet  -> accent (brand: buttons, links, focus, grid)
- *   #008bff azure   -> info (informational messaging, distinct from brand)
- *   #362f4f indigo  -> the dark theme's neutral ramp, and its border at
- *                      full strength
- *   #e4ff30 lime    -> highlight: never text on a light ground (~1.1:1).
- *                      Only as a fill carrying dark ink (highlight/-ink),
- *                      or as text/glyphs on the always-dark `feature`
- *                      ground — the hero, today's bit, featured Aha and the
- *                      terminal prompt. (The logo is a raster, see GitBitLogo.)
+ * One theme only — the design is defined light, and there is no dark mode.
  *
- * safe/caution/danger deliberately keep their conventional green/amber/red
- * hues: those are semantic signals, not brand colour, and recolouring them
- * from a four-colour palette would cost more in comprehension than it wins
- * in cohesion. Every foreground/background pair below meets WCAG AA.
+ * Token *names* are kept from the earlier multi-colour system so components
+ * didn't have to change vocabulary: `accent` is now ink (the colour that
+ * carries emphasis and interaction), `accent-subtle`/`highlight` is lime.
+ *
+ * safe/caution/danger/info are pastel fills that always carry ink text
+ * inside an ink border — they read on both lime and white, and keep their
+ * conventional green/amber/red/blue meaning. Every text/ground pair below
+ * is WCAG AA or better (checked numerically).
  */
 
 @theme {
   /* Typography */
   --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'Ubuntu Mono', ui-monospace, 'Cascadia Code', monospace;
+  --font-mono: 'Cascadia Code', ui-monospace, 'Cascadia Mono', monospace;
 
   /* Type sizes between Tailwind's steps, for a compact scale: 13px secondary
-     copy and 15px lead copy around the 14px body (see Typography.tsx). */
+     copy and 15px lead copy around the 14px body (see Typography.tsx).
+     Also registered with tailwind-merge in utils/cn.ts — keep them in sync. */
   --text-body-sm: 0.8125rem;
   --text-body-sm--line-height: 1.25rem;
   --text-body-lg: 0.9375rem;
@@ -58,6 +54,9 @@
   --color-accent-subtle: var(--gb-accent-subtle);
   --color-accent-border: var(--gb-accent-border);
 
+  --color-card: var(--gb-card);
+  --color-card-hover: var(--gb-card-hover);
+
   --color-info: var(--gb-info);
   --color-info-strong: var(--gb-info-strong);
   --color-info-subtle: var(--gb-info-subtle);
@@ -79,7 +78,7 @@
   --color-highlight-hover: var(--gb-highlight-hover);
   --color-highlight-ink: var(--gb-highlight-ink);
 
-  /* Always-dark brand ground — the one place lime may carry text. */
+  /* Inverted ground: ink with lime/white text (hero, code chips, terminal). */
   --color-feature: var(--gb-feature);
   --color-feature-hover: var(--gb-feature-hover);
   --color-feature-border: var(--gb-feature-border);
@@ -88,32 +87,36 @@
 
   --color-code-bg: var(--gb-code-bg);
   --color-code-text: var(--gb-code-text);
+  --color-code-muted: var(--gb-code-muted);
 
-  /* The four source colours, exposed so /design-system can show the palette
-     itself rather than only the semantic tokens derived from it. */
-  --color-palette-indigo: var(--gb-palette-indigo);
-  --color-palette-violet: var(--gb-palette-violet);
-  --color-palette-azure: var(--gb-palette-azure);
+  /* The two source colours, exposed so /design-system can show the palette. */
+  --color-palette-ink: var(--gb-palette-ink);
   --color-palette-lime: var(--gb-palette-lime);
-
 
   --color-terminal-bg: var(--gb-terminal-bg);
   --color-terminal-text: var(--gb-terminal-text);
   --color-terminal-prompt: var(--gb-terminal-prompt);
   --color-terminal-accent: var(--gb-terminal-accent);
 
-  /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  /* Radius — square corners are the look. `rounded-full` is kept only for
+     true circles (unread dot, numbered steps, progress ring). */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
 
-  /* Shadows (elevation) — tinted with the palette's indigo rather than a
-     neutral grey, so elevation sits in the same colour family as the UI. */
-  --shadow-xs: 0 1px 2px rgb(25 20 45 / 0.05);
-  --shadow-sm: 0 1px 3px rgb(25 20 45 / 0.08), 0 1px 2px rgb(25 20 45 / 0.05);
-  --shadow-md: 0 4px 12px rgb(25 20 45 / 0.1), 0 2px 4px rgb(25 20 45 / 0.06);
-  --shadow-lg: 0 12px 32px rgb(25 20 45 / 0.14), 0 4px 8px rgb(25 20 45 / 0.06);
+  /* Shadows — hard, unblurred ink offsets down-left. `brutal` is the card
+     shadow from the reference design; `-sm` is for controls; `-pressed` is
+     the hover/active state, paired with a translate toward the shadow so
+     the element reads as being pushed in. */
+  --shadow-brutal: -7.778px 7.778px 0 0 var(--gb-palette-ink);
+  --shadow-brutal-pressed: -3px 3px 0 0 var(--gb-palette-ink);
+  --shadow-brutal-sm: -3px 3px 0 0 var(--gb-palette-ink);
+  --shadow-brutal-sm-pressed: -1px 1px 0 0 var(--gb-palette-ink);
+  --shadow-xs: var(--shadow-brutal-sm);
+  --shadow-sm: var(--shadow-brutal-sm);
+  --shadow-md: var(--shadow-brutal);
+  --shadow-lg: var(--shadow-brutal);
 
   /* Motion easing */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
@@ -122,80 +125,69 @@
 }
 
 :root {
-  /* Source palette (Color Hunt 362f4f-5b23ff-008bff-e4ff30). Semantic tokens
-     reference these wherever a colour is used at full strength, and state
-     their own value where a theme needs a lighter or darker variant to stay
-     legible — which is why e.g. --gb-info is not literally the azure below. */
-  --gb-palette-indigo: #362f4f;
-  --gb-palette-violet: #5b23ff;
-  --gb-palette-azure: #008bff;
+  --gb-palette-ink: #1f2015;
   --gb-palette-lime: #e4ff30;
 
   --gb-bg: #ffffff;
-  --gb-bg-subtle: #f6f5fa;
+  --gb-bg-subtle: #f6f6ef;
   --gb-surface: #ffffff;
-  --gb-surface-hover: #f5f4f9;
-  --gb-border: #e7e4f0;
-  --gb-border-strong: #d2cee2;
+  --gb-surface-hover: #f6f6ef;
+  --gb-border: var(--gb-palette-ink);
+  --gb-border-strong: var(--gb-palette-ink);
 
-  --gb-text: #191426;
-  --gb-text-secondary: #55506b;
-  --gb-text-tertiary: #6d6885;
+  /* Secondary 8.4:1 and tertiary 5.6:1 on lime (9.5 / 6.3 on white). */
+  --gb-text: var(--gb-palette-ink);
+  --gb-text-secondary: #45473a;
+  --gb-text-tertiary: #5f6152;
   --gb-text-inverse: #ffffff;
 
-  /* #5b23ff at full strength; -strong darkens it for text on -subtle. */
-  --gb-accent: var(--gb-palette-violet);
-  --gb-accent-strong: #4a15d6;
-  --gb-accent-subtle: #f1ecff;
-  --gb-accent-border: #d6c8ff;
+  --gb-accent: var(--gb-palette-ink);
+  --gb-accent-strong: var(--gb-palette-ink);
+  --gb-accent-subtle: var(--gb-palette-lime);
+  --gb-accent-border: var(--gb-palette-ink);
 
-  /* `info` is the palette azure itself, in both themes — it's a fill/swatch
-     colour, so it never has to carry small text. `info-strong` is the
-     per-theme variant that does (Alert's body copy), because #008bff only
-     reaches ~3.3:1 on the light -subtle ground. Same split as
-     accent/accent-strong. */
-  --gb-info: var(--gb-palette-azure);
-  --gb-info-strong: #0069c7;
-  --gb-info-subtle: #e6f4ff;
-  --gb-info-border: #b3daff;
+  --gb-card: var(--gb-palette-lime);
+  --gb-card-hover: #d9f51f;
 
-  --gb-safe: #0f7a4f;
-  --gb-safe-subtle: #eaf8f1;
-  --gb-safe-border: #bfe9d5;
+  --gb-info: #1d4ed8;
+  --gb-info-strong: #1d4ed8;
+  --gb-info-subtle: #e0efff;
+  --gb-info-border: var(--gb-palette-ink);
 
-  --gb-caution: #8a5809;
-  --gb-caution-subtle: #fdf3e0;
-  --gb-caution-border: #f2ddab;
+  --gb-safe: #15803d;
+  --gb-safe-subtle: #d9f7e3;
+  --gb-safe-border: var(--gb-palette-ink);
 
-  --gb-danger: #c22b3a;
-  --gb-danger-subtle: #fdecee;
-  --gb-danger-border: #f3c3ca;
+  --gb-caution: #b45309;
+  --gb-caution-subtle: #fff1c2;
+  --gb-caution-border: var(--gb-palette-ink);
 
-  --gb-code-bg: #f4f2fa;
-  --gb-code-text: #2a2540;
+  --gb-danger: #b91c1c;
+  --gb-danger-subtle: #ffd6d6;
+  --gb-danger-border: var(--gb-palette-ink);
 
-  /* Lime is a fill, and its ink is the near-black indigo (~17:1) in both themes. */
   --gb-highlight: var(--gb-palette-lime);
-  --gb-highlight-hover: #d4f000;
-  --gb-highlight-ink: #14121f;
+  --gb-highlight-hover: #d9f51f;
+  --gb-highlight-ink: var(--gb-palette-ink);
 
-  --gb-feature: #14121f;
-  --gb-feature-hover: #221d33;
-  --gb-feature-border: #2b2540;
-  --gb-feature-text: #f2f0f8;
-  --gb-feature-text-secondary: #b9b3cf;
+  --gb-feature: var(--gb-palette-ink);
+  --gb-feature-hover: #2c2e1f;
+  --gb-feature-border: var(--gb-palette-ink);
+  --gb-feature-text: #ffffff;
+  --gb-feature-text-secondary: #d7d8c8;
 
-  /* Terminal is always dark, in both themes — defined once, never overridden. */
-  --gb-terminal-bg: #14121f;
-  --gb-terminal-text: #e8e6f2;
+  /* Code is an ink chip with light text, like the reference card's `git init`. */
+  --gb-code-bg: var(--gb-palette-ink);
+  --gb-code-text: #ffffff;
+  --gb-code-muted: #b9baa9;
+
+  --gb-terminal-bg: var(--gb-palette-ink);
+  --gb-terminal-text: #f4f5ea;
   --gb-terminal-prompt: var(--gb-palette-lime);
-  /* The prompt glyph is a single character, so it carries full-chroma lime
-     well. The human-translation line is a whole sentence, where that same
-     lime is tiring to read — this is the same hue held back to roughly half
-     saturation, so the two still read as one family. */
+  /* Same hue at about half saturation, for whole sentences of lime-ish text. */
   --gb-terminal-accent: #d3e28d;
 
-  /* Stacking order — not theme-dependent, kept here as the single source of truth */
+  /* Stacking order — kept here as the single source of truth */
   --z-header: 40;
   --z-dropdown: 50;
   --z-overlay: 60;
@@ -209,95 +201,4 @@
   --duration-slow: 360ms;
 
   color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --gb-bg: #14121f;
-    --gb-bg-subtle: #191627;
-    --gb-surface: #1e1a2e;
-    --gb-surface-hover: #262138;
-    --gb-border: var(--gb-palette-indigo);
-    --gb-border-strong: #493f6b;
-
-    --gb-text: #f2f0f8;
-    --gb-text-secondary: #aea8c4;
-    --gb-text-tertiary: #8f89a6;
-    --gb-text-inverse: #14121f;
-
-    --gb-accent: #a68bff;
-    --gb-accent-strong: #c0adff;
-    --gb-accent-subtle: #251b4a;
-    --gb-accent-border: #3f2f80;
-
-    --gb-info-strong: #4dabff;
-    --gb-info-subtle: #0d2b47;
-    --gb-info-border: #17507f;
-
-    --gb-safe: #4ad391;
-    --gb-safe-subtle: #102b1f;
-    --gb-safe-border: #1f4a34;
-
-    --gb-caution: #f0b23e;
-    --gb-caution-subtle: #2e2410;
-    --gb-caution-border: #55431a;
-
-    --gb-danger: #f26478;
-    --gb-danger-subtle: #341419;
-    --gb-danger-border: #5c2530;
-
-    --gb-code-bg: #1c182e;
-    --gb-code-text: #e5e2f0;
-
-    /* The page itself is #14121f here, so the feature ground lifts to a violet-tinted ink to stay distinct. */
-    --gb-feature: #211a40;
-    --gb-feature-hover: #2a2150;
-    --gb-feature-border: #3f2f80;
-
-    color-scheme: dark;
-  }
-}
-
-:root[data-theme='dark'] {
-  --gb-bg: #14121f;
-  --gb-bg-subtle: #191627;
-  --gb-surface: #1e1a2e;
-  --gb-surface-hover: #262138;
-  --gb-border: var(--gb-palette-indigo);
-  --gb-border-strong: #493f6b;
-
-  --gb-text: #f2f0f8;
-  --gb-text-secondary: #aea8c4;
-  --gb-text-tertiary: #8f89a6;
-  --gb-text-inverse: #14121f;
-
-  --gb-accent: #a68bff;
-  --gb-accent-strong: #c0adff;
-  --gb-accent-subtle: #251b4a;
-  --gb-accent-border: #3f2f80;
-
-  --gb-info-strong: #4dabff;
-  --gb-info-subtle: #0d2b47;
-  --gb-info-border: #17507f;
-
-  --gb-safe: #4ad391;
-  --gb-safe-subtle: #102b1f;
-  --gb-safe-border: #1f4a34;
-
-  --gb-caution: #f0b23e;
-  --gb-caution-subtle: #2e2410;
-  --gb-caution-border: #55431a;
-
-  --gb-danger: #f26478;
-  --gb-danger-subtle: #341419;
-  --gb-danger-border: #5c2530;
-
-  --gb-code-bg: #1c182e;
-  --gb-code-text: #e5e2f0;
-
-  --gb-feature: #211a40;
-  --gb-feature-hover: #2a2150;
-  --gb-feature-border: #3f2f80;
-
-  color-scheme: dark;
 }
