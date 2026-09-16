@@ -1,10 +1,11 @@
 import { useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { dailyContent } from '@/services/content'
 import { selectDailyItem } from '@/services/dailySelection'
 import { dailyTypeMeta as typeMeta } from './dailyTypeMeta'
 import { Heading, Text } from '@/components/ui/Typography'
 import { Badge } from '@/components/ui/Badge'
-import { Card } from '@/components/ui/Card'
+import { cardClassName } from '@/components/ui/Card'
 import { NotificationOptIn } from '@/components/NotificationOptIn'
 import { useUnreadDailyNotification } from '@/hooks/useUnreadDailyNotification'
 
@@ -53,7 +54,7 @@ export default function DailyPage() {
         {rest.map((item) => {
           const Icon = typeMeta[item.type].icon
           return (
-            <Card key={item.slug} className="flex gap-3">
+            <Link key={item.slug} to={`/daily/${item.slug}`} className={cardClassName(true, 'flex gap-3')}>
               <Icon className="mt-0.5 size-5 shrink-0 text-foreground-tertiary" aria-hidden="true" />
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2">
@@ -64,7 +65,7 @@ export default function DailyPage() {
                   {item.body}
                 </Text>
               </div>
-            </Card>
+            </Link>
           )
         })}
       </div>
