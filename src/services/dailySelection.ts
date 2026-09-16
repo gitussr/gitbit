@@ -42,3 +42,32 @@ export function selectDailyItem(items: DailyContentItem[], now: Date = new Date(
   if (rotation.length === 0) return undefined
   return rotation[utcDayNumber(now) % rotation.length]
 }
+
+/** Hour (UTC) the daily push goes out — must match the `crons` schedule in vercel.json. */
+export const DAILY_PUSH_UTC_HOUR = 9
+
+export interface SentDailyItem {
+  item: DailyContentItem
+  /** When that day's push was scheduled to go out. */
+  sentAt: Date
+}
+
+/**
+ * The bits already pushed on the most recent `count` days, newest first —
+ * today's is included only once its push time has passed. Derived from the
+ * same rotation as `selectDailyItem`, so the bell's list names exactly what
+ * the cron sent (one-off `message=` announcements aren't in it).
+ */
+export function recentSentDailyItems(items: DailyContentItem[], count: number, now: Date = new Date()): SentDailyItem[] {
+  const rotation = getDailyRotation(items)
+  if (rotation.length === 0) return []
+  const today = utcDayNumber(now)
+  const firstDay = now.getUTCHours() >= DAILY_PUSH_UTC_HOUR ? today : today - 1
+  return Array.from({ length: count }, (_, offset) => {
+    const day = firstDay - offset
+    return {
+      item: rotation[day % rotation.length],
+      sentAt: new Date(day * 86_400_000 + DAILY_PUSH_UTC_HOUR * 3_600_000),
+    }
+  })
+}

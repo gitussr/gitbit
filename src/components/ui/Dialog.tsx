@@ -31,12 +31,13 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
         if (event.target === ref.current) onClose()
       }}
       className={cn(
-        'm-auto w-full max-w-md rounded-xl border border-border bg-surface p-0 text-foreground shadow-lg',
+        // 97% rather than full width so the dialog never touches the screen edges on phones.
+        'm-auto max-h-[90dvh] w-[97%] max-w-md overflow-y-auto rounded-xl border border-border bg-surface p-0 text-foreground shadow-lg',
         'backdrop:bg-black/40 backdrop:backdrop-blur-sm',
         className,
       )}
     >
-      <div className="flex items-center justify-between border-b border-border px-5 py-4">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-surface border-border px-5 py-4">
         <h2 className="text-base font-semibold">{title}</h2>
         <IconButton icon={<X aria-hidden="true" />} label="Close" size="sm" onClick={onClose} />
       </div>

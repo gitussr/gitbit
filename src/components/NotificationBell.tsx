@@ -3,6 +3,7 @@ import { Bell, BellOff } from 'lucide-react'
 import { useNotificationPermission } from '@/hooks/useNotificationPermission'
 import { useUnreadDailyNotification } from '@/hooks/useUnreadDailyNotification'
 import { NotificationStatus } from '@/components/NotificationStatus'
+import { DailyNotificationList } from '@/components/DailyNotificationList'
 import { IconButton } from '@/components/ui/IconButton'
 import { Dialog } from '@/components/ui/Dialog'
 
@@ -27,6 +28,8 @@ export function NotificationBell() {
   const { state, supported, dismissed, dismiss } = permission
   const { unread, markRead } = useUnreadDailyNotification()
   const [open, setOpen] = useState(false)
+  // Snapshot of `unread` when the panel opens — opening it clears the dot, but the newest entry should still read as new.
+  const [openedWithUnread, setOpenedWithUnread] = useState(false)
   const autoPrompted = useRef(false)
 
   useEffect(() => {
@@ -44,6 +47,7 @@ export function NotificationBell() {
 
   /** Opening the panel is the acknowledgement — it clears the tray notification and the badge with it. */
   const openPanel = () => {
+    setOpenedWithUnread(unread)
     setOpen(true)
     void markRead()
   }
@@ -67,7 +71,12 @@ export function NotificationBell() {
         )}
       </span>
       <Dialog open={open} onClose={close} title="GitBit Daily notifications">
-        <NotificationStatus {...permission} />
+        <div className="flex flex-col gap-5">
+          <NotificationStatus {...permission} />
+          {state === 'granted' && (
+            <DailyNotificationList newestUnread={openedWithUnread} onNavigate={() => setOpen(false)} />
+          )}
+        </div>
       </Dialog>
     </>
   )
