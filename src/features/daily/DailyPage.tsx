@@ -36,7 +36,10 @@ export default function DailyPage() {
       <NotificationOptIn />
 
       {today && (
-        <div className="flex flex-col gap-3 rounded-xl border border-accent-border bg-accent-subtle p-6">
+        <Link
+          to={`/daily/${today.slug}`}
+          className={cardClassName(true, 'flex flex-col gap-3 rounded-xl border-accent-border bg-accent-subtle p-6')}
+        >
           <div className="flex items-center gap-2">
             <Text variant="caption" className="font-semibold tracking-wide text-accent-strong uppercase">
               Today's GitBit
@@ -47,7 +50,7 @@ export default function DailyPage() {
           <Text variant="body-lg" className="whitespace-pre-line text-foreground">
             {today.body}
           </Text>
-        </div>
+        </Link>
       )}
 
       <div className="flex flex-col gap-3">
