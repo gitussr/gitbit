@@ -16,6 +16,13 @@ function readDismissed() {
  */
 let permissionState: NotificationPermissionState = NotificationService.getPermissionState()
 let dismissedState = readDismissed()
+/**
+ * Whether the provider SDK has finished loading. Until then `state` is only
+ * the browser's raw permission, which reads 'default' even where init is
+ * about to fail and flip it to 'unavailable' — so nothing should act on
+ * 'default' (e.g. auto-open a prompt) before this is true.
+ */
+let readyState = false
 const listeners = new Set<() => void>()
 
 function emit() {
@@ -62,6 +69,7 @@ function subscribe(listener: () => void) {
 export function useNotificationPermission() {
   const state = useSyncExternalStore(subscribe, () => permissionState)
   const dismissed = useSyncExternalStore(subscribe, () => dismissedState)
+  const ready = useSyncExternalStore(subscribe, () => readyState)
   const [error, setError] = useState(false)
 
   useEffect(() => {
@@ -69,7 +77,12 @@ export function useNotificationPermission() {
     refreshPermission()
     NotificationService.initialize()
       .catch(() => {})
-      .then(refreshPermission)
+      .then(() => {
+        refreshPermission()
+        if (readyState) return
+        readyState = true
+        emit()
+      })
   }, [])
 
   const requestPermission = useCallback(async () => {
@@ -92,6 +105,7 @@ export function useNotificationPermission() {
     state,
     supported: state !== 'unsupported',
     dismissed,
+    ready,
     error,
     requestPermission,
     dismiss,

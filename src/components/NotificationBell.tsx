@@ -25,7 +25,7 @@ import { Dialog } from '@/components/ui/Dialog'
  */
 export function NotificationBell() {
   const permission = useNotificationPermission()
-  const { state, supported, dismissed, dismiss } = permission
+  const { state, supported, dismissed, ready, dismiss } = permission
   const { unread, markRead } = useUnreadDailyNotification()
   const [open, setOpen] = useState(false)
   // Snapshot of `unread` when the panel opens — opening it clears the dot, but the newest entry should still read as new.
@@ -33,10 +33,12 @@ export function NotificationBell() {
   const autoPrompted = useRef(false)
 
   useEffect(() => {
-    if (autoPrompted.current || dismissed || state !== 'default') return
+    // Wait for the SDK: before it loads, state reads 'default' even where it's about to become 'unavailable',
+    // which would greet the visitor with a "couldn't load" popup they can never dismiss for good.
+    if (autoPrompted.current || !ready || dismissed || state !== 'default') return
     autoPrompted.current = true
     setOpen(true)
-  }, [dismissed, state])
+  }, [dismissed, ready, state])
 
   if (!supported) return null
 
