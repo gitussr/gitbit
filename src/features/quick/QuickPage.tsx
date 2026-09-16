@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Terminal } from 'lucide-react'
 import { commands } from '@/services/content'
 import type { DangerLevel } from '@/content/types'
-import { Heading, Text } from '@/components/ui/Typography'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { SearchInput } from '@/components/ui/SearchInput'
 import { Tag } from '@/components/ui/Tag'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -30,13 +30,8 @@ export default function QuickPage() {
   }, [query, filter])
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <Heading level={1}>GitBit Quick</Heading>
-        <Text tone="secondary" className="mt-2">
-          Fast answers to "what command do I need?"
-        </Text>
-      </div>
+    <div className="flex flex-col gap-5">
+      <PageHeader title="GitBit Quick" description={'Fast answers to "what command do I need?"'} />
 
       <SearchInput
         value={query}
@@ -61,7 +56,7 @@ export default function QuickPage() {
           description="Try a different word, or clear the filter above."
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {results.map((command) => (
             <CommandCard key={command.slug} command={command} />
           ))}

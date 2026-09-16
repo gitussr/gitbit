@@ -4,10 +4,10 @@ import { cn } from '@/utils/cn'
 type HeadingLevel = 1 | 2 | 3 | 4
 
 const headingStyles: Record<HeadingLevel, string> = {
-  1: 'text-3xl md:text-4xl font-semibold tracking-tight',
-  2: 'text-2xl md:text-3xl font-semibold tracking-tight',
-  3: 'text-xl md:text-2xl font-semibold',
-  4: 'text-lg font-semibold',
+  1: 'text-2xl md:text-3xl font-bold tracking-tight',
+  2: 'text-xl md:text-2xl font-bold tracking-tight',
+  3: 'text-lg font-semibold tracking-tight',
+  4: 'text-base font-semibold',
 }
 
 export interface HeadingProps extends HTMLAttributes<HTMLHeadingElement> {
@@ -29,9 +29,9 @@ type TextVariant = 'body-lg' | 'body' | 'body-sm' | 'caption'
 type TextTone = 'primary' | 'secondary' | 'tertiary'
 
 const textStyles: Record<TextVariant, string> = {
-  'body-lg': 'text-base md:text-lg',
-  body: 'text-sm md:text-base',
-  'body-sm': 'text-sm',
+  'body-lg': 'text-body-lg',
+  body: 'text-sm leading-6',
+  'body-sm': 'text-body-sm',
   caption: 'text-xs',
 }
 

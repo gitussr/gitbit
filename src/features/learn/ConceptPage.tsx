@@ -15,9 +15,9 @@ import { CodeBlock } from '@/components/ui/CodeBlock'
 import { Pagination } from '@/components/ui/Pagination'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { CommandCard } from '@/components/cards'
-import { cardClassName } from '@/components/ui/Card'
+import { Card } from '@/components/ui/Card'
+import { ChipLink } from '@/components/ui/ChipLink'
 import { cn } from '@/utils/cn'
-import { Link } from 'react-router-dom'
 
 export default function ConceptPage() {
   const { levelSlug, conceptSlug } = useParams()
@@ -35,11 +35,11 @@ export default function ConceptPage() {
   const relatedCommands = getConceptRelatedCommands(concept)
 
   return (
-    <div className={cn('flex max-w-3xl flex-col gap-8', levelConcepts.length > 1 && 'pb-24')}>
+    <div className={cn('flex max-w-3xl flex-col gap-5', levelConcepts.length > 1 && 'pb-24')}>
       <Breadcrumbs items={[{ label: 'Learn', to: '/learn' }, { label: level.title, to: `/learn/${level.slug}` }, { label: concept.term }]} />
 
-      <div className="flex flex-col gap-3">
-        <Badge variant="accent" className="w-fit">
+      <div className="flex flex-col items-start gap-1.5">
+        <Badge variant="accent">
           {concept.category}
         </Badge>
         <Heading level={1}>{concept.term}</Heading>
@@ -48,16 +48,16 @@ export default function ConceptPage() {
         </Text>
       </div>
 
-      <div className="rounded-lg border border-accent-border bg-accent-subtle p-5">
-        <Text variant="caption" tone="tertiary" className="mb-1 uppercase tracking-wide">
+      <Card variant="accent" className="flex flex-col gap-1">
+        <Text variant="caption" className="font-bold tracking-wide text-accent-strong uppercase">
           Mental model
         </Text>
-        <Text variant="body-lg" className="font-medium text-accent-strong">
+        <Text variant="body-lg" className="font-semibold">
           {concept.mentalModel}
         </Text>
-      </div>
+      </Card>
 
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1">
         <Heading level={2} size={4}>
           The technical explanation
         </Heading>
@@ -66,9 +66,9 @@ export default function ConceptPage() {
 
       {concept.example && <CodeBlock code={concept.example} />}
 
-      <div className="grid gap-6 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2">
         {concept.whenToUse && (
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1">
             <Heading level={2} size={4}>
               When it matters
             </Heading>
@@ -76,7 +76,7 @@ export default function ConceptPage() {
           </div>
         )}
         {concept.whatHappens && (
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1">
             <Heading level={2} size={4}>
               What actually happens
             </Heading>
@@ -92,26 +92,26 @@ export default function ConceptPage() {
       )}
 
       {(relatedConcepts.length > 0 || relatedCommands.length > 0) && (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           <Heading level={2} size={4}>
             Related
           </Heading>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-2">
             {relatedConcepts.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {relatedConcepts.map((r) => {
                   const rLevel = getLevelForConcept(r.slug)
                   return (
-                    <Link key={r.slug} to={rLevel ? `/learn/${rLevel.slug}/${r.slug}` : '/learn'} className={cardClassName(true, 'px-3 py-1.5 text-sm')}>
+                    <ChipLink key={r.slug} to={rLevel ? `/learn/${rLevel.slug}/${r.slug}` : '/learn'}>
                       {r.term}
-                    </Link>
+                    </ChipLink>
                   )
                 })}
               </div>
             )}
           </div>
           {relatedCommands.length > 0 && (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2">
               {relatedCommands.map((c) => (
                 <CommandCard key={c.slug} command={c} />
               ))}

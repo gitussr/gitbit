@@ -28,7 +28,7 @@ export default function QuizQuestionPage() {
   const isCorrect = selected === quiz.correctIndex
 
   return (
-    <div className="flex max-w-2xl flex-col gap-6">
+    <div className="flex max-w-2xl flex-col gap-5">
       <Breadcrumbs items={[{ label: 'Quiz', to: '/quiz' }, { label: `Question ${index + 1}` }]} />
 
       <div className="flex flex-col gap-3">
@@ -59,7 +59,7 @@ export default function QuizQuestionPage() {
               disabled={answered}
               onClick={() => setSelected(choiceIndex)}
               className={cn(
-                'flex items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left text-sm font-medium transition-colors duration-150 ease-standard',
+                'flex items-center justify-between gap-3 rounded-lg border px-3.5 py-2.5 text-left text-sm font-semibold transition-colors duration-150 ease-standard',
                 'disabled:cursor-default',
                 !answered && 'border-border bg-surface hover:border-border-strong hover:bg-surface-hover',
                 showState && isRightAnswer && 'border-safe-border bg-safe-subtle text-safe',
@@ -83,7 +83,7 @@ export default function QuizQuestionPage() {
 
       {answered && (
         <Button
-          variant="secondary"
+          variant="primary"
           trailingIcon={<ArrowRight aria-hidden="true" />}
           onClick={() => {
             setSelected(null)

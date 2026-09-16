@@ -2,7 +2,7 @@ import type { HTMLAttributes } from 'react'
 import { cn } from '@/utils/cn'
 import type { DangerLevel } from '@/content/types'
 
-export type BadgeVariant = 'neutral' | 'accent' | 'safe' | 'caution' | 'danger'
+export type BadgeVariant = 'neutral' | 'accent' | 'highlight' | 'safe' | 'caution' | 'danger'
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant
@@ -11,6 +11,8 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 const variantStyles: Record<BadgeVariant, string> = {
   neutral: 'bg-background-subtle text-foreground-secondary border-border',
   accent: 'bg-accent-subtle text-accent-strong border-accent-border',
+  /** Lime fill with dark ink — reads on any ground. Sparingly: "new", "today". */
+  highlight: 'bg-highlight text-highlight-ink border-transparent',
   safe: 'bg-safe-subtle text-safe border-safe-border',
   caution: 'bg-caution-subtle text-caution border-caution-border',
   danger: 'bg-danger-subtle text-danger border-danger-border',
@@ -21,7 +23,7 @@ export function Badge({ className, variant = 'neutral', ...props }: BadgeProps) 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium',
+        'inline-flex items-center gap-1 rounded-full border px-2 py-px text-xs font-semibold whitespace-nowrap',
         variantStyles[variant],
         className,
       )}

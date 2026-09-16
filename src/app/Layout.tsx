@@ -4,7 +4,7 @@ import { Menu, Search, X } from 'lucide-react'
 import { GitBitLogo } from '@/components/GitBitLogo'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { NotificationBell } from '@/components/NotificationBell'
-import { IconButton } from '@/components/ui/IconButton'
+import { IconButton, iconButtonClassName } from '@/components/ui/IconButton'
 import { cn } from '@/utils/cn'
 
 const primaryNav = [
@@ -19,7 +19,7 @@ const primaryNav = [
 
 const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
   cn(
-    'inline-flex items-center rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors duration-150 ease-standard',
+    'inline-flex h-8 items-center rounded-md px-2.5 text-body-sm font-semibold transition-colors duration-150 ease-standard',
     isActive
       ? 'bg-accent-subtle text-accent-strong'
       : 'text-foreground-secondary hover:bg-surface-hover hover:text-foreground',
@@ -88,12 +88,12 @@ export function Layout() {
             </ul>
           </nav>
 
-          <div className="flex flex-1 shrink-0 items-center justify-end gap-2 md:flex-none">
+          <div className="flex flex-1 shrink-0 items-center justify-end gap-1 md:flex-none">
             <NavLink
               to="/search"
               aria-label="Search"
               title="Search"
-              className="inline-flex size-8 items-center justify-center rounded-md text-foreground-secondary transition-colors duration-150 ease-standard hover:bg-surface-hover hover:text-foreground"
+              className={iconButtonClassName('ghost', 'sm')}
             >
               <Search className="size-4" aria-hidden="true" />
             </NavLink>
@@ -107,7 +107,7 @@ export function Layout() {
             <ul className="flex flex-col gap-1">
               {primaryNav.map((item) => (
                 <li key={item.to}>
-                  <NavLink to={item.to} className={(state) => cn(navLinkClassName(state), 'block w-full px-3 py-2')}>
+                  <NavLink to={item.to} className={(state) => cn(navLinkClassName(state), 'flex h-10 w-full px-3 text-sm')}>
                     {item.label}
                   </NavLink>
                 </li>
@@ -120,7 +120,7 @@ export function Layout() {
       <main
         id="main-content"
         tabIndex={-1}
-        className="safe-bottom mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 focus:outline-none"
+        className="safe-bottom mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8 focus:outline-none"
       >
         <Outlet />
       </main>

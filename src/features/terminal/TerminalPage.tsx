@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { commands } from '@/services/content'
-import { Heading, Text } from '@/components/ui/Typography'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { SearchInput } from '@/components/ui/SearchInput'
 import { TerminalBlock } from '@/components/ui/TerminalBlock'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -15,13 +15,8 @@ export default function TerminalPage() {
   }, [query])
 
   return (
-    <div className="flex max-w-2xl flex-col gap-6">
-      <div>
-        <Heading level={1}>GitBit Terminal</Heading>
-        <Text tone="secondary" className="mt-2">
-          A terminal-inspired way to see what a command actually does — for learning, not replacing your real terminal.
-        </Text>
-      </div>
+    <div className="flex max-w-2xl flex-col gap-5">
+      <PageHeader title="GitBit Terminal" description={'A terminal-inspired way to see what a command actually does — for learning, not replacing your real terminal.'} />
 
       <SearchInput
         value={query}
@@ -33,7 +28,7 @@ export default function TerminalPage() {
       {results.length === 0 ? (
         <EmptyState title="No matching commands" description="Try a different word." />
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
           {results.map((command) => (
             <TerminalBlock
               key={command.slug}

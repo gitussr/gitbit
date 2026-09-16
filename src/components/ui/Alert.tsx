@@ -18,10 +18,10 @@ const variantStyles: Record<AlertVariant, string> = {
 }
 
 const variantIcons: Record<AlertVariant, ReactNode> = {
-  info: <Info className="size-4.5" aria-hidden="true" />,
-  success: <CheckCircle2 className="size-4.5" aria-hidden="true" />,
-  warning: <AlertTriangle className="size-4.5" aria-hidden="true" />,
-  danger: <OctagonAlert className="size-4.5" aria-hidden="true" />,
+  info: <Info className="size-4" aria-hidden="true" />,
+  success: <CheckCircle2 className="size-4" aria-hidden="true" />,
+  warning: <AlertTriangle className="size-4" aria-hidden="true" />,
+  danger: <OctagonAlert className="size-4" aria-hidden="true" />,
 }
 
 /** Calm, non-alarming status messaging (Section 32) — never fear-based language in `children`. */
@@ -29,13 +29,13 @@ export function Alert({ className, variant = 'info', title, icon, children, ...p
   return (
     <div
       role={variant === 'danger' ? 'alert' : 'status'}
-      className={cn('flex gap-3 rounded-lg border p-4', variantStyles[variant], className)}
+      className={cn('flex gap-2.5 rounded-lg border px-3.5 py-3', variantStyles[variant], className)}
       {...props}
     >
       <div className="mt-0.5 shrink-0">{icon ?? variantIcons[variant]}</div>
       <div className="flex flex-col gap-1 text-foreground">
         {title && <p className="text-sm font-semibold">{title}</p>}
-        <div className="text-sm text-foreground-secondary">{children}</div>
+        <div className="text-body-sm text-foreground-secondary">{children}</div>
       </div>
     </div>
   )

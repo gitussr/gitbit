@@ -20,7 +20,7 @@ export function CodeBlock({ code, label, className }: CodeBlockProps) {
         </div>
       )}
       <div className="group relative">
-        <pre className="overflow-x-auto p-4 font-mono text-sm text-code-text">
+        <pre className="overflow-x-auto p-3 font-mono text-sm text-code-text">
           <code>{code}</code>
         </pre>
         <button

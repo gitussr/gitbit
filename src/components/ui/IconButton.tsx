@@ -1,42 +1,51 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { cn } from '@/utils/cn'
-import type { ButtonVariant, ButtonSize } from './Button'
+import type { ButtonSize } from './Button'
+
+export type IconButtonVariant = 'secondary' | 'ghost'
 
 export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon: ReactNode
   label: string
-  variant?: Extract<ButtonVariant, 'secondary' | 'ghost'>
+  variant?: IconButtonVariant
   size?: ButtonSize
 }
 
-const variantStyles = {
-  secondary: 'bg-surface text-foreground border border-border hover:bg-surface-hover',
+const variantStyles: Record<IconButtonVariant, string> = {
+  secondary: 'border border-border bg-surface text-foreground hover:border-border-strong hover:bg-surface-hover',
   ghost: 'text-foreground-secondary hover:bg-surface-hover hover:text-foreground',
 }
 
+/** Same heights and radius as `Button`, so an icon button sits flush beside a text one. */
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: 'size-8 rounded-md [&_svg]:size-4',
-  md: 'size-10 rounded-md [&_svg]:size-4.5',
-  lg: 'size-12 rounded-lg [&_svg]:size-5',
+  sm: 'size-8 [&_svg]:size-4',
+  md: 'size-9 [&_svg]:size-4',
+  lg: 'size-10 [&_svg]:size-4.5',
+}
+
+/** Also used by icon-only links (e.g. the header's search link) so they match the buttons beside them. */
+export function iconButtonClassName(variant: IconButtonVariant = 'ghost', size: ButtonSize = 'md', className?: string) {
+  return cn(
+    'inline-flex shrink-0 items-center justify-center rounded-md transition-colors duration-200 ease-standard',
+    'disabled:pointer-events-none disabled:opacity-45',
+    variantStyles[variant],
+    sizeStyles[size],
+    className,
+  )
 }
 
 /** A square, icon-only button. Always requires an accessible `label`. */
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
-  { className, icon, label, variant = 'ghost', size = 'md', ...props },
+  { className, icon, label, variant, size, type = 'button', ...props },
   ref,
 ) {
   return (
     <button
       ref={ref}
+      type={type}
       aria-label={label}
       title={label}
-      className={cn(
-        'inline-flex items-center justify-center transition-colors duration-200 ease-standard',
-        'disabled:pointer-events-none disabled:opacity-45',
-        variantStyles[variant],
-        sizeStyles[size],
-        className,
-      )}
+      className={iconButtonClassName(variant, size, className)}
       {...props}
     >
       {icon}

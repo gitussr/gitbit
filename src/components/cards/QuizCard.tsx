@@ -13,14 +13,14 @@ const difficultyLabel: Record<QuizQuestion['difficulty'], string> = {
 
 export function QuizCard({ quiz }: { quiz: QuizQuestion }) {
   return (
-    <Link to={`/quiz/${quiz.slug}`} className={cardClassName(true, 'flex flex-col gap-3')}>
-      <div className="flex items-start justify-between gap-2">
-        <HelpCircle className="size-5 text-accent" aria-hidden="true" />
+    <Link to={`/quiz/${quiz.slug}`} className={cardClassName(true, 'flex gap-3')}>
+      <HelpCircle className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden="true" />
+      <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5">
+        <Text as="p" className="line-clamp-3 font-semibold">
+          {quiz.prompt}
+        </Text>
         <Badge variant="neutral">{difficultyLabel[quiz.difficulty]}</Badge>
       </div>
-      <Text variant="body" className="line-clamp-3 font-medium">
-        {quiz.prompt}
-      </Text>
     </Link>
   )
 }

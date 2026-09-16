@@ -17,7 +17,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(functi
   return (
     <div
       className={cn(
-        'flex h-11 items-center gap-2 rounded-lg border border-border bg-surface px-3',
+        'flex h-10 items-center gap-2 rounded-md border border-border bg-surface px-3',
         'transition-colors duration-150 ease-standard focus-within:border-accent-border',
         className,
       )}

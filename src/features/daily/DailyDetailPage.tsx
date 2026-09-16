@@ -1,15 +1,16 @@
 import { useEffect } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowRight } from 'lucide-react'
+import { useParams } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { commands, getConceptBySlug, getDailyBySlug, getLevelForConcept } from '@/services/content'
 import { dailyTypeMeta } from './dailyTypeMeta'
 import { useUnreadDailyNotification } from '@/hooks/useUnreadDailyNotification'
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
 import { Heading, Text } from '@/components/ui/Typography'
 import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
+import { ButtonLink } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { ChipLink } from '@/components/ui/ChipLink'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { cardClassName } from '@/components/ui/Card'
 
 /**
  * A single GitBit Daily bit — where a tapped push notification and an entry
@@ -18,7 +19,6 @@ import { cardClassName } from '@/components/ui/Card'
  */
 export default function DailyDetailPage() {
   const { slug } = useParams()
-  const navigate = useNavigate()
   const item = slug ? getDailyBySlug(slug) : undefined
   const { markRead } = useUnreadDailyNotification()
 
@@ -38,47 +38,48 @@ export default function DailyDetailPage() {
     .filter((c) => c !== undefined)
 
   return (
-    <div className="flex max-w-2xl flex-col gap-8">
+    <div className="flex max-w-2xl flex-col gap-5">
       <Breadcrumbs items={[{ label: 'Daily', to: '/daily' }, { label: item.title }]} />
 
-      <div className="flex flex-col gap-4 rounded-xl border border-accent-border bg-accent-subtle p-8">
+      <Card variant="accent" className="flex flex-col gap-2.5 p-5">
         <div className="flex items-center gap-2">
-          <Icon className="size-5 text-accent-strong" aria-hidden="true" />
+          <Icon className="size-4 text-accent-strong" aria-hidden="true" />
           <Badge variant="accent">{label}</Badge>
         </div>
-        <Heading level={1} size={2} className="leading-snug">
+        <Heading level={1} size={2}>
           {item.title}
         </Heading>
-        <Text variant="body-lg" className="whitespace-pre-line text-foreground">
+        <Text variant="body-lg" className="whitespace-pre-line">
           {item.body}
         </Text>
-      </div>
+      </Card>
 
       {(relatedConcepts.length > 0 || relatedCommands.length > 0) && (
-        <div className="flex flex-wrap gap-2">
-          {relatedConcepts.map((concept) => {
-            const level = getLevelForConcept(concept.slug)
-            return (
-              <Link
-                key={concept.slug}
-                to={level ? `/learn/${level.slug}/${concept.slug}` : '/learn'}
-                className={cardClassName(true, 'px-3 py-1.5 text-sm')}
-              >
-                {concept.term}
-              </Link>
-            )
-          })}
-          {relatedCommands.map((command) => (
-            <Link key={command.slug} to={`/quick/${command.slug}`} className={cardClassName(true, 'px-3 py-1.5 font-mono text-sm')}>
-              {command.command}
-            </Link>
-          ))}
+        <div className="flex flex-col gap-2">
+          <Heading level={2} size={4}>
+            Related
+          </Heading>
+          <div className="flex flex-wrap gap-2">
+            {relatedConcepts.map((concept) => {
+              const level = getLevelForConcept(concept.slug)
+              return (
+                <ChipLink key={concept.slug} to={level ? `/learn/${level.slug}/${concept.slug}` : '/learn'}>
+                  {concept.term}
+                </ChipLink>
+              )
+            })}
+            {relatedCommands.map((command) => (
+              <ChipLink key={command.slug} to={`/quick/${command.slug}`} code>
+                {command.command}
+              </ChipLink>
+            ))}
+          </div>
         </div>
       )}
 
-      <Button variant="secondary" trailingIcon={<ArrowRight aria-hidden="true" />} onClick={() => navigate('/daily')} className="self-start">
+      <ButtonLink to="/daily" variant="secondary" leadingIcon={<ArrowLeft aria-hidden="true" />} className="self-start">
         All GitBit Daily
-      </Button>
+      </ButtonLink>
     </div>
   )
 }

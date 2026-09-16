@@ -180,6 +180,7 @@ export default function DesignSystemPage() {
           <Button variant="secondary">Secondary</Button>
           <Button variant="ghost">Ghost</Button>
           <Button variant="danger">Danger</Button>
+          <Button variant="highlight">Highlight</Button>
           <Button variant="primary" disabled>
             Disabled
           </Button>
@@ -188,12 +189,17 @@ export default function DesignSystemPage() {
           </Button>
           <IconButton icon={<TerminalIcon aria-hidden="true" />} label="Open terminal" variant="secondary" />
         </div>
+        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg bg-feature p-4">
+          <Button variant="highlight">Highlight on feature</Button>
+          <Button variant="inverse">Inverse on feature</Button>
+        </div>
       </Section>
 
       <Section title="Badges, tags &amp; danger levels">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="neutral">core-concept</Badge>
           <Badge variant="accent">everyday</Badge>
+          <Badge variant="highlight">Today</Badge>
           <DangerBadge level="safe" />
           <DangerBadge level="caution" />
           <DangerBadge level="high-caution" />

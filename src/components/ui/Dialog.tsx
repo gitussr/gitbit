@@ -37,11 +37,11 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
         className,
       )}
     >
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-surface border-border px-5 py-4">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-surface border-border px-4 py-3">
         <h2 className="text-base font-semibold">{title}</h2>
         <IconButton icon={<X aria-hidden="true" />} label="Close" size="sm" onClick={onClose} />
       </div>
-      <div className="p-5">{children}</div>
+      <div className="p-4">{children}</div>
     </dialog>
   )
 }

@@ -86,7 +86,7 @@ export function NotificationStatus({
   }
 
   return (
-    <div className="relative flex flex-col gap-3 rounded-xl border border-accent-border bg-accent-subtle p-6">
+    <div className="relative flex flex-col gap-2.5 rounded-lg border border-accent-border bg-accent-subtle p-4">
       <IconButton
         icon={<X aria-hidden="true" />}
         label="Dismiss"

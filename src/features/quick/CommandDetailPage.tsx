@@ -19,11 +19,11 @@ export default function CommandDetailPage() {
   const related = getRelatedCommands(command)
 
   return (
-    <div className="flex max-w-3xl flex-col gap-8">
+    <div className="flex max-w-3xl flex-col gap-5">
       <Breadcrumbs items={[{ label: 'Quick', to: '/quick' }, { label: command.command }]} />
 
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col gap-1.5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <Heading level={1} size={2} className="font-mono">
             {command.command}
           </Heading>
@@ -38,21 +38,21 @@ export default function CommandDetailPage() {
 
       <CommandBlock command={command.example} anatomy={command.anatomy} />
 
-      <div className="grid gap-6 sm:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="flex flex-col gap-1">
           <Heading level={2} size={4}>
             When to use it
           </Heading>
           <Text tone="secondary">{command.whenToUse}</Text>
         </div>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1">
           <Heading level={2} size={4}>
             Mental model
           </Heading>
           <Text tone="secondary">{command.mentalModel}</Text>
         </div>
         {command.whatHappens && (
-          <div className="flex flex-col gap-1.5 sm:col-span-2">
+          <div className="flex flex-col gap-1 sm:col-span-2">
             <Heading level={2} size={4}>
               What actually happens
             </Heading>
@@ -68,11 +68,11 @@ export default function CommandDetailPage() {
       )}
 
       {related.length > 0 && (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           <Heading level={2} size={4}>
             Related commands
           </Heading>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             {related.map((r) => (
               <CommandCard key={r.slug} command={r} />
             ))}

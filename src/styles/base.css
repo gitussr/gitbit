@@ -37,8 +37,15 @@ video {
 }
 
 ::selection {
-  background: var(--color-accent-subtle);
-  color: var(--color-accent-strong);
+  background: var(--color-highlight);
+  color: var(--color-highlight-ink);
+}
+
+mark {
+  background: var(--color-highlight);
+  color: var(--color-highlight-ink);
+  border-radius: var(--radius-sm);
+  padding-inline: 0.2em;
 }
 
 /* Focus states — always visible, never suppressed (Section 24) */
@@ -73,14 +80,20 @@ video {
    purple accent so it reads as "on-brand" rather than a neutral texture.
    Static: no animation. */
 @utility bg-grid {
+  /* A fallback rather than a declaration here, so bg-grid-feature wins regardless of utility order. */
   background-image:
-    linear-gradient(to right, var(--color-accent-border) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--color-accent-border) 1px, transparent 1px);
-  background-size: 40px 40px;
+    linear-gradient(to right, var(--grid-line, var(--color-accent-border)) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line, var(--color-accent-border)) 1px, transparent 1px);
+  background-size: 32px 32px;
   background-position: center top;
   -webkit-mask-image: linear-gradient(to bottom, black, transparent 70%);
   mask-image: linear-gradient(to bottom, black, transparent 70%);
   opacity: 0.6;
+}
+
+/* The same grid on the always-dark feature ground, where the light accent line would glare. */
+@utility bg-grid-feature {
+  --grid-line: var(--color-feature-border);
 }
 
 /* Frosted glass — pagination, floating controls, overlays (Section 16).

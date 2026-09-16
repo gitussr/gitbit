@@ -15,9 +15,9 @@ radius, or shadow value in a component — extend `tokens.css` instead.
 | Category   | Where |
 |------------|-------|
 | Color      | Semantic tokens: `background`, `background-subtle`, `surface`, `surface-hover`, `border`, `border-strong`, `foreground` (+`-secondary`/`-tertiary`/`-inverse`), `accent` (+`-strong`/`-subtle`/`-border`), `info` (+`-strong`/`-subtle`/`-border`), `safe`/`caution`/`danger` (+`-subtle`/`-border` each), `code-bg`/`code-text`, `brand`/`brand-mark` (fixed in both themes), `terminal-bg`/`terminal-text`/`terminal-prompt`/`terminal-accent`. |
-| Typography | `--font-sans` (Manrope), `--font-mono` (Ubuntu Mono). Type scale lives in `components/ui/Typography.tsx` (`Heading` levels 1-4, `Text` variants `body-lg`/`body`/`body-sm`/`caption`) — never set a raw `text-*` size on a heading/paragraph outside that file. `Heading`'s `level` prop picks the semantic tag (h1-h4) and must stay sequential in a page's reading order; its `size` prop picks the visual size when it needs to differ (e.g. a real h2 subsection that should look smaller) — never fake a size by adding a conflicting `text-*` className, since Tailwind's responsive variants (`md:text-*`) won't get cancelled that way. Card/grid item titles reused at different depths (e.g. `CommandCard`) are rendered `as="p"` — not a heading at all — since they can't have one correct semantic level across every page that embeds them. |
+| Typography | `--font-sans` (Manrope), `--font-mono` (Ubuntu Mono). Type scale lives in `components/ui/Typography.tsx` (`Heading` levels 1-4, `Text` variants `body-lg`/`body`/`body-sm`/`caption`). The scale is deliberately compact: body is 14px, `body-sm` 13px and `body-lg` 15px (`--text-body-sm`/`--text-body-lg` in `tokens.css`), h1 tops out at 30px. Every page title goes through `PageHeader` — never set a raw `text-*` size on a heading/paragraph outside that file. `Heading`'s `level` prop picks the semantic tag (h1-h4) and must stay sequential in a page's reading order; its `size` prop picks the visual size when it needs to differ (e.g. a real h2 subsection that should look smaller) — never fake a size by adding a conflicting `text-*` className, since Tailwind's responsive variants (`md:text-*`) won't get cancelled that way. Card/grid item titles reused at different depths (e.g. `CommandCard`) are rendered `as="p"` — not a heading at all — since they can't have one correct semantic level across every page that embeds them. |
 | Spacing    | Tailwind's default spacing scale (0.25rem increments) is used as-is — it's already a centralized token system; no need to reinvent one. |
-| Radius     | `--radius-sm/md/lg/xl` → `rounded-sm/md/lg/xl`. |
+| Radius     | `--radius-sm/md/lg/xl` (6/8/12/16px) → `rounded-sm/md/lg/xl`. Buttons, inputs and icon chips are `md`; cards and alerts `lg`; dialogs `xl`; badges, tags and chip links are pills. |
 | Shadow     | `--shadow-xs/sm/md/lg` → `shadow-xs/sm/md/lg` (elevation). |
 | Motion     | Duration by convention: `duration-150` (micro, e.g. tag/tab hover), `duration-200` (default — most transitions), `duration-300` (larger surfaces — dialogs, progress). Easing: `--ease-standard`, `--ease-out-soft`, `--ease-in-soft` → `ease-standard` etc. |
 | Z-index    | Semantic, not numeric: `--z-header/dropdown/overlay/modal/toast/tooltip`, applied via the `z-header`/`z-dropdown`/… utilities defined in `styles/base.css`. |
@@ -34,7 +34,7 @@ one job:
 | `#5b23ff` violet | `accent` — brand: buttons, links, focus ring, `.bg-grid`, selection |
 | `#008bff` azure  | `info` — informational messaging (`Alert variant="info"`), deliberately separate from the brand accent so "this is GitBit" and "this is a note" don't look identical. `info` is the raw azure in both themes (a fill, never small text); `info-strong` is the per-theme variant that carries text, since #008bff reaches only ~3.3:1 on the light `-subtle` ground. |
 | `#362f4f` indigo | the dark theme's whole neutral ramp (bg/surface/border are tints and shades of it), used at full strength as its `border` |
-| `#e4ff30` lime   | `brand-mark` (the logo glyph) and `terminal-prompt` — a high-energy accent that only reads well on a dark ground, so it's used only where the ground is always dark, and only for a glyph or a single character. `terminal-accent` is the same hue at about half saturation, for running text (the terminal's human-translation line). |
+| `#e4ff30` lime   | `highlight` — the brand's energy, used sparingly. Lime is ~1.1:1 against white, so it is **never text on a light ground**. It appears in exactly two forms: as a **fill carrying dark ink** (`bg-highlight text-highlight-ink` — the `highlight` Button and Badge, `::selection`, `<mark>`), or as **text/glyphs on the always-dark `feature` ground** (the home hero, today's GitBit, the featured Aha, `brand-mark`, `terminal-prompt`). Budget: one `highlight` button per view, one `feature` card per view. `terminal-accent` is the same hue at about half saturation, for running text. |
 
 Each colour appears at full strength where contrast allows, and the
 `-strong` variant carries the cases where it can't: `--gb-accent` is
@@ -99,7 +99,7 @@ to read `theme` / `resolvedTheme` or call `setTheme()`.
 
 ## Components (`src/components/ui`)
 
-Button, IconButton, Badge (+`DangerBadge` for `DangerLevel`), Tag, Card,
+Button/ButtonLink, IconButton, Badge (+`DangerBadge` for `DangerLevel`), Tag, Card, PageHeader, ChipLink,
 Input, SearchInput, CodeBlock, CommandBlock (Git commands, with optional
 anatomy breakdown per Section 29), TerminalBlock (always-dark simulated
 terminal, Section 4), Alert, Tooltip, Tabs/TabPanel, Breadcrumbs,
@@ -110,7 +110,30 @@ ErrorState, Typography (`Heading`/`Text`).
 Content-bound cards (`src/components/cards`) compose those primitives
 against the typed content shapes in `src/content/types.ts`: `CommandCard`,
 `LessonCard`, `AhaTile` (named to avoid colliding with the `AhaCard`
-content type), `QuizCard`, `SosCard`.
+content type), `QuizCard`, `SosCard`, `ModuleCard`.
+
+### Buttons
+
+`Button` (actions) and `ButtonLink` (navigation — a real `<a>`) share
+`buttonClassName`, so they are identical visually. Never wrap a `Button`
+in a `Link`, and never navigate from a Button's `onClick` when a
+`ButtonLink` would do. Heights are 32/36/40px (`sm`/`md`/`lg`), all
+`rounded-md`, all semibold; `IconButton` uses the same heights so the two
+sit flush. Variants: `primary` (violet, the default action), `secondary`,
+`ghost`, `danger`, `highlight` (lime, the one headline action in a view)
+and `inverse` (secondary action on the `feature` ground). Icon-only links
+use `iconButtonClassName`.
+
+### Cards
+
+`Card`/`cardClassName` default to `p-4`, `rounded-lg`, and include
+`min-w-0` so a truncated line inside a grid item can't widen the page.
+Variants: `default`, `accent` (violet-tinted — Aha, mental models) and
+`feature` (always dark — see the lime rule). Content cards lead with the
+title in body-size semibold and clamp supporting copy to two lines. Other
+primitives added for consistency: `PageHeader` (every page title),
+`ChipLink` (related concept/command pills), and `ModuleCard` (home
+module entry points).
 
 **Rule:** if a screen needs UI that isn't here, add it to
 `components/ui` (or compose existing primitives in `components/cards`)

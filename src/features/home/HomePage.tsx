@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
 import { Terminal, BookOpen, Lightbulb, HelpCircle, LifeBuoy, TerminalSquare, Bell, ArrowRight } from 'lucide-react'
 import { Heading, Text } from '@/components/ui/Typography'
-import { Button } from '@/components/ui/Button'
+import { ButtonLink } from '@/components/ui/Button'
 import { cardClassName } from '@/components/ui/Card'
+import { ModuleCard } from '@/components/cards'
 import { ahaCards } from '@/services/content'
 
 const modules = [
@@ -19,62 +20,64 @@ export default function HomePage() {
   const featuredAha = ahaCards[0]
 
   return (
-    <div className="flex flex-col gap-16">
-      <section className="relative left-1/2 right-1/2 -mx-[50vw] w-screen overflow-hidden bg-accent-subtle px-4 py-16 text-center sm:px-6 sm:py-20">
-        <div className="bg-grid absolute inset-0" aria-hidden="true" />
-        <div className="relative flex flex-col items-center gap-6">
-          <Text variant="caption" className="font-mono tracking-wide text-accent uppercase">
+    <div className="flex flex-col gap-8">
+      {/* Full-bleed and always dark: the hero is the one place lime carries text, echoing the logo's lime-on-violet mark. */}
+      <section className="relative left-1/2 right-1/2 -mx-[50vw] -mt-6 w-screen overflow-hidden bg-feature px-4 py-10 text-center text-feature-text sm:-mt-8 sm:px-6 sm:py-14">
+        <div className="bg-grid bg-grid-feature absolute inset-0" aria-hidden="true" />
+        <div className="relative mx-auto flex max-w-2xl flex-col items-center gap-4">
+          <Text variant="caption" className="font-mono font-bold tracking-widest text-highlight uppercase">
             Git, one bit at a time.
           </Text>
-          <Heading level={1} className="max-w-2xl text-4xl md:text-5xl">
-            Finally understand what Git is doing.
+          <Heading level={1} className="text-3xl text-feature-text md:text-4xl">
+            Finally understand what <span className="text-highlight">Git</span> is doing.
           </Heading>
-          <Text variant="body-lg" tone="secondary" className="max-w-xl">
+          <Text variant="body-lg" className="max-w-xl text-feature-text-secondary">
             GitBit bridges Git terminology, plain English, and real mental models — so commands stop being magic
             incantations and start making sense.
           </Text>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link to="/learn">
-              <Button size="lg">Start learning</Button>
-            </Link>
-            <Link to="/quick">
-              <Button size="lg" variant="secondary">
-                Browse commands
-              </Button>
-            </Link>
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-2.5">
+            <ButtonLink to="/learn" variant="highlight" size="lg" trailingIcon={<ArrowRight aria-hidden="true" />}>
+              Start learning
+            </ButtonLink>
+            <ButtonLink to="/quick" variant="inverse" size="lg">
+              Browse commands
+            </ButtonLink>
           </div>
         </div>
       </section>
 
-      <section className="flex flex-col gap-6">
-        <Heading level={2}>Everything GitBit</Heading>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="flex flex-col gap-3">
+        <Heading level={2} size={3}>
+          Everything GitBit
+        </Heading>
+        <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
           {modules.map((mod) => (
-            <Link key={mod.to} to={mod.to} className={cardClassName(true, 'flex flex-col gap-3')}>
-              <mod.icon className="size-6 text-accent" aria-hidden="true" />
-              <Heading level={4} as="p">
-                {mod.title}
-              </Heading>
-              <Text variant="body-sm" tone="secondary">
-                {mod.description}
-              </Text>
-            </Link>
+            <ModuleCard key={mod.to} {...mod} />
           ))}
         </div>
       </section>
 
       {featuredAha && (
-        <section className="flex flex-col items-center gap-4 rounded-xl border border-accent-border bg-accent-subtle p-8 text-center">
-          <Lightbulb className="size-7 text-accent-strong" aria-hidden="true" />
-          <Text variant="body-lg" className="max-w-lg text-xl font-semibold text-foreground">
-            {featuredAha.statement}
-          </Text>
-          <Link to={`/aha/${featuredAha.slug}`}>
-            <Button variant="ghost" trailingIcon={<ArrowRight aria-hidden="true" />}>
-              See why
-            </Button>
-          </Link>
-        </section>
+        <Link
+          to={`/aha/${featuredAha.slug}`}
+          className={cardClassName(true, 'group flex items-center gap-4 p-5 sm:p-6', 'feature')}
+        >
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-highlight text-highlight-ink">
+            <Lightbulb className="size-5" aria-hidden="true" />
+          </span>
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <Text as="span" variant="caption" className="font-bold tracking-widest text-highlight uppercase">
+              Aha of the moment
+            </Text>
+            <Text as="span" variant="body-lg" className="font-semibold text-feature-text">
+              {featuredAha.statement}
+            </Text>
+          </span>
+          <ArrowRight
+            className="size-4 shrink-0 text-feature-text-secondary transition-transform duration-200 ease-standard group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
+        </Link>
       )}
     </div>
   )

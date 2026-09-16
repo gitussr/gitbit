@@ -16,8 +16,11 @@
  *   #008bff azure   -> info (informational messaging, distinct from brand)
  *   #362f4f indigo  -> the dark theme's neutral ramp, and its border at
  *                      full strength
- *   #e4ff30 lime    -> terminal prompt and the app icon glyph, where a
- *                      high-energy accent reads well on a dark ground
+ *   #e4ff30 lime    -> highlight: never text on a light ground (~1.1:1).
+ *                      Only as a fill carrying dark ink (highlight/-ink),
+ *                      or as text/glyphs on the always-dark `feature`
+ *                      ground — the hero, today's bit, featured Aha, the
+ *                      terminal prompt and the logo glyph.
  *
  * safe/caution/danger deliberately keep their conventional green/amber/red
  * hues: those are semantic signals, not brand colour, and recolouring them
@@ -29,6 +32,13 @@
   /* Typography */
   --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'Ubuntu Mono', ui-monospace, 'Cascadia Code', monospace;
+
+  /* Type sizes between Tailwind's steps, for a compact scale: 13px secondary
+     copy and 15px lead copy around the 14px body (see Typography.tsx). */
+  --text-body-sm: 0.8125rem;
+  --text-body-sm--line-height: 1.25rem;
+  --text-body-lg: 0.9375rem;
+  --text-body-lg--line-height: 1.5rem;
 
   /* Semantic color tokens -> CSS variables defined below */
   --color-background: var(--gb-bg);
@@ -65,6 +75,17 @@
   --color-danger-subtle: var(--gb-danger-subtle);
   --color-danger-border: var(--gb-danger-border);
 
+  --color-highlight: var(--gb-highlight);
+  --color-highlight-hover: var(--gb-highlight-hover);
+  --color-highlight-ink: var(--gb-highlight-ink);
+
+  /* Always-dark brand ground — the one place lime may carry text. */
+  --color-feature: var(--gb-feature);
+  --color-feature-hover: var(--gb-feature-hover);
+  --color-feature-border: var(--gb-feature-border);
+  --color-feature-text: var(--gb-feature-text);
+  --color-feature-text-secondary: var(--gb-feature-text-secondary);
+
   --color-code-bg: var(--gb-code-bg);
   --color-code-text: var(--gb-code-text);
 
@@ -85,9 +106,9 @@
 
   /* Radius */
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 22px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
 
   /* Shadows (elevation) — tinted with the palette's indigo rather than a
      neutral grey, so elevation sits in the same colour family as the UI. */
@@ -154,6 +175,17 @@
 
   --gb-code-bg: #f4f2fa;
   --gb-code-text: #2a2540;
+
+  /* Lime is a fill, and its ink is the near-black indigo (~17:1) in both themes. */
+  --gb-highlight: var(--gb-palette-lime);
+  --gb-highlight-hover: #d4f000;
+  --gb-highlight-ink: #14121f;
+
+  --gb-feature: #14121f;
+  --gb-feature-hover: #221d33;
+  --gb-feature-border: #2b2540;
+  --gb-feature-text: #f2f0f8;
+  --gb-feature-text-secondary: #b9b3cf;
 
   /* The brand mark is fixed in both themes, so the header logo always matches
      the installed app icon (public/icon.svg). Deriving it from --gb-accent
@@ -226,6 +258,11 @@
     --gb-code-bg: #1c182e;
     --gb-code-text: #e5e2f0;
 
+    /* The page itself is #14121f here, so the feature ground lifts to a violet-tinted ink to stay distinct. */
+    --gb-feature: #211a40;
+    --gb-feature-hover: #2a2150;
+    --gb-feature-border: #3f2f80;
+
     color-scheme: dark;
   }
 }
@@ -266,6 +303,10 @@
 
   --gb-code-bg: #1c182e;
   --gb-code-text: #e5e2f0;
+
+  --gb-feature: #211a40;
+  --gb-feature-hover: #2a2150;
+  --gb-feature-border: #3f2f80;
 
   color-scheme: dark;
 }

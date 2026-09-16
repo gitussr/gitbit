@@ -1,15 +1,15 @@
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { Lightbulb, ArrowRight } from 'lucide-react'
 import { ahaCards, getAhaBySlug, getConceptBySlug, getLevelForConcept } from '@/services/content'
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
 import { Heading, Text } from '@/components/ui/Typography'
-import { Button } from '@/components/ui/Button'
+import { ButtonLink } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { ChipLink } from '@/components/ui/ChipLink'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { cardClassName } from '@/components/ui/Card'
 
 export default function AhaDetailPage() {
   const { slug } = useParams()
-  const navigate = useNavigate()
   const aha = slug ? getAhaBySlug(slug) : undefined
 
   if (!aha) {
@@ -20,15 +20,15 @@ export default function AhaDetailPage() {
   const next = ahaCards[(index + 1) % ahaCards.length]
 
   return (
-    <div className="flex max-w-2xl flex-col gap-8">
+    <div className="flex max-w-2xl flex-col gap-5">
       <Breadcrumbs items={[{ label: 'Aha', to: '/aha' }, { label: aha.statement }]} />
 
-      <div className="flex flex-col gap-4 rounded-xl border border-accent-border bg-accent-subtle p-8">
-        <Lightbulb className="size-8 text-accent-strong" aria-hidden="true" />
-        <Heading level={1} size={2} className="leading-snug">
+      <Card variant="accent" className="flex flex-col gap-2.5 p-5">
+        <Lightbulb className="size-5 text-accent-strong" aria-hidden="true" />
+        <Heading level={1} size={2}>
           {aha.statement}
         </Heading>
-      </div>
+      </Card>
 
       <Text variant="body-lg" tone="secondary">
         {aha.explanation}
@@ -41,17 +41,22 @@ export default function AhaDetailPage() {
             if (!concept) return null
             const level = getLevelForConcept(concept.slug)
             return (
-              <Link key={slug} to={level ? `/learn/${level.slug}/${concept.slug}` : '/learn'} className={cardClassName(true, 'px-3 py-1.5 text-sm')}>
+              <ChipLink key={slug} to={level ? `/learn/${level.slug}/${concept.slug}` : '/learn'}>
                 {concept.term}
-              </Link>
+              </ChipLink>
             )
           })}
         </div>
       )}
 
-      <Button variant="secondary" trailingIcon={<ArrowRight aria-hidden="true" />} onClick={() => navigate(`/aha/${next.slug}`)} className="self-start">
+      <ButtonLink
+        to={`/aha/${next.slug}`}
+        variant="secondary"
+        trailingIcon={<ArrowRight aria-hidden="true" />}
+        className="self-start"
+      >
         Next Aha
-      </Button>
+      </ButtonLink>
     </div>
   )
 }

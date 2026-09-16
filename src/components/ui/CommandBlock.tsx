@@ -22,7 +22,7 @@ export function CommandBlock({ command, anatomy, className }: CommandBlockProps)
 
   return (
     <div className={cn('overflow-hidden rounded-lg border border-border bg-code-bg', className)}>
-      <div className="flex items-center gap-3 px-4 py-3">
+      <div className="flex items-center gap-2.5 px-3 py-2">
         <span className="select-none font-mono text-sm text-foreground-tertiary" aria-hidden="true">
           $
         </span>
@@ -40,11 +40,11 @@ export function CommandBlock({ command, anatomy, className }: CommandBlockProps)
       </div>
 
       {anatomy && anatomy.length > 0 && (
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 border-t border-border px-4 py-3">
+        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 border-t border-border px-3 py-2.5">
           {anatomy.map((item) => (
             <div key={item.token} className="contents">
               <dt className="font-mono text-sm font-semibold text-accent">{item.token}</dt>
-              <dd className="text-sm text-foreground-secondary">{item.explanation}</dd>
+              <dd className="text-body-sm text-foreground-secondary">{item.explanation}</dd>
             </div>
           ))}
         </dl>

@@ -29,7 +29,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         aria-invalid={Boolean(error)}
         aria-describedby={cn(hintId, errorId) || undefined}
         className={cn(
-          'h-10 w-full rounded-md border bg-surface px-3 text-sm text-foreground placeholder:text-foreground-tertiary',
+          'h-9 w-full rounded-md border bg-surface px-3 text-sm text-foreground placeholder:text-foreground-tertiary',
           'transition-colors duration-150 ease-standard',
           error ? 'border-danger-border' : 'border-border hover:border-border-strong',
           className,

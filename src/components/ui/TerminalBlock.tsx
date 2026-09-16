@@ -19,13 +19,13 @@ export function TerminalBlock({ command, gitSays, humanTranslation, className }:
       role="group"
       aria-label="Simulated terminal"
     >
-      <div className="flex items-center gap-1.5 border-b border-white/10 px-4 py-2.5">
-        <span className="size-2.5 rounded-full bg-white/20" aria-hidden="true" />
-        <span className="size-2.5 rounded-full bg-white/20" aria-hidden="true" />
-        <span className="size-2.5 rounded-full bg-white/20" aria-hidden="true" />
+      <div className="flex items-center gap-1.5 border-b border-white/10 px-3 py-2">
+        <span className="size-2 rounded-full bg-white/20" aria-hidden="true" />
+        <span className="size-2 rounded-full bg-white/20" aria-hidden="true" />
+        <span className="size-2 rounded-full bg-white/20" aria-hidden="true" />
       </div>
 
-      <div className="flex flex-col gap-4 p-4 font-mono text-sm">
+      <div className="flex flex-col gap-3 p-3.5 font-mono text-sm">
         <p className="text-terminal-text">
           <span className="text-terminal-prompt">$</span> {command}
         </p>
