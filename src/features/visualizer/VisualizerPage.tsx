@@ -1,0 +1,161 @@
+import { Pencil, RotateCcw } from 'lucide-react'
+import { useEffect, useMemo, useReducer, useState } from 'react'
+import { Alert } from '@/components/ui/Alert'
+import { Button } from '@/components/ui/Button'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { panelClassName } from '@/components/ui/StatePanel'
+import { Text } from '@/components/ui/Typography'
+import type { GitStateId } from '@/content/states'
+import { suggest } from '@/services/git-sim'
+import { announceTransition } from './announce'
+import { initialVisualizerState, visualizerReducer } from './visualizerReducer'
+import { VisualizerStage } from './VisualizerStage'
+
+/** How long a panel stays lit after something lands in it. Long enough to notice, short enough not to linger. */
+const HIGHLIGHT_MS = 1400
+
+/**
+ * The file the edit control rewrites, and the two contents it alternates
+ * between — a stand-in for an editor, so there is something to stage.
+ */
+const EDIT_PATH = 'index.html'
+const EDITS = ['<h1>Hello</h1>\n', '<h1>Welcome to GitBit</h1>\n']
+
+/**
+ * GitBit Visualizer — the workspace (Section 2).
+ *
+ * Task 4 draws the first state visualization: Working Directory → Staging
+ * Area → Local Repository, rendered from the simulation engine and
+ * animated by the events it emits. The command console (Section 9) is the
+ * next task; until it exists, the suggestion buttons below run commands so
+ * the stage can actually be exercised.
+ */
+export default function VisualizerPage() {
+  const [state, dispatch] = useReducer(visualizerReducer, undefined, initialVisualizerState)
+  const [seen, setSeen] = useState(0)
+  const [highlighted, setHighlighted] = useState(false)
+
+  const last = state.history[state.history.length - 1]
+
+  /**
+   * Lighting the panels is React state rather than a CSS animation on
+   * purpose: the global `prefers-reduced-motion` rule collapses every
+   * animation to 0.001ms, which would make a flash imperceptible for
+   * exactly the readers who most need the state change to be obvious.
+   * A class held for a beat works either way.
+   *
+   * Set during render rather than in an effect (the pattern `Layout.tsx`
+   * uses for closing the menu on navigation) so the highlight is on in the
+   * same paint as the state it describes, with no flash of an unlit panel.
+   */
+  if (seen !== state.history.length) {
+    setSeen(state.history.length)
+    setHighlighted(state.history.length > 0)
+  }
+
+  useEffect(() => {
+    if (!highlighted) return
+    const timer = window.setTimeout(() => setHighlighted(false), HIGHLIGHT_MS)
+    return () => window.clearTimeout(timer)
+  }, [highlighted, seen])
+
+  const { active, entering } = useMemo(() => {
+    const panels = new Set<GitStateId>()
+    const nodes = new Set<string>()
+    if (!last || !highlighted) return { active: panels, entering: nodes }
+
+    for (const event of last.events) {
+      if (event.type === 'FILE_MODIFIED') {
+        panels.add('working-directory')
+        nodes.add(event.path)
+      }
+      if (event.type === 'FILE_STAGED' || event.type === 'FILE_UNSTAGED') {
+        panels.add('staging-area')
+        nodes.add(event.path)
+      }
+      if (event.type === 'COMMIT_CREATED') {
+        panels.add('local-repository')
+        nodes.add(event.id)
+      }
+      if (event.type === 'REPO_INITIALIZED') panels.add('local-repository')
+    }
+
+    return { active: panels, entering: nodes }
+  }, [last, highlighted])
+
+  const suggestions = suggest(state.repo)
+  const nextEdit = EDITS.find((content) => content !== state.repo.workingTree[EDIT_PATH]) ?? EDITS[1]
+
+  return (
+    <div className="flex flex-col gap-5">
+      <PageHeader
+        title="GitBit Visualizer"
+        description="Run a Git command and watch what actually moves. Nothing here is a picture of Git — it is a working simulation of it."
+      />
+
+      <Alert variant="info" title="This is a simulator">
+        Nothing here touches a repository on your computer. Break whatever you like.
+      </Alert>
+
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <VisualizerStage repo={state.repo} active={active} entering={entering} />
+
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Text variant="body-sm" className="font-bold">
+              Run a command
+            </Text>
+            <div className="flex flex-wrap gap-2">
+              {suggestions.map((command) => (
+                <Button
+                  key={command}
+                  variant="secondary"
+                  size="sm"
+                  className="font-mono"
+                  onClick={() => dispatch({ type: 'run', input: command })}
+                >
+                  {command}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              leadingIcon={<Pencil className="size-4" />}
+              onClick={() => dispatch({ type: 'edit', path: EDIT_PATH, content: nextEdit })}
+            >
+              Edit {EDIT_PATH}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              leadingIcon={<RotateCcw className="size-4" />}
+              onClick={() => dispatch({ type: 'reset' })}
+            >
+              Start over
+            </Button>
+          </div>
+
+          {/* The textual meaning of the last change (Section 40). Announced to
+              screen readers, and shown to everyone — it is not a fallback. */}
+          <div className={panelClassName(false, 'flex flex-col gap-1')}>
+            <Text variant="caption" tone="secondary" className="font-bold uppercase">
+              What just happened
+            </Text>
+            <Text variant="body-sm" aria-live="polite">
+              {last ? announceTransition(last) : 'Nothing yet. Run a command to begin.'}
+            </Text>
+            {last && last.outcome.kind !== 'ok' && (
+              <Text variant="body-sm" tone="secondary">
+                {last.outcome.why}
+              </Text>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

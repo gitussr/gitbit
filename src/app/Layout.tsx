@@ -13,7 +13,7 @@ const primaryNav = [
   { to: '/aha', label: 'Aha' },
   { to: '/quiz', label: 'Quiz' },
   { to: '/sos', label: 'SOS' },
-  { to: '/terminal', label: 'Terminal' },
+  { to: '/visualizer', label: 'Visualizer' },
   { to: '/daily', label: 'Daily' },
 ]
 

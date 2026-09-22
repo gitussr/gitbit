@@ -15,6 +15,7 @@ import {
   QuizQuestionPage,
   SosPage,
   SosDetailPage,
+  VisualizerPage,
   TerminalPage,
   DailyPage,
   DailyDetailPage,
@@ -60,6 +61,9 @@ export const routes: RouteObject[] = [
       // GitBit SOS — recovery guides
       { path: 'sos', element: <SosPage /> },
       { path: 'sos/:slug', element: <SosDetailPage /> },
+
+      // GitBit Visualizer — the simulated repository (docs/VISUALIZER.md)
+      { path: 'visualizer', element: <VisualizerPage /> },
 
       // GitBit Terminal — terminal-inspired educational interface
       { path: 'terminal', element: <TerminalPage /> },
