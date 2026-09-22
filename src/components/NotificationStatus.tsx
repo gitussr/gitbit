@@ -35,7 +35,7 @@ export function NotificationStatus({
 
   if (state === 'granted') {
     return (
-      <Alert variant="success" title="🔔 GitBit Daily is on">
+      <Alert variant="success" icon={<Bell className="size-4.5" aria-hidden="true" />} title="GitBit Daily is on">
         You'll get one useful GitBit a day — a command, an aha moment, or a small Git concept.
       </Alert>
     )
