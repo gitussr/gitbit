@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom'
+import { useReadingProgress } from '@/hooks/useReadingProgress'
 import {
   getLevelBySlug,
   getLevelForConcept,
@@ -26,6 +27,8 @@ export default function ConceptPage() {
   const navigate = useNavigate()
   const level = levelSlug ? getLevelBySlug(levelSlug) : undefined
   const concept = conceptSlug ? getConceptBySlug(conceptSlug) : undefined
+  // Above the early return below: hooks can't sit behind a conditional exit.
+  const readingProgress = useReadingProgress(conceptSlug)
 
   if (!level || !concept || !level.conceptSlugs.includes(concept.slug)) {
     return <EmptyState title="Lesson not found" description="That concept isn't part of this level." />
@@ -137,6 +140,7 @@ export default function ConceptPage() {
         <Pagination
           page={index + 1}
           totalPages={levelConcepts.length}
+          progress={readingProgress ?? undefined}
           onPageChange={(page) => {
             const target = levelConcepts[page - 1]
             if (target) navigate(`/learn/${level.slug}/${target.slug}`)
