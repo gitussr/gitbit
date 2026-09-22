@@ -102,15 +102,37 @@ the separation §36 asks for.
 
 ```
 src/services/git-sim/
-  types.ts       RepoState, Commit, Branch, FileEntry, GitEvent, Transition
-  seed.ts        Named starting states (empty, scenario seeds)
-  parse.ts       string           -> ParsedCommand | ParseError
-  validate.ts    ParsedCommand, RepoState -> Ok | GitError
-  commands/      One module per command: (state, cmd) -> CommandResult
-  execute.ts     The single entry point
-  suggest.ts     RepoState -> the commands that make sense next
+  types.ts       RepoState, Commit, HeadRef, Tree, FileChange
   events.ts      The GitEvent union
+  result.ts      Outcome, CommandResult, Transition
+  repo.ts        Derived views: staged/unstaged/untracked, ancestry, refs
+  hash.ts        Content-derived commit ids
+  diff.ts        Line diff and hunks (Section 21)
+  seed.ts        Named starting states
+  workspace.ts   Editing files in the sandbox (not a Git command)
+  parse.ts       string -> ParsedCommand | ParseError
+  validate.ts    Can this command start? -> GitError | null
+  commands/      One module per command: (state, parsed) -> CommandResult
+  suggest.ts     RepoState -> the commands that make sense next
+  execute.ts     The single entry point
+  index.ts       The public surface feature code imports
 ```
+
+### The index is the whole index
+
+`RepoState.index` holds **every tracked file**, not only the ones with
+pending changes, and the Staging Area panel is *derived* as the
+difference between HEAD and the index.
+
+This is the decision the rest of the engine's honesty rests on.
+`git commit` does not empty the index — it records it. The panel looks
+empty afterwards because index and HEAD now agree. Modelling it the
+lazy way (a list of "staged files", cleared on commit) would animate
+correctly today and then make `reset --soft/--mixed/--hard` three
+special cases instead of three layers (Section 18), and would have no
+way to show a file that is staged *and* edited again sitting in two
+places at once — which real `git status` shows, and which is one of the
+better Aha moments available.
 
 ```ts
 executeCommand(state: RepoState, input: string): Transition
@@ -124,7 +146,7 @@ interface Transition {
 }
 ```
 
-`RepoState` is a plain immutable object: `workingTree`, `stagingArea`,
+`RepoState` is a plain immutable object: `workingTree`, `index`,
 `commits`, `branches`, `HEAD`, `remoteBranches`, `stash`. State names
 derive from the `GitStateId` union already in `src/content/states.ts`,
 so the simulator cannot drift from the model Learn, Quick and Aha teach.
@@ -144,11 +166,17 @@ The engine emits events; it does **not** emit prose. It has no import of
 ### Events
 
 ```
-FILE_MODIFIED  FILE_STAGED  FILE_UNSTAGED  FILE_RESTORED
-COMMIT_CREATED  HEAD_MOVED  BRANCH_CREATED  BRANCH_SWITCHED
-MERGE_CREATED  FAST_FORWARD  REMOTE_UPDATED  RESET_PERFORMED
-WORK_STASHED  NOTHING_HAPPENED
+REPO_INITIALIZED  FILE_MODIFIED  FILE_STAGED  FILE_UNSTAGED
+FILE_RESTORED  COMMIT_CREATED  HEAD_MOVED  BRANCH_CREATED
+BRANCH_SWITCHED  MERGE_CREATED  FAST_FORWARD  REMOTE_UPDATED
+RESET_PERFORMED  WORK_STASHED  NOTHING_HAPPENED
 ```
+
+A **failed** command emits no events at all. Events describe change; a
+refusal changed nothing and explains itself through its outcome. That
+makes an empty array unambiguous — it only ever means failure, because
+a *successful* command that changed nothing says so with
+`NOTHING_HAPPENED`.
 
 `NOTHING_HAPPENED` is load-bearing. `git status`, `git log` and `git
 diff` change nothing, and the honest version of that is an explicit
@@ -169,8 +197,11 @@ input → parse → validate → execute → reduce → animate → explain → 
 2. **Parse failure** shows Git's own error text plus one GitBit line
    about what the shape of the command should be. State is untouched.
 3. **Validation failure** shows why this command can't work *against
-   this state right now* — "there's nothing staged to commit" — which is
-   the teachable moment most simulators throw away.
+   this state right now* — which is the teachable moment most simulators
+   throw away. Validation covers what can be checked before running
+   (is this a repository, are the required arguments there, does that
+   path exist); a refusal that needs the command's own work to discover,
+   like "nothing staged to commit", comes back from the command itself.
 4. **Execute** returns the `Transition`. The reducer appends it to
    `history`.
 5. **Animate** by mapping events to motion (table below).
