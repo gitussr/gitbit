@@ -1,5 +1,18 @@
-import OneSignal from 'react-onesignal'
 import type { NotificationPermissionState, NotificationProviderAdapter } from './types'
+
+type OneSignalSdk = typeof import('react-onesignal').default
+
+/**
+ * Imported dynamically, not at module scope: this module is reached from the
+ * header bell, so a static import puts the provider SDK in the entry chunk
+ * that every page load blocks on — for a feature most visitors never touch.
+ */
+let sdk: OneSignalSdk | null = null
+
+async function loadSdk(): Promise<OneSignalSdk> {
+  if (!sdk) sdk = (await import('react-onesignal')).default
+  return sdk
+}
 
 const APP_ID = import.meta.env.VITE_ONESIGNAL_APP_ID
 
@@ -31,12 +44,16 @@ let unavailable = false
 function initialize() {
   if (!APP_ID || !isPushCapable()) return Promise.resolve()
   if (!initPromise) {
-    initPromise = OneSignal.init({
-      appId: APP_ID,
-      serviceWorkerPath: 'onesignal/OneSignalSDKWorker.js',
-      serviceWorkerParam: { scope: '/onesignal/' },
-      allowLocalhostAsSecureOrigin: import.meta.env.DEV,
-    }).catch((err: unknown) => {
+    initPromise = loadSdk()
+      .then((OneSignal) =>
+        OneSignal.init({
+          appId: APP_ID,
+          serviceWorkerPath: 'onesignal/OneSignalSDKWorker.js',
+          serviceWorkerParam: { scope: '/onesignal/' },
+          allowLocalhostAsSecureOrigin: import.meta.env.DEV,
+        }),
+      )
+      .catch((err: unknown) => {
       unavailable = true
       console.error('[GitBit] OneSignal.init() failed — GitBit Daily notifications unavailable:', err)
     })
@@ -63,6 +80,7 @@ export const oneSignalAdapter: NotificationProviderAdapter = {
     if (!isPushCapable()) return 'unsupported'
     await initialize()
     if (unavailable) return 'unavailable'
+    const OneSignal = await loadSdk()
     await OneSignal.Notifications.requestPermission()
     return Notification.permission as NotificationPermissionState
   },

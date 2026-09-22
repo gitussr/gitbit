@@ -1,11 +1,15 @@
 import { cn } from '@/utils/cn'
-import logoUrl from '@/assets/gitbit-logo.png'
+import logoUrl from '@/assets/gitbit-logo-84.png'
 
 /**
- * Wordmark + mark (Section 22). The mark is `src/assets/gitbit-logo.png` —
- * the same file every favicon and installed-app icon is generated from
- * (`npm run icons`), so the header and the home-screen icon can't drift
- * apart. Replace that one file to change the logo everywhere.
+ * Wordmark + mark (Section 22). Everything still comes from the one source,
+ * `src/assets/gitbit-logo.png` — `npm run icons` generates every favicon and
+ * installed-app icon from it, and the 84px file used here, so the header and
+ * the home-screen icon can't drift apart. Replace that one file and re-run
+ * the script to change the logo everywhere.
+ *
+ * 84px rather than the 512px source: this renders at 28 CSS px, and shipping
+ * the full-size art cost 24 KB on the critical path to draw a small square.
  */
 export function GitBitLogo({ className }: { className?: string }) {
   return (

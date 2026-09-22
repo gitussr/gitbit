@@ -75,14 +75,34 @@ export function useNotificationPermission() {
   useEffect(() => {
     watchBrowserPermission()
     refreshPermission()
-    NotificationService.initialize()
-      .catch(() => {})
-      .then(() => {
-        refreshPermission()
-        if (readyState) return
-        readyState = true
-        emit()
-      })
+
+    /*
+     * Deferred to idle rather than run during mount. Initialising pulls a
+     * third-party script and a sync request, and nothing on screen is waiting
+     * for either: the bell renders from the browser's own Notification
+     * permission until init resolves and flips `ready`. On the critical path
+     * it was competing with the app's own fonts and chunks for bandwidth
+     * (Section 25: no unnecessary network requests).
+     */
+    const start = () => {
+      NotificationService.initialize()
+        .catch(() => {})
+        .then(() => {
+          refreshPermission()
+          if (readyState) return
+          readyState = true
+          emit()
+        })
+    }
+
+    // The timeout caps how long idle can be deferred on a busy page; Safari
+    // has no requestIdleCallback, so it gets a plain delay.
+    const idle = 'requestIdleCallback' in window
+    const handle = idle ? window.requestIdleCallback(start, { timeout: 3000 }) : window.setTimeout(start, 1500)
+    return () => {
+      if (idle) window.cancelIdleCallback(handle as number)
+      else window.clearTimeout(handle as number)
+    }
   }, [])
 
   const requestPermission = useCallback(async () => {
