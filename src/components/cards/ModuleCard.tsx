@@ -11,7 +11,7 @@ export interface ModuleCardProps {
   description: string
 }
 
-/** A GitBit module entry point (home page): icon beside the text rather than above it, so seven fit on one phone screen. */
+/** A GitBit module entry point (home page): icon beside the text rather than above it, so eight fit on one phone screen. */
 export function ModuleCard({ to, icon: Icon, title, description }: ModuleCardProps) {
   return (
     <Link to={to} className={cardClassName(true, 'group flex items-center gap-3 p-3')}>

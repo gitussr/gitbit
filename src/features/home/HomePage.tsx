@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Terminal, BookOpen, Lightbulb, HelpCircle, LifeBuoy, TerminalSquare, Bell, ArrowRight } from 'lucide-react'
+import { Terminal, BookOpen, Lightbulb, HelpCircle, LifeBuoy, TerminalSquare, Bell, GitCompareArrows, ArrowRight } from 'lucide-react'
 import { Heading, Text } from '@/components/ui/Typography'
 import { ButtonLink } from '@/components/ui/Button'
 import { cardClassName } from '@/components/ui/Card'
@@ -8,6 +8,7 @@ import { ahaCards } from '@/services/content'
 
 const modules = [
   { to: '/quick', icon: Terminal, title: 'GitBit Quick', description: 'Fast, searchable command cheat sheet.' },
+  { to: '/compare', icon: GitCompareArrows, title: 'GitBit Compare', description: 'Two commands that sound alike, side by side.' },
   { to: '/learn', icon: BookOpen, title: 'GitBit Learn', description: 'A structured path from basics to branching.' },
   { to: '/aha', icon: Lightbulb, title: 'GitBit Aha', description: 'Short ideas that fix a wrong mental model.' },
   { to: '/quiz', icon: HelpCircle, title: 'GitBit Quiz', description: 'Knowledge checks that test understanding.' },

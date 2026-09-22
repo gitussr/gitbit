@@ -14,6 +14,7 @@ const typeLabel: Record<SearchResultType, string> = {
   concept: 'Concept',
   aha: 'Aha',
   sos: 'SOS',
+  comparison: 'Compare',
 }
 
 export default function SearchPage() {
@@ -22,7 +23,7 @@ export default function SearchPage() {
 
   return (
     <div className="flex max-w-2xl flex-col gap-5">
-      <PageHeader title="Search" description={'Commands, concepts, Aha explanations, and SOS guides — all in one place.'} />
+      <PageHeader title="Search" description={'Commands, concepts, comparisons, Aha explanations, and SOS guides — all in one place.'} />
 
       <SearchInput
         autoFocus

@@ -1,11 +1,12 @@
 import { useParams } from 'react-router-dom'
-import { getCommandBySlug, getRelatedCommands } from '@/services/content'
+import { getCommandBySlug, getComparisonsForCommand, getRelatedCommands } from '@/services/content'
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
 import { Heading, Text } from '@/components/ui/Typography'
 import { DangerBadge } from '@/components/ui/Badge'
 import { CommandBlock } from '@/components/ui/CommandBlock'
 import { Alert } from '@/components/ui/Alert'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ChipLink } from '@/components/ui/ChipLink'
 import { CommandCard } from '@/components/cards'
 
 export default function CommandDetailPage() {
@@ -17,6 +18,7 @@ export default function CommandDetailPage() {
   }
 
   const related = getRelatedCommands(command)
+  const confusedWith = getComparisonsForCommand(command)
 
   return (
     <div className="flex max-w-3xl flex-col gap-5">
@@ -65,6 +67,21 @@ export default function CommandDetailPage() {
         <Alert variant="warning" title="Common mistake">
           {command.commonMistake}
         </Alert>
+      )}
+
+      {confusedWith.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <Heading level={2} size={4}>
+            Often confused with
+          </Heading>
+          <div className="flex flex-wrap gap-2">
+            {confusedWith.map((comparison) => (
+              <ChipLink key={comparison.slug} to={`/compare/${comparison.slug}`} code>
+                {comparison.title}
+              </ChipLink>
+            ))}
+          </div>
+        </div>
       )}
 
       {related.length > 0 && (

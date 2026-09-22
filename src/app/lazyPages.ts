@@ -6,6 +6,8 @@ export const CommandDetailPage = lazy(() => import('@/features/quick/CommandDeta
 export const LearnPage = lazy(() => import('@/features/learn/LearnPage'))
 export const LevelPage = lazy(() => import('@/features/learn/LevelPage'))
 export const ConceptPage = lazy(() => import('@/features/learn/ConceptPage'))
+export const ComparePage = lazy(() => import('@/features/compare/ComparePage'))
+export const CompareDetailPage = lazy(() => import('@/features/compare/CompareDetailPage'))
 export const AhaPage = lazy(() => import('@/features/aha/AhaPage'))
 export const AhaDetailPage = lazy(() => import('@/features/aha/AhaDetailPage'))
 export const QuizPage = lazy(() => import('@/features/quiz/QuizPage'))

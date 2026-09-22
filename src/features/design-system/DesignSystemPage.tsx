@@ -16,6 +16,7 @@ import { Tabs, TabPanel } from '@/components/ui/Tabs'
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
 import { Pagination } from '@/components/ui/Pagination'
 import { ProgressRing } from '@/components/ui/ProgressRing'
+import { ComparisonSplit } from '@/components/ui/ComparisonSplit'
 import { Dialog } from '@/components/ui/Dialog'
 import { useToast } from '@/components/ui/Toast'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -278,6 +279,13 @@ export default function DesignSystemPage() {
           <ProgressRing value={60} />
           <ProgressRing value={100} />
         </div>
+      </Section>
+
+      <Section title="Comparison split">
+        <ComparisonSplit
+          left={{ command: 'git reset', plainEnglish: 'Rewrite history to say this commit never happened.', to: '/quick/git-reset' }}
+          right={{ command: 'git revert', plainEnglish: 'Add a new commit that cancels this one out.', to: '/quick/git-revert' }}
+        />
       </Section>
 
       <Section title="Tooltip, dialog &amp; toast">

@@ -4,6 +4,8 @@ import {
   HomePage,
   QuickPage,
   CommandDetailPage,
+  ComparePage,
+  CompareDetailPage,
   LearnPage,
   LevelPage,
   ConceptPage,
@@ -37,6 +39,10 @@ export const routes: RouteObject[] = [
       // GitBit Quick — searchable command cheat sheet
       { path: 'quick', element: <QuickPage /> },
       { path: 'quick/:commandSlug', element: <CommandDetailPage /> },
+
+      // GitBit Compare — commonly-confused command pairs (Section 30)
+      { path: 'compare', element: <ComparePage /> },
+      { path: 'compare/:slug', element: <CompareDetailPage /> },
 
       // GitBit Learn — structured learning path (Levels 0-6)
       { path: 'learn', element: <LearnPage /> },
