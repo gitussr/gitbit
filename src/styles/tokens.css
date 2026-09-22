@@ -97,6 +97,9 @@
   --color-terminal-text: var(--gb-terminal-text);
   --color-terminal-prompt: var(--gb-terminal-prompt);
   --color-terminal-accent: var(--gb-terminal-accent);
+  --color-terminal-close: var(--gb-terminal-close);
+  --color-terminal-minimize: var(--gb-terminal-minimize);
+  --color-terminal-zoom: var(--gb-terminal-zoom);
 
   /* Radius — square corners are the look. `rounded-full` is kept only for
      true circles (unread dot, numbered steps, progress ring). */
@@ -186,6 +189,11 @@
   --gb-terminal-prompt: var(--gb-palette-lime);
   /* Same hue at about half saturation, for whole sentences of lime-ish text. */
   --gb-terminal-accent: #d3e28d;
+  /* The macOS window controls, at their standard values — this is quoted
+     chrome, so it stays recognisable rather than joining the lime palette. */
+  --gb-terminal-close: #ff5f57;
+  --gb-terminal-minimize: #febc2e;
+  --gb-terminal-zoom: #28c840;
 
   /* Stacking order — kept here as the single source of truth */
   --z-header: 40;

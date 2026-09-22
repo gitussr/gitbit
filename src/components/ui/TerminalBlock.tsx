@@ -19,10 +19,12 @@ export function TerminalBlock({ command, gitSays, humanTranslation, className }:
       role="group"
       aria-label="Simulated terminal"
     >
-      <div className="flex items-center gap-1.5 border-b border-white/10 px-3 py-2">
-        <span className="size-2 rounded-full bg-white/20" aria-hidden="true" />
-        <span className="size-2 rounded-full bg-white/20" aria-hidden="true" />
-        <span className="size-2 rounded-full bg-white/20" aria-hidden="true" />
+      {/* Quoted macOS window controls: red/amber/green reads as "terminal" at a
+          glance in a way three grey dots don't. Decorative — they do nothing. */}
+      <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2.5" aria-hidden="true">
+        <span className="size-3 rounded-full bg-terminal-close" />
+        <span className="size-3 rounded-full bg-terminal-minimize" />
+        <span className="size-3 rounded-full bg-terminal-zoom" />
       </div>
 
       <div className="flex flex-col gap-3 p-3.5 font-mono text-sm">
