@@ -6,6 +6,7 @@ import {
   getConceptsForLevel,
   getConceptRelatedCommands,
   getRelatedConcepts,
+  getStateForConcept,
 } from '@/services/content'
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
 import { Heading, Text } from '@/components/ui/Typography'
@@ -13,6 +14,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Alert } from '@/components/ui/Alert'
 import { CodeBlock } from '@/components/ui/CodeBlock'
 import { Pagination } from '@/components/ui/Pagination'
+import { GitStateFlow } from '@/components/ui/GitStateFlow'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { CommandCard } from '@/components/cards'
 import { Card } from '@/components/ui/Card'
@@ -32,6 +34,7 @@ export default function ConceptPage() {
   const levelConcepts = getConceptsForLevel(level)
   const index = levelConcepts.findIndex((c) => c.slug === concept.slug)
   const relatedConcepts = getRelatedConcepts(concept)
+  const conceptState = getStateForConcept(concept.slug)
   const relatedCommands = getConceptRelatedCommands(concept)
 
   return (
@@ -56,6 +59,16 @@ export default function ConceptPage() {
           {concept.mentalModel}
         </Text>
       </Card>
+
+      {/* Section 3: a concept that *is* one of Git's states is best shown in its place on the flow. */}
+      {conceptState && (
+        <div className="flex flex-col gap-2">
+          <Heading level={2} size={4}>
+            Where this sits
+          </Heading>
+          <GitStateFlow activeStates={[conceptState]} />
+        </div>
+      )}
 
       <div className="flex flex-col gap-1">
         <Heading level={2} size={4}>

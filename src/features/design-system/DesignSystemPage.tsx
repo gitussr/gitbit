@@ -17,6 +17,7 @@ import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
 import { Pagination } from '@/components/ui/Pagination'
 import { ProgressRing } from '@/components/ui/ProgressRing'
 import { ComparisonSplit } from '@/components/ui/ComparisonSplit'
+import { GitStateFlow, GitStateHop } from '@/components/ui/GitStateFlow'
 import { Dialog } from '@/components/ui/Dialog'
 import { useToast } from '@/components/ui/Toast'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -279,6 +280,12 @@ export default function DesignSystemPage() {
           <ProgressRing value={60} />
           <ProgressRing value={100} />
         </div>
+      </Section>
+
+      <Section title="Git state model">
+        <GitStateFlow />
+        <GitStateFlow activeStates={['working-directory', 'staging-area']} activeCommand="git add" />
+        <GitStateHop from="working-directory" to="discarded" command="git clean" destructive />
       </Section>
 
       <Section title="Comparison split">

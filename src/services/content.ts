@@ -6,6 +6,7 @@ import { sosGuides } from '@/content/sos'
 import { dailyContent } from '@/content/daily'
 import { comparisons } from '@/content/comparisons'
 import { learnLevels, type LearnLevel } from '@/content/levels'
+import { commandStateTransitions, conceptStates, gitStates, type GitStateId, type GitStateTransition } from '@/content/states'
 import type { Comparison, GitCommand, GitConcept } from '@/content/types'
 
 /** Framework-agnostic lookups over the content model — feature components read through here, not the raw arrays. */
@@ -83,7 +84,17 @@ export function getConceptRelatedCommands(concept: GitConcept): GitCommand[] {
   return concept.relatedCommands.map(getCommandByName).filter((c): c is GitCommand => Boolean(c))
 }
 
-export { commands, concepts, ahaCards, quizQuestions, sosGuides, dailyContent, comparisons, learnLevels }
+/** What a command moves between Git's states (Section 3), when it moves anything at all. */
+export function getStateTransition(command: GitCommand): GitStateTransition | undefined {
+  return commandStateTransitions[command.slug]
+}
+
+/** The state a concept *is*, for the concepts that name one of them. */
+export function getStateForConcept(conceptSlug: string): GitStateId | undefined {
+  return conceptStates[conceptSlug]
+}
+
+export { commands, concepts, ahaCards, quizQuestions, sosGuides, dailyContent, comparisons, learnLevels, gitStates }
 
 export type SearchResultType = 'command' | 'concept' | 'aha' | 'sos' | 'comparison'
 

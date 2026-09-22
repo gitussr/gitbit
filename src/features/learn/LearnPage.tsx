@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
 import { learnLevels, getConceptsForLevel, getCommandsForLevel } from '@/services/content'
-import { Text } from '@/components/ui/Typography'
+import { Heading, Text } from '@/components/ui/Typography'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { cardClassName } from '@/components/ui/Card'
+import { GitStateFlow } from '@/components/ui/GitStateFlow'
 
 export default function LearnPage() {
   return (
@@ -11,6 +12,18 @@ export default function LearnPage() {
         title="GitBit Learn"
         description={'A structured path from "what is Git" to branching, collaboration, and undoing mistakes with confidence.'}
       />
+
+      {/* Section 3: the state model comes before the levels, because every level below is a way of moving work along it. */}
+      <div className="flex flex-col gap-2">
+        <Heading level={2} size={3}>
+          Where your work lives
+        </Heading>
+        <Text tone="secondary">
+          Almost every Git command is a way of moving your work between these four places. Knowing which one you are in
+          explains most of what Git does.
+        </Text>
+        <GitStateFlow className="mt-1" />
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         {learnLevels.map((level) => {

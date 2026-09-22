@@ -56,6 +56,7 @@ src/
   features/            One folder per product module; owns its routes + feature-specific UI
     home/
     quick/
+    compare/
     learn/
     aha/
     quiz/
@@ -74,6 +75,8 @@ src/
     sos/
     daily/
     comparisons/
+    states.ts          The Git state model (Section 3) — the states, the flow between
+                       them, and what each command moves; read by Quick and Learn
   data/                Derived/aggregated views over content (e.g. search index) — built in Phase 4/5
   hooks/               Shared React hooks (notifications, reduced-motion, search, etc.)
   services/            Framework-agnostic logic (search matching, daily selection, notifications) — no React imports
