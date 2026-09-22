@@ -29,7 +29,9 @@ export interface GitStateFlowProps {
  */
 export function GitStateFlow({ activeStates, activeCommand, className }: GitStateFlowProps) {
   const active = new Set(activeStates ?? [])
-  const dimmed = active.size > 0
+  // Only dim when something on this flow is actually lit — an active state that
+  // sits off it (the stash) would otherwise grey out all four and light none.
+  const dimmed = mainFlow.some((state) => active.has(state.id))
 
   return (
     <ol className={cn('flex flex-col items-stretch gap-0 lg:flex-row', className)}>

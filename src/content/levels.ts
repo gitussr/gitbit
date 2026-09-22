@@ -59,7 +59,7 @@ export const learnLevels: LearnLevel[] = [
     order: 5,
     title: 'Undoing Things',
     description: 'Four different ways to take something back — and when to reach for each.',
-    conceptSlugs: [],
+    conceptSlugs: ['uncommitted-changes', 'tracked-vs-untracked', 'stash', 'rewriting-history'],
     commandSlugs: ['git-restore', 'git-reset', 'git-reset-hard', 'git-revert', 'git-stash'],
   },
   {
