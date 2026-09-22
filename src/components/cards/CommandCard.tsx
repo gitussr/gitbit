@@ -7,8 +7,10 @@ import { Text } from '@/components/ui/Typography'
 export function CommandCard({ command }: { command: GitCommand }) {
   return (
     <Link to={`/quick/${command.slug}`} className={cardClassName(true, 'flex flex-col gap-1.5')}>
-      <div className="flex items-center justify-between gap-2">
-        <code className="truncate bg-code-bg px-1.5 py-0.5 font-mono text-body-sm font-bold text-code-text">{command.command}</code>
+      {/* Wraps rather than truncates: the badge and the command compete for a 320px
+          row, and a clipped "git rebase -i" reads as a different command entirely. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+        <code className="bg-code-bg px-1.5 py-0.5 font-mono text-body-sm font-bold text-code-text">{command.command}</code>
         <DangerBadge level={command.dangerLevel} />
       </div>
       <Text as="p" className="font-semibold">

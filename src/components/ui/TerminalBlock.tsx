@@ -28,7 +28,10 @@ export function TerminalBlock({ command, gitSays, humanTranslation, className }:
       </div>
 
       <div className="flex flex-col gap-3 p-3.5 font-mono text-sm">
-        <p className="text-terminal-text">
+        {/* break-all because a real terminal breaks at the character cell, and a
+            clone URL has no break opportunity — without it the line runs past the
+            card and the card's own overflow-hidden eats the rest of it. */}
+        <p className="text-terminal-text break-all">
           <span className="text-terminal-prompt">$</span> {command}
         </p>
 
