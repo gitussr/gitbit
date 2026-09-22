@@ -25,7 +25,7 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
                   {item.label}
                 </Link>
               ) : (
-                <span aria-current={isLast ? 'page' : undefined} className={isLast ? 'truncate font-medium text-foreground' : undefined}>
+                <span aria-current={isLast ? 'page' : undefined} className={isLast ? 'truncate font-semibold text-foreground' : undefined}>
                   {item.label}
                 </span>
               )}
