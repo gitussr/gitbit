@@ -1,0 +1,364 @@
+# GitBit Visualizer — Information Architecture & Interaction Model
+
+The design reference for GitBit Visualizer, the flagship feature defined
+in `GitBit Visualizer - Master Development Prompt.md`. Inline comments in
+`src/services/git-sim/**` and `src/features/visualizer/**` cite this
+document the way the rest of the codebase cites `PRODUCT_SPEC.md`.
+
+This is Task 2 of the Visualizer brief's §47 sequence: what gets built
+and how it behaves. Task 3 builds the engine described in
+[Simulation engine](#simulation-engine).
+
+Everything here sits inside the two rules the repo already enforces
+(see [`ARCHITECTURE.md`](ARCHITECTURE.md)): **no Git knowledge inside
+components**, and **no UI that isn't a Design System primitive first**.
+
+## The one-sentence product
+
+> Type a Git command, watch the repository state actually change, and
+> read what moved in plain English.
+
+Everything below is in service of that. Where a choice traded fidelity
+of the picture against correctness of the idea, correctness won (§38).
+
+## Routes
+
+```
+/visualizer                 The workspace, free play
+/visualizer/:scenarioSlug   The same workspace, running a guided scenario
+```
+
+The flagship is the workspace itself, so `/visualizer` **is** the
+workspace — not an index page the workspace hides behind. The scenario
+rail is visible from the first frame, which is what §28 ("do not make
+users start from an empty screen") actually asks for: not a menu, but a
+first move already suggested. Deep links to a scenario still get the
+module/detail URL shape every other GitBit module uses.
+
+Both routes render one lazy component, `features/visualizer/VisualizerPage`.
+A scenario slug only changes the seed state and turns the rail's guidance
+on.
+
+### Navigation changes
+
+| Surface | Change |
+|---------|--------|
+| `primaryNav` (`app/Layout.tsx`) | **Visualizer replaces Terminal.** The bar holds seven items before it collapses at `md`; the flagship earns the slot. |
+| Home module grid | Gains GitBit Visualizer in first position. Terminal keeps its row. |
+| `/terminal` | Unchanged. It answers "what does this command do?" as a lookup; the Visualizer answers "what does it do *to my repository, right now*?" Each page links to the other. |
+| Search | Unaffected — the Visualizer holds no indexable prose of its own (see [Content integration](#content-integration)). |
+
+## Layout
+
+Four regions, one arrangement, re-flowed rather than redesigned per
+breakpoint (§32 — "do not simply shrink the desktop visualizer", but
+also don't build two products).
+
+```
+┌─ Scenario rail ────────────────────────────────┐   collapsible
+├─ Stage ────────────────────┬─ Explainer ───────┤
+│                            │                   │
+│  YOUR COMPUTER             │  What happened?   │
+│  ┌ Working Directory ┐     │  Why?             │
+│           ↓                │  Where did it go? │
+│  ┌ Staging Area      ┐     │  Remember this    │
+│           ↓                │                   │
+│  ┌ Local Repository  ┐     │  › Technical      │
+│    ● ─ ● ─ ●  graph        │                   │
+│  ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌      │  💡 Aha           │
+│  REMOTE (origin)           │  ? Recall         │
+│  ┌ Remote Repository ┐     │                   │
+├────────────────────────────┴───────────────────┤
+│ $ git add index.html                    [Run]  │   sticky
+└────────────────────────────────────────────────┘
+```
+
+- **Stage is always vertical.** Working Directory → Staging Area → Local
+  Repository top to bottom, at every width. `GitStateFlow` turns
+  horizontal at `lg`; the Visualizer deliberately doesn't, because
+  "down" must mean "further into Git" in every animation at every
+  breakpoint. One direction, one set of transform geometry, no fork.
+- **The dashed boundary is a teaching device, not decoration.** Local
+  and remote are separated by a labelled divider that `push`/`fetch`
+  animate *across*. It is the answer to §23: the remote is a different
+  place, and it is labelled "Remote (origin)", never "GitHub".
+- **The console is docked at the bottom at every width** (sticky within
+  the workspace, not `position: fixed`). §33's mobile sketch puts it
+  there, and a console that moves between breakpoints is a console
+  people lose.
+- Below `lg` the Explainer moves beneath the Stage and the scenario rail
+  collapses to a single-line step indicator. The graph is the one
+  element allowed a horizontal scroll container, with the scroll cue the
+  Design System already uses.
+
+The legend (§31) is a collapsed disclosure in the workspace toolbar —
+present, unobtrusive, never a permanent column.
+
+## Simulation engine
+
+Pure, framework-agnostic, under `src/services/git-sim/` — the repo
+already requires `services/` to hold no React imports, which is exactly
+the separation §36 asks for.
+
+```
+src/services/git-sim/
+  types.ts       RepoState, Commit, Branch, FileEntry, GitEvent, Transition
+  seed.ts        Named starting states (empty, scenario seeds)
+  parse.ts       string           -> ParsedCommand | ParseError
+  validate.ts    ParsedCommand, RepoState -> Ok | GitError
+  commands/      One module per command: (state, cmd) -> CommandResult
+  execute.ts     The single entry point
+  suggest.ts     RepoState -> the commands that make sense next
+  events.ts      The GitEvent union
+```
+
+```ts
+executeCommand(state: RepoState, input: string): Transition
+
+interface Transition {
+  input: string
+  before: RepoState
+  after: RepoState        // === before when the command only reads
+  events: GitEvent[]
+  outcome: Ok | GitError | ParseError
+}
+```
+
+`RepoState` is a plain immutable object: `workingTree`, `stagingArea`,
+`commits`, `branches`, `HEAD`, `remoteBranches`, `stash`. State names
+derive from the `GitStateId` union already in `src/content/states.ts`,
+so the simulator cannot drift from the model Learn, Quick and Aha teach.
+
+Three properties this buys, and the reasons they're worth the structure:
+
+- **The UI cannot contain Git logic**, because the UI never gets a
+  chance to decide anything — it receives a `Transition` and renders it.
+- **Undo is free.** Every transition retains its `before`, so §27's undo
+  is a pop, not an inverse-operation engine.
+- **It is testable without a DOM**, which is what makes the Vitest
+  decision cheap (see [Testing](#testing)).
+
+The engine emits events; it does **not** emit prose. It has no import of
+`src/content/**`. Teaching is the Explainer's job.
+
+### Events
+
+```
+FILE_MODIFIED  FILE_STAGED  FILE_UNSTAGED  FILE_RESTORED
+COMMIT_CREATED  HEAD_MOVED  BRANCH_CREATED  BRANCH_SWITCHED
+MERGE_CREATED  FAST_FORWARD  REMOTE_UPDATED  RESET_PERFORMED
+WORK_STASHED  NOTHING_HAPPENED
+```
+
+`NOTHING_HAPPENED` is load-bearing. `git status`, `git log` and `git
+diff` change nothing, and the honest version of that is an explicit
+event saying so — not an empty array the UI quietly renders as a
+successful move (§38).
+
+`FAST_FORWARD` is separate from `MERGE_CREATED` for the same reason:
+§16 wants people to see that not every merge creates a commit, and that
+distinction has to exist in the data before it can exist in the picture.
+
+## The interaction loop
+
+```
+input → parse → validate → execute → reduce → animate → explain → (aha) → (recall)
+```
+
+1. **Input.** Type and press Enter, or click a suggested command chip.
+2. **Parse failure** shows Git's own error text plus one GitBit line
+   about what the shape of the command should be. State is untouched.
+3. **Validation failure** shows why this command can't work *against
+   this state right now* — "there's nothing staged to commit" — which is
+   the teachable moment most simulators throw away.
+4. **Execute** returns the `Transition`. The reducer appends it to
+   `history`.
+5. **Animate** by mapping events to motion (table below).
+6. **Explain** fills the four beginner questions (§29).
+7. **Aha** surfaces if the event maps to an existing `AhaCard`.
+8. **Recall** offers a question occasionally — never twice in a row, and
+   only the first time an event type occurs (§26: "use selectively").
+
+Commands that fail still enter the history and still get explained. A
+rejected command is a lesson, not an error state.
+
+### Events → motion
+
+| Event | Motion | Reduced-motion equivalent |
+|-------|--------|---------------------------|
+| `FILE_MODIFIED` | File node picks up the modified marker | Marker appears |
+| `FILE_STAGED` | Node travels Working Directory → Staging Area | Node appears in Staging, target panel highlights once |
+| `FILE_UNSTAGED` / `FILE_RESTORED` | The same journey, reversed | As above |
+| `COMMIT_CREATED` | Staged nodes converge into a new graph node; Staging empties | New node appears; Staging empties |
+| `HEAD_MOVED` | HEAD pointer travels to its new node | Pointer re-renders at the new node |
+| `BRANCH_CREATED` | Label fades in at the node it points to | Label appears |
+| `BRANCH_SWITCHED` | `HEAD_MOVED` + Working Directory contents swap | Both re-render |
+| `MERGE_CREATED` | New node draws with **two** parent edges | Node and both edges appear |
+| `FAST_FORWARD` | Branch label slides along existing edges — **no new node** | Label re-renders, with the "no new commit" line |
+| `REMOTE_UPDATED` | Nodes mirror across the local/remote boundary | Nodes appear on the far side |
+| `RESET_PERFORMED` | The affected layers highlight in sequence (§18) | Affected layers highlight statically |
+| `WORK_STASHED` | Node moves to the stash drawer | Drawer opens with the node in it |
+
+Motion uses `--duration-base` / `--ease-standard` from
+`styles/tokens.css`, CSS transforms and SVG only. No animation library,
+no canvas, no continuous loop (§39).
+
+**Reduced motion is not "the same thing, faster."** The global rule in
+`styles/base.css` collapses every transition to 0.001ms, which is right
+for a hover state and wrong for a visualizer whose animation carries the
+meaning. The Visualizer reads `useReducedMotion()` — a hook that exists
+in the repo today and is imported by nothing — and renders the *end
+state* plus a one-step highlight, so what moved is still legible (§12).
+
+Every transition also writes a sentence into an `aria-live="polite"`
+region: `index.html moved from Working Directory to Staging Area.` That
+line is generated for everyone, animation or not — it's the textual
+meaning §40 requires, not an accessibility afterthought.
+
+## Explainer
+
+Beginner by default (§29), four questions, always in the same order:
+
+```
+What happened?      One sentence, past tense, concrete.
+Why?                The rule that made it happen.
+Where did it move?  The state hop, drawn small.
+Remember this       The misconception this corrects.
+```
+
+`› Technical details` is a collapsed disclosure holding hashes, parents,
+refs and remote-tracking state (§30). The Beginner/Advanced preference
+persists in `localStorage` through a hook, never read directly from a
+component — the rule `ARCHITECTURE.md` already sets.
+
+## Content integration
+
+The Visualizer writes **no** Git prose inside components (§41, and the
+repo's own content/UI rule). The Explainer resolves events to content:
+
+| Needs | Comes from |
+|-------|-----------|
+| What a command means | `GitCommand.humanMeaning` / `whatHappens` / `mentalModel` |
+| Where it moves things | `commandStateTransitions[slug]` in `content/states.ts` |
+| The misconception | `GitCommand.commonMistake` |
+| Aha moments | Existing `AhaCard`s, matched by slug |
+| Recall questions | Existing `QuizQuestion`s, filtered to the concepts in play |
+
+`content/states.ts` already carries `{from, to, summary}` for 19
+commands. That's most of "where did it move?" written and reviewed
+before the Visualizer existed.
+
+Genuinely new prose — per-variant `reset --soft/--mixed/--hard` notes,
+fast-forward vs. merge-commit copy, validation-failure explanations —
+goes in a new typed `src/content/visualizer/` module. Plain data, no
+JSX, same as every other content folder.
+
+## Scenarios
+
+```ts
+interface VisualizerScenario {
+  slug: string
+  title: string
+  goal: string
+  seed: RepoSeed
+  steps: { instruction: string; expect: CommandMatcher; hint: string }[]
+  completion: { title: string; body: string; relatedConcepts?: string[] }
+}
+```
+
+The five from §28: First Commit, Push to a Remote, Branch, Merge, Undo.
+
+Guided, not gated. A command that doesn't match the current step **still
+executes** — the rail keeps the step and adds a quiet "that works too;
+the next step is still …". Blocking exploration inside a sandbox whose
+entire point is safe exploration would be the wrong lesson.
+
+## Safety framing
+
+One pinned line in the workspace, not a per-command warning:
+
+> This is a simulator. Nothing here touches a repository on your
+> computer.
+
+Destructive commands (`reset --hard`, `clean`, `push --force`) get the
+Design System's `caution`/`danger` treatment and say what is
+unrecoverable — calm, once, in the Explainer (§18).
+
+## Accessibility
+
+- Each state region is a `<section aria-labelledby>`; file lists are
+  real lists with text labels (`index.html — modified`).
+- The graph is `role="img"` with `<title>`/`<desc>`, **plus** a
+  visually-hidden ordered list of commits with their parents and refs.
+  A screen reader gets structure, not a description of a picture.
+- Console input is a labelled `<input>` in a `<form>`; history is a log
+  region; ↑/↓ walks history, Tab accepts a suggestion, Esc clears.
+- Commit nodes are focusable; Enter inspects one (§24's snapshot view).
+- Tab order: scenario rail → stage → console. Roving tabindex inside a
+  panel's file list, matching the `Tabs` primitive's existing pattern.
+- Focus is never trapped; every interactive element keeps the global
+  `:focus-visible` ring.
+
+## Components
+
+New **primitives** (`components/ui`, added before use, per §34 and the
+repo rule): `FileNode`, `CommitNode`, `BranchLabel`, `HeadPointer`,
+`StatePanel`, `CommandConsole`, `VisualizerLegend`, `Timeline`.
+
+New **composition** (`features/visualizer/`): `VisualizerStage`,
+`CommitGraph`, `ExplainerPanel`, `ScenarioRail`, `WorkspaceToolbar`.
+
+New **tokens** (`styles/tokens.css`): `--viz-node`, `--viz-node-sm`,
+`--viz-lane`, `--viz-edge`, `--viz-gap`. Colour reuses ink/lime and the
+existing pastel `caution`/`danger` fills — no new palette.
+
+Anything with a custom size or shadow name must also be registered in
+`utils/cn.ts`, or tailwind-merge drops it.
+
+## State management
+
+One `useReducer` in `VisualizerPage` — the first in the codebase, and
+justified: the whole feature is a single state machine, and the
+`useState`-per-feature convention can't express undo, replay or a
+timeline.
+
+```ts
+{ repo: RepoState, history: Transition[], cursor: number,
+  mode: 'beginner' | 'advanced', scenario?: ScenarioProgress }
+```
+
+`history` + `cursor` gives §27's undo/replay and §19's Time Machine from
+one structure. Slices pass down as props; `CommitGraph` is `React.memo`'d
+on commit count and HEAD, since it's the only component whose render
+cost grows.
+
+## Performance budget
+
+The route is lazy, so the main chunk must not grow. Baseline at the time
+of writing: main chunk 303.56 kB (96.60 kB gzip), 65 precached entries,
+699.34 KiB. Target for the Visualizer chunk: **≤ 25 kB gzip**, zero new
+runtime dependencies. SVG and CSS only (§39).
+
+Being a pure client-side simulation with no fetch, the Visualizer
+inherits full offline support from the existing Workbox precache.
+
+## Testing
+
+Vitest, added as a dev dependency, `npm run test`. Engine only —
+`parse`, `validate`, each command reducer, emitted events, and
+end-to-end command sequences asserting the final `RepoState`.
+
+No DOM or component tests: one package, not four, and the engine is
+where a wrong answer would actually teach someone something false.
+
+## Decisions taken, and what they cost
+
+| Decision | Why | Cost |
+|----------|-----|------|
+| Keep `/terminal` | It answers a different question (lookup vs. simulation) and costs 45 lines | Two pages with a family resemblance; mitigated by cross-links |
+| Visualizer takes Terminal's nav slot | Seven items is the ceiling before `md` collapse | Terminal is one click further away |
+| Vitest, engine only | Pure functions, no DOM needed | One dev dependency |
+| CSS/SVG, no animation library | §39, and a ~18 kB gzip library against a 96.6 kB baseline | FLIP-style transitions written by hand |
+| Stage always vertical | One direction of travel at every width | Wide screens have unused horizontal room |
+| Mono font stays Cascadia Code | §34 forbids a separate visual language; the repo replaced Ubuntu Mono deliberately | A knowing deviation from §9's letter, keeping its intent |
+| Failing commands still execute and explain | A rejected command is the teachable moment | History contains failures; the UI must style them as lessons |
