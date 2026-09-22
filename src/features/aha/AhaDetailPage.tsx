@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { Lightbulb, ArrowRight } from 'lucide-react'
 import { ahaCards, getAhaBySlug, getConceptBySlug, getLevelForConcept } from '@/services/content'
+import { AhaVisualView } from '@/components/AhaVisualView'
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
 import { Heading, Text } from '@/components/ui/Typography'
 import { ButtonLink } from '@/components/ui/Button'
@@ -29,6 +30,8 @@ export default function AhaDetailPage() {
           {aha.statement}
         </Heading>
       </Card>
+
+      {aha.visual && <AhaVisualView visual={aha.visual} />}
 
       <Text variant="body-lg" tone="secondary">
         {aha.explanation}

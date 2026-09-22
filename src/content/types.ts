@@ -5,6 +5,8 @@
  * UI components read this data; they never hard-code explanations.
  */
 
+import type { GitStateId } from '@/content/states'
+
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced'
 
 export type DangerLevel = 'safe' | 'caution' | 'high-caution'
@@ -54,11 +56,22 @@ export interface GitCommand {
   anatomy?: { token: string; explanation: string }[]
 }
 
+/**
+ * The picture an Aha card is drawn with (Section 4: "highly visual where
+ * useful"). Content declares *what* to show, never how — `state-flow`
+ * reuses the Git state model (Section 3), `contrast` sets the belief the
+ * statement corrects against what is actually true.
+ */
+export type AhaVisual =
+  | { kind: 'state-flow'; activeStates?: GitStateId[]; activeCommand?: string; caption?: string }
+  | { kind: 'contrast'; sounds: string; actually: string; caption?: string }
+
 /** GitBit Aha — short, highly visual conceptual explanations (Section 4). */
 export interface AhaCard {
   slug: string
   statement: string
   explanation: string
+  visual?: AhaVisual
   relatedConcepts?: string[]
 }
 

@@ -18,6 +18,7 @@ import { Pagination } from '@/components/ui/Pagination'
 import { ProgressRing } from '@/components/ui/ProgressRing'
 import { ComparisonSplit } from '@/components/ui/ComparisonSplit'
 import { GitStateFlow, GitStateHop } from '@/components/ui/GitStateFlow'
+import { ContrastPanels } from '@/components/ui/ContrastPanels'
 import { Dialog } from '@/components/ui/Dialog'
 import { useToast } from '@/components/ui/Toast'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -286,6 +287,13 @@ export default function DesignSystemPage() {
         <GitStateFlow />
         <GitStateFlow activeStates={['working-directory', 'staging-area']} activeCommand="git add" />
         <GitStateHop from="working-directory" to="discarded" command="git clean" destructive />
+      </Section>
+
+      <Section title="Contrast panels">
+        <ContrastPanels
+          sounds="A second copy of every file in the project."
+          actually="A pointer to one commit — a few bytes."
+        />
       </Section>
 
       <Section title="Comparison split">
