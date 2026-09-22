@@ -71,7 +71,10 @@ export function Layout() {
             onClick={() => setMenuOpen((open) => !open)}
           />
 
-          <NavLink to="/" className="shrink-0">
+          {/* `flex`, not the default inline flow: the logo's inline-flex box sits on
+              the anchor's text baseline, which leaves descender space underneath and
+              pushes the mark a couple of pixels above the header's centre line. */}
+          <NavLink to="/" className="flex shrink-0 items-center">
             <GitBitLogo />
           </NavLink>
 
