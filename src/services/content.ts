@@ -165,5 +165,20 @@ export function search(query: string): SearchResult[] {
     }
   }
 
+  /*
+   * Ranked, not just filtered: typing "stash" should land on the command,
+   * not on whichever entry happens to mention it first in the file. A title
+   * that starts with the query beats a title that merely contains it, which
+   * beats a match found only in the body. Ties keep their original order,
+   * so commands still come before prose at equal rank.
+   */
+  const lowerQuery = query.trim().toLowerCase()
   return results
+    .map((result, index) => {
+      const title = result.title.toLowerCase()
+      const rank = title.startsWith(lowerQuery) ? 0 : title.includes(lowerQuery) ? 1 : 2
+      return { result, rank, index }
+    })
+    .sort((a, b) => a.rank - b.rank || a.index - b.index)
+    .map((entry) => entry.result)
 }

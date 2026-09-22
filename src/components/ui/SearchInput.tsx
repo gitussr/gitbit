@@ -1,6 +1,7 @@
 import { forwardRef, type InputHTMLAttributes } from 'react'
 import { Search, X } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { Kbd } from './Kbd'
 
 export interface SearchInputProps extends InputHTMLAttributes<HTMLInputElement> {
   onClear?: () => void
@@ -43,9 +44,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(functi
         </button>
       )}
       {!hasValue && shortcutHint && (
-        <kbd className="shrink-0 border-2 border-accent bg-background-subtle px-1.5 py-0.5 font-mono text-[11px] text-foreground-secondary">
-          {shortcutHint}
-        </kbd>
+        <Kbd>{shortcutHint}</Kbd>
       )}
     </div>
   )

@@ -3,7 +3,8 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Menu, Search, X } from 'lucide-react'
 import { GitBitLogo } from '@/components/GitBitLogo'
 import { NotificationBell } from '@/components/NotificationBell'
-import { IconButton, iconButtonClassName } from '@/components/ui/IconButton'
+import { SearchPalette } from '@/components/SearchPalette'
+import { IconButton } from '@/components/ui/IconButton'
 import { cn } from '@/utils/cn'
 
 const primaryNav = [
@@ -34,6 +35,7 @@ const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
  */
 export function Layout() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const location = useLocation()
   const [lastPathname, setLastPathname] = useState(location.pathname)
 
@@ -41,6 +43,19 @@ export function Layout() {
     setLastPathname(location.pathname)
     setMenuOpen(false)
   }
+
+  /* Section 20: search is keyboard-reachable from anywhere. Cmd/Ctrl-K is the
+     convention readers already have from their editor, so it's the one to match. */
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   useEffect(() => {
     if (!menuOpen) return
@@ -91,14 +106,12 @@ export function Layout() {
           </nav>
 
           <div className="flex flex-1 shrink-0 items-center justify-end gap-1 md:flex-none">
-            <NavLink
-              to="/search"
-              aria-label="Search"
-              title="Search"
-              className={iconButtonClassName('ghost', 'sm')}
-            >
-              <Search className="size-4" aria-hidden="true" />
-            </NavLink>
+            <IconButton
+              icon={<Search aria-hidden="true" />}
+              label="Search"
+              size="sm"
+              onClick={() => setSearchOpen(true)}
+            />
             <NotificationBell />
           </div>
         </div>
@@ -126,6 +139,8 @@ export function Layout() {
       >
         <Outlet />
       </main>
+
+      {searchOpen && <SearchPalette onClose={() => setSearchOpen(false)} />}
     </div>
   )
 }

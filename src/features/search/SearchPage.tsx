@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Search as SearchIcon } from 'lucide-react'
 import { search, type SearchResultType } from '@/services/content'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -18,8 +18,16 @@ const typeLabel: Record<SearchResultType, string> = {
 }
 
 export default function SearchPage() {
-  const [query, setQuery] = useState('')
+  // Seeded from ?q= so the palette's "see all results" arrives with the query intact.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [query, setQuery] = useState(() => searchParams.get('q') ?? '')
   const results = useMemo(() => search(query), [query])
+
+  const onQueryChange = (next: string) => {
+    setQuery(next)
+    // `replace` so typing doesn't stack a history entry per keystroke.
+    setSearchParams(next ? { q: next } : {}, { replace: true })
+  }
 
   return (
     <div className="flex max-w-2xl flex-col gap-5">
@@ -28,8 +36,8 @@ export default function SearchPage() {
       <SearchInput
         autoFocus
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        onClear={() => setQuery('')}
+        onChange={(e) => onQueryChange(e.target.value)}
+        onClear={() => onQueryChange('')}
         placeholder="Try “undo commit”, “branch”, “merge conflict”…"
       />
 
