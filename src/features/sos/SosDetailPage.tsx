@@ -13,7 +13,7 @@ export default function SosDetailPage() {
   const guide = slug ? getSosBySlug(slug) : undefined
 
   if (!guide) {
-    return <EmptyState title="Guide not found" description="That situation isn't in GitBit SOS yet." />
+    return <EmptyState titleAs="h1" title="Guide not found" description="That situation isn't in GitBit SOS yet." />
   }
 
   return (

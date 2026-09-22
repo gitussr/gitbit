@@ -15,7 +15,7 @@ export default function CommandDetailPage() {
   const command = commandSlug ? getCommandBySlug(commandSlug) : undefined
 
   if (!command) {
-    return <EmptyState title="Command not found" description="That command isn't in GitBit Quick yet." />
+    return <EmptyState titleAs="h1" title="Command not found" description="That command isn't in GitBit Quick yet." />
   }
 
   const related = getRelatedCommands(command)

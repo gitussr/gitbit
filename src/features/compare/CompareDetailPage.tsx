@@ -18,7 +18,7 @@ export default function CompareDetailPage() {
   const comparison = slug ? getComparisonBySlug(slug) : undefined
 
   if (!comparison) {
-    return <EmptyState title="Comparison not found" description="GitBit doesn't compare those two commands yet." />
+    return <EmptyState titleAs="h1" title="Comparison not found" description="GitBit doesn't compare those two commands yet." />
   }
 
   const others = comparisons.filter((item) => item.slug !== comparison.slug)

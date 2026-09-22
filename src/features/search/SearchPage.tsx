@@ -34,6 +34,7 @@ export default function SearchPage() {
       <PageHeader title="Search" description={'Commands, concepts, comparisons, Aha explanations, and SOS guides — all in one place.'} />
 
       <SearchInput
+        aria-label="Search GitBit"
         autoFocus
         value={query}
         onChange={(e) => onQueryChange(e.target.value)}

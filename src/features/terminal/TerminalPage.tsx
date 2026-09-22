@@ -19,6 +19,7 @@ export default function TerminalPage() {
       <PageHeader title="GitBit Terminal" description={'A terminal-inspired way to see what a command actually does — for learning, not replacing your real terminal.'} />
 
       <SearchInput
+        aria-label="Search commands to simulate"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onClear={() => setQuery('')}

@@ -13,6 +13,10 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(functi
   { className, value, onClear, shortcutHint, placeholder = 'Search Git commands, concepts…', ...props },
   ref,
 ) {
+  // A placeholder is not a label — it disappears on the first keystroke and
+  // screen readers don't reliably announce it (Section 24). Callers should
+  // pass something better; the placeholder is the floor, not the intent.
+  const accessibleName = props['aria-label'] ?? (props['aria-labelledby'] ? undefined : placeholder)
   const hasValue = typeof value === 'string' && value.length > 0
 
   return (
@@ -30,6 +34,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(functi
         role="searchbox"
         value={value}
         placeholder={placeholder}
+        aria-label={accessibleName}
         className="min-w-0 flex-1 bg-transparent text-sm text-foreground placeholder:text-foreground-tertiary outline-none"
         {...props}
       />

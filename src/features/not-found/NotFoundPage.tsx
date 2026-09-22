@@ -4,7 +4,7 @@ import { ButtonLink } from '@/components/ui/Button'
 
 export default function NotFoundPage() {
   return (
-    <EmptyState
+    <EmptyState titleAs="h1"
       icon={<CompassIcon className="size-7" aria-hidden="true" />}
       title="This page doesn't exist"
       description="It might have moved, or the link might be off."

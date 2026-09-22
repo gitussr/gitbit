@@ -14,7 +14,7 @@ export default function AhaDetailPage() {
   const aha = slug ? getAhaBySlug(slug) : undefined
 
   if (!aha) {
-    return <EmptyState title="Aha not found" description="That one isn't in GitBit Aha yet." />
+    return <EmptyState titleAs="h1" title="Aha not found" description="That one isn't in GitBit Aha yet." />
   }
 
   const index = ahaCards.findIndex((a) => a.slug === aha.slug)

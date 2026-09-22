@@ -34,6 +34,7 @@ export default function QuickPage() {
       <PageHeader title="GitBit Quick" description={'Fast answers to "what command do I need?"'} />
 
       <SearchInput
+        aria-label="Search Git commands"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onClear={() => setQuery('')}

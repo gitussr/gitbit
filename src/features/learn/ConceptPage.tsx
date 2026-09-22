@@ -31,7 +31,7 @@ export default function ConceptPage() {
   const readingProgress = useReadingProgress(conceptSlug)
 
   if (!level || !concept || !level.conceptSlugs.includes(concept.slug)) {
-    return <EmptyState title="Lesson not found" description="That concept isn't part of this level." />
+    return <EmptyState titleAs="h1" title="Lesson not found" description="That concept isn't part of this level." />
   }
 
   const levelConcepts = getConceptsForLevel(level)

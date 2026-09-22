@@ -28,7 +28,7 @@ export default function DailyDetailPage() {
   }, [markRead])
 
   if (!item) {
-    return <EmptyState title="GitBit not found" description="That one isn't in GitBit Daily any more." />
+    return <EmptyState titleAs="h1" title="GitBit not found" description="That one isn't in GitBit Daily any more." />
   }
 
   const { label, icon: Icon } = dailyTypeMeta[item.type]

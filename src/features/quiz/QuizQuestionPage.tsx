@@ -19,7 +19,7 @@ export default function QuizQuestionPage() {
   const quiz = slug ? getQuizBySlug(slug) : undefined
 
   if (!quiz) {
-    return <EmptyState title="Question not found" description="That quiz question doesn't exist." />
+    return <EmptyState titleAs="h1" title="Question not found" description="That quiz question doesn't exist." />
   }
 
   const index = quizQuestions.findIndex((q) => q.slug === quiz.slug)

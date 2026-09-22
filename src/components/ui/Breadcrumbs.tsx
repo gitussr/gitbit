@@ -16,7 +16,12 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
           return (
             <li key={`${item.label}-${index}`} className={isLast ? 'flex min-w-0 items-center' : 'flex shrink-0 items-center gap-1.5'}>
               {item.to && !isLast ? (
-                <Link to={item.to} className="transition-colors duration-150 hover:text-foreground">
+                <Link
+                  to={item.to}
+                  /* min-h-6: the text is 20px tall, under the 24px minimum target size, and
+                     a breadcrumb is a nav control rather than a link inside a sentence. */
+                  className="inline-flex min-h-6 items-center transition-colors duration-150 hover:text-foreground"
+                >
                   {item.label}
                 </Link>
               ) : (
