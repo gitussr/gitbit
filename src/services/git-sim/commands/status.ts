@@ -1,5 +1,5 @@
 import type { ParsedCommand } from '../parse'
-import { currentBranch, headCommitId, stagedChanges, unstagedChanges, untrackedFiles } from '../repo'
+import { currentBranch, headCommitId, headTree, stagedChanges, unstagedChanges, untrackedFiles } from '../repo'
 import { ok, type CommandResult } from '../result'
 import type { ChangeKind, RepoState } from '../types'
 
@@ -18,14 +18,25 @@ function label(kind: ChangeKind, staged: boolean): string {
  * in Git it genuinely is in two places at once.
  */
 export function status(state: RepoState, _parsed: ParsedCommand): CommandResult {
-  const staged = stagedChanges(state)
-  const unstaged = unstagedChanges(state)
-  const untracked = untrackedFiles(state)
+  // A conflicted path is reported once, as unmerged — not also as a staged
+  // or unstaged change, which is what its index and disk copies would say.
+  const unmerged = new Set(state.merging?.conflicts ?? [])
+  const staged = stagedChanges(state).filter((change) => !unmerged.has(change.path))
+  const unstaged = unstagedChanges(state).filter((change) => !unmerged.has(change.path))
+  const untracked = untrackedFiles(state).filter((path) => !unmerged.has(path))
   const branch = currentBranch(state)
 
   const out: string[] = [branch ? `On branch ${branch}` : `HEAD detached at ${headCommitId(state)}`]
 
   if (headCommitId(state) === null) out.push('', 'No commits yet')
+
+  if (state.merging) {
+    out.push(
+      ...(unmerged.size > 0
+        ? ['You have unmerged paths.', '  (fix conflicts and run "git commit")', '  (use "git merge --abort" to abort the merge)']
+        : ['All conflicts fixed but you are still merging.', '  (use "git commit" to conclude merge)']),
+    )
+  }
 
   if (staged.length > 0) {
     out.push('', 'Changes to be committed:', '  (use "git restore --staged <file>..." to unstage)')
@@ -42,12 +53,22 @@ export function status(state: RepoState, _parsed: ParsedCommand): CommandResult 
     for (const change of unstaged) out.push(`\t${label(change.kind, false)}${change.path}`)
   }
 
+  if (state.merging && unmerged.size > 0) {
+    const ours = headTree(state)
+    const theirs = state.commits[state.merging.theirs].tree
+    out.push('', 'Unmerged paths:', '  (use "git add <file>..." to mark resolution)')
+    for (const path of unmerged) {
+      const how = !(path in theirs) ? 'deleted by them:' : !(path in ours) ? 'deleted by us:' : 'both modified:'
+      out.push(`\t${how.padEnd(17)}${path}`)
+    }
+  }
+
   if (untracked.length > 0) {
     out.push('', 'Untracked files:', '  (use "git add <file>..." to include in what will be committed)')
     for (const path of untracked) out.push(`\t${path}`)
   }
 
-  if (staged.length === 0) {
+  if (staged.length === 0 && !state.merging) {
     out.push('')
     if (unstaged.length > 0) out.push('no changes added to commit (use "git add" and/or "git commit -a")')
     else if (untracked.length > 0) out.push('nothing added to commit but untracked files present (use "git add" to track)')

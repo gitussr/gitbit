@@ -14,7 +14,7 @@
 
 import type { GitEvent } from '../events'
 import { currentBranch, headCommitId, headTree, treeDiff } from '../repo'
-import { gitError, ok, type CommandResult } from '../result'
+import { gitError, ok, type CommandResult, type GitError } from '../result'
 import type { BranchName, CommitId, FilePath, HeadRef, RepoState, Tree } from '../types'
 
 export type Destination = { type: 'branch'; branch: BranchName } | { type: 'detached'; commit: CommitId }
@@ -23,6 +23,83 @@ function without(tree: Tree, path: FilePath): Tree {
   const next = { ...tree }
   delete next[path]
   return next
+}
+
+export interface Rewrite {
+  index: Tree
+  workingTree: Tree
+  /** Every path that was written or removed. */
+  paths: FilePath[]
+}
+
+/**
+ * Bring the index and working tree from HEAD's snapshot to new contents,
+ * touching only the paths that differ — or refuse, if that would destroy
+ * something. Shared by everything that moves you onto another snapshot:
+ * switching, and merging.
+ *
+ * The index and the disk can be given different targets because a merge
+ * that stops for conflicts needs exactly that: the conflicted file's
+ * markers on disk, and your own version still in the index.
+ */
+export function rewriteFiles(
+  state: RepoState,
+  toIndex: Tree,
+  toDisk: Tree,
+  operation: 'checkout' | 'merge',
+): Rewrite | GitError {
+  const leaving = headTree(state)
+  const paths = [
+    ...new Set([...treeDiff(leaving, toIndex), ...treeDiff(leaving, toDisk)].map((change) => change.path)),
+  ].sort()
+
+  const blocked = paths.filter((path) => {
+    const settled = state.index[path] === leaving[path] && state.workingTree[path] === leaving[path]
+    const alreadyThere = state.index[path] === toIndex[path] && state.workingTree[path] === toDisk[path]
+    return !settled && !alreadyThere
+  })
+  // An untracked file sitting where the other snapshot keeps a file of the same name.
+  const untrackedInTheWay = paths.filter(
+    (path) =>
+      !(path in state.index) &&
+      path in state.workingTree &&
+      path in toDisk &&
+      state.workingTree[path] !== toDisk[path],
+  )
+
+  if (blocked.length > 0 || untrackedInTheWay.length > 0) {
+    const tracked = blocked.filter((path) => !untrackedInTheWay.includes(path))
+    const leave = operation === 'checkout' ? 'switch branches' : 'merge'
+    const message =
+      tracked.length > 0
+        ? [
+            `error: Your local changes to the following files would be overwritten by ${operation}:`,
+            ...tracked.map((path) => `\t${path}`),
+            `Please commit your changes or stash them before you ${leave}.`,
+            'Aborting',
+          ]
+        : [
+            `error: The following untracked working tree files would be overwritten by ${operation}:`,
+            ...untrackedInTheWay.map((path) => `\t${path}`),
+            `Please move or remove them before you ${leave}.`,
+            'Aborting',
+          ]
+    const doing = operation === 'checkout' ? 'Switching' : 'Merging'
+    return gitError(
+      message.join('\n'),
+      tracked.length > 0
+        ? `${doing} would rewrite ${tracked.join(', ')}, and you have changes there that aren't committed. Git won't destroy work you haven't saved — commit it first.`
+        : `The other side has its own ${untrackedInTheWay.join(', ')}, and an untracked file of that name is in the way. Git never overwrites a file it isn't tracking.`,
+    )
+  }
+
+  let index = state.index
+  let workingTree = state.workingTree
+  for (const path of paths) {
+    index = path in toIndex ? { ...index, [path]: toIndex[path] } : without(index, path)
+    workingTree = path in toDisk ? { ...workingTree, [path]: toDisk[path] } : without(workingTree, path)
+  }
+  return { index, workingTree, paths }
 }
 
 /**
@@ -39,59 +116,11 @@ export function moveHead(
   const fromCommit = headCommitId(state)
   const target = destination.type === 'branch' ? (state.branches[destination.branch] ?? null) : destination.commit
 
-  const leaving = headTree(state)
   // An unborn branch (`switch -c` before the first commit) has no snapshot to bring.
-  const arriving = target ? state.commits[target].tree : leaving
-  const changing = treeDiff(leaving, arriving).map((change) => change.path)
-
-  const blocked = changing.filter((path) => {
-    const settled = state.index[path] === leaving[path] && state.workingTree[path] === leaving[path]
-    const alreadyThere = state.index[path] === arriving[path] && state.workingTree[path] === arriving[path]
-    return !settled && !alreadyThere
-  })
-  // An untracked file sitting where the other branch keeps a file of the same name.
-  const untrackedInTheWay = changing.filter(
-    (path) =>
-      !(path in state.index) &&
-      path in state.workingTree &&
-      path in arriving &&
-      state.workingTree[path] !== arriving[path],
-  )
-
-  if (blocked.length > 0 || untrackedInTheWay.length > 0) {
-    const tracked = blocked.filter((path) => !untrackedInTheWay.includes(path))
-    const message =
-      tracked.length > 0
-        ? [
-            'error: Your local changes to the following files would be overwritten by checkout:',
-            ...tracked.map((path) => `\t${path}`),
-            'Please commit your changes or stash them before you switch branches.',
-            'Aborting',
-          ]
-        : [
-            'error: The following untracked working tree files would be overwritten by checkout:',
-            ...untrackedInTheWay.map((path) => `\t${path}`),
-            'Please move or remove them before you switch branches.',
-            'Aborting',
-          ]
-    return {
-      state,
-      events: [],
-      outcome: gitError(
-        message.join('\n'),
-        tracked.length > 0
-          ? `Switching would rewrite ${tracked.join(', ')} with the other branch's version, and you have changes there that aren't committed. Git won't destroy work you haven't saved — commit it first.`
-          : `The other branch has its own ${untrackedInTheWay.join(', ')}, and an untracked file of that name is in the way. Git never overwrites a file it isn't tracking.`,
-      ),
-    }
-  }
-
-  let index = state.index
-  let workingTree = state.workingTree
-  for (const path of changing) {
-    index = path in arriving ? { ...index, [path]: arriving[path] } : without(index, path)
-    workingTree = path in arriving ? { ...workingTree, [path]: arriving[path] } : without(workingTree, path)
-  }
+  const arriving = target ? state.commits[target].tree : headTree(state)
+  const rewrite = rewriteFiles(state, arriving, arriving, 'checkout')
+  if ('kind' in rewrite) return { state, events: [], outcome: rewrite }
+  const { index, workingTree, paths: changing } = rewrite
 
   const HEAD: HeadRef =
     destination.type === 'branch' ? { type: 'branch', branch: destination.branch } : { type: 'detached', commit: destination.commit }

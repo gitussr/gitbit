@@ -21,6 +21,7 @@ export function emptyState(): RepoState {
     hasRemote: false,
     remoteBranches: {},
     stash: [],
+    merging: null,
     commitCounter: 0,
     defaultBranch: DEFAULT_BRANCH,
   }

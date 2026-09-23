@@ -7,7 +7,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { panelClassName } from '@/components/ui/StatePanel'
 import { Text } from '@/components/ui/Typography'
 import type { GitStateId } from '@/content/states'
-import { complete, suggest } from '@/services/git-sim'
+import { complete, currentBranch, suggest, type RepoState } from '@/services/git-sim'
 import { announceTransition } from './announce'
 import { initialVisualizerState, visualizerReducer } from './visualizerReducer'
 import { VisualizerStage } from './VisualizerStage'
@@ -16,11 +16,21 @@ import { VisualizerStage } from './VisualizerStage'
 const HIGHLIGHT_MS = 1400
 
 /**
- * The file the edit control rewrites, and the two contents it alternates
- * between — a stand-in for an editor, so there is something to stage.
+ * The file the edit control rewrites — a stand-in for an editor, so there
+ * is something to stage.
+ *
+ * What it writes depends on the branch, so two branches that each edit it
+ * genuinely disagree about the same line, and merging them conflicts the
+ * way it would for real. Editing twice on one branch alternates, so the
+ * second edit is still a change. Over a conflicted file, it's the
+ * resolution: one clean version, markers gone.
  */
 const EDIT_PATH = 'index.html'
-const EDITS = ['<h1>Hello</h1>\n', '<h1>Welcome to GitBit</h1>\n']
+function nextEdit(repo: RepoState): string {
+  const where = currentBranch(repo) ?? 'a detached HEAD'
+  const first = `<h1>Hello from ${where}</h1>\n`
+  return repo.workingTree[EDIT_PATH] === first ? `<h1>Hello again from ${where}</h1>\n` : first
+}
 
 /**
  * GitBit Visualizer — the workspace (Section 2).
@@ -86,12 +96,23 @@ export default function VisualizerPage() {
         event.type === 'BRANCH_CREATED' ||
         event.type === 'BRANCH_DELETED' ||
         event.type === 'BRANCH_SWITCHED' ||
-        event.type === 'HEAD_DETACHED'
+        event.type === 'HEAD_DETACHED' ||
+        event.type === 'FAST_FORWARD' ||
+        event.type === 'MERGE_CREATED'
       ) {
         panels.add('local-repository')
       }
-      // Moving HEAD rewrites whichever files differ between the two snapshots.
-      if ((event.type === 'BRANCH_SWITCHED' || event.type === 'HEAD_DETACHED') && event.paths.length > 0) {
+      if (event.type === 'MERGE_CREATED') nodes.add(event.id)
+      // Anything that moves you onto another snapshot rewrites whichever files differ.
+      if (
+        (event.type === 'BRANCH_SWITCHED' ||
+          event.type === 'HEAD_DETACHED' ||
+          event.type === 'FAST_FORWARD' ||
+          event.type === 'MERGE_CREATED' ||
+          event.type === 'MERGE_CONFLICT' ||
+          event.type === 'MERGE_ABORTED') &&
+        event.paths.length > 0
+      ) {
         panels.add('working-directory')
         for (const path of event.paths) nodes.add(`working-directory:${path}`)
       }
@@ -123,7 +144,6 @@ export default function VisualizerPage() {
       ),
     [state.history, state.clearedAt],
   )
-  const nextEdit = EDITS.find((content) => content !== state.repo.workingTree[EDIT_PATH]) ?? EDITS[1]
 
   return (
     <div className="flex flex-col gap-5">
@@ -145,7 +165,7 @@ export default function VisualizerPage() {
               variant="ghost"
               size="sm"
               leadingIcon={<Pencil className="size-4" />}
-              onClick={() => dispatch({ type: 'edit', path: EDIT_PATH, content: nextEdit })}
+              onClick={() => dispatch({ type: 'edit', path: EDIT_PATH, content: nextEdit(state.repo) })}
             >
               Edit {EDIT_PATH}
             </Button>

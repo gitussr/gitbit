@@ -25,8 +25,18 @@ export function add(state: RepoState, parsed: ParsedCommand): CommandResult {
   const index: Tree = { ...state.index }
   const events: GitEvent[] = []
 
+  const unresolved = new Set(state.merging?.conflicts ?? [])
+  const resolved: FilePath[] = []
+
   for (const path of expand(state, parsed)) {
     const onDisk = state.workingTree[path]
+    // Adding a conflicted file is how you tell Git it's settled — even if
+    // its index copy happens to match already. Git doesn't check the file
+    // for leftover markers; it takes your word for it.
+    if (unresolved.has(path)) {
+      resolved.push(path)
+      events.push({ type: 'CONFLICT_RESOLVED', path })
+    }
 
     if (onDisk === undefined) {
       // Staging a file that's gone from disk stages the deletion.
@@ -42,6 +52,11 @@ export function add(state: RepoState, parsed: ParsedCommand): CommandResult {
     events.push({ type: 'FILE_STAGED', path })
   }
 
+  const merging = state.merging && {
+    ...state.merging,
+    conflicts: state.merging.conflicts.filter((path) => !resolved.includes(path)),
+  }
+
   if (events.length === 0) {
     return {
       state,
@@ -51,5 +66,5 @@ export function add(state: RepoState, parsed: ParsedCommand): CommandResult {
   }
 
   // Git says nothing when `add` works. The Visualizer's job is to make what happened visible instead.
-  return { state: { ...state, index }, events, outcome: ok() }
+  return { state: { ...state, index, merging }, events, outcome: ok() }
 }

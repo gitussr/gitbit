@@ -1,4 +1,4 @@
-import { Check, File, FilePlus, FileX, Pencil } from 'lucide-react'
+import { Check, File, FilePlus, FileWarning, FileX, Pencil } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { cn } from '@/utils/cn'
 
@@ -9,7 +9,7 @@ import { cn } from '@/utils/cn'
  * status a file has, this decides what that looks like. Keeping the
  * primitive ignorant of Git is what lets Learn reuse it later.
  */
-export type FileNodeStatus = 'untracked' | 'modified' | 'staged' | 'deleted' | 'unchanged'
+export type FileNodeStatus = 'untracked' | 'modified' | 'staged' | 'deleted' | 'unchanged' | 'conflicted'
 
 const statusMeta: Record<FileNodeStatus, { icon: ComponentType<{ className?: string }>; label: string; className: string }> = {
   untracked: { icon: FilePlus, label: 'untracked', className: 'bg-surface' },
@@ -17,6 +17,9 @@ const statusMeta: Record<FileNodeStatus, { icon: ComponentType<{ className?: str
   staged: { icon: Check, label: 'staged', className: 'bg-safe-subtle' },
   deleted: { icon: FileX, label: 'deleted', className: 'bg-danger-subtle' },
   unchanged: { icon: File, label: 'unchanged', className: 'bg-surface' },
+  // Danger fill with a dashed edge, so it can't be mistaken for `deleted` in
+  // greyscale either: this file is waiting on a decision, not gone.
+  conflicted: { icon: FileWarning, label: 'conflict', className: 'border-dashed bg-danger-subtle' },
 }
 
 export interface FileNodeProps {

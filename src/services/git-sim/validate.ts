@@ -45,7 +45,8 @@ export function validate(parsed: ParsedCommand, state: RepoState): GitError | nu
     }
   }
 
-  if (parsed.name === 'commit') {
+  // Concluding a merge has a message ready — Git offers "Merge branch 'x'" in the editor.
+  if (parsed.name === 'commit' && !(state.merging && parsed.flags.m === undefined)) {
     const message = parsed.flags.m
     if (message === undefined) {
       return gitError(
@@ -59,6 +60,16 @@ export function validate(parsed: ParsedCommand, state: RepoState): GitError | nu
         'A commit with no message is a checkpoint nobody can read later, including you. Git refuses it.',
       )
     }
+  }
+
+  if ((parsed.name === 'switch' || parsed.name === 'checkout') && state.merging) {
+    const unresolved = state.merging.conflicts
+    return gitError(
+      unresolved.length > 0
+        ? `error: you need to resolve your current index first\n${unresolved.map((path) => `${path}: needs merge`).join('\n')}`
+        : 'fatal: cannot switch branch while merging\nConsider "git merge --quit" or "git worktree add".',
+      'You are in the middle of a merge. Finish it (`git add` the resolved files, then `git commit`) or back out with `git merge --abort` before going anywhere else.',
+    )
   }
 
   return null

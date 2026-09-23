@@ -140,3 +140,13 @@ export function resolve(state: RepoState, ref: string): CommitId | null {
 export function contains(state: RepoState, id: CommitId, ancestor: CommitId): boolean {
   return ancestry(state, id).some((commit) => commit.id === ancestor)
 }
+
+/**
+ * The merge base: the most recent commit both histories share — the
+ * "before" that a three-way merge compares each side against.
+ */
+export function mergeBase(state: RepoState, a: CommitId, b: CommitId): CommitId | null {
+  const inA = new Set(ancestry(state, a).map((commit) => commit.id))
+  // `ancestry` is newest first, so the first shared commit is the nearest.
+  return ancestry(state, b).find((commit) => inA.has(commit.id))?.id ?? null
+}

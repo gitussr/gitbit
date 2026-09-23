@@ -8,11 +8,18 @@
  * not because a tutorial says step four comes after step three.
  */
 
-import { currentBranch, isClean, stagedChanges, unstagedChanges, untrackedFiles, headCommitId } from './repo'
+import { contains, currentBranch, isClean, stagedChanges, unstagedChanges, untrackedFiles, headCommitId } from './repo'
 import type { RepoState } from './types'
 
 export function suggest(state: RepoState): string[] {
   if (!state.initialized) return ['git init']
+
+  // Mid-merge, the only sensible moves are finishing it or backing out.
+  if (state.merging) {
+    const [unresolved] = state.merging.conflicts
+    if (unresolved) return [`git add ${unresolved}`, 'git diff', 'git merge --abort']
+    return ['git commit', 'git status', 'git merge --abort']
+  }
 
   if (stagedChanges(state).length > 0) {
     return ['git commit -m "Add homepage"', 'git diff --staged', 'git status']
@@ -34,5 +41,10 @@ export function suggest(state: RepoState): string[] {
 
   // Clean, with history: the natural next thing is a line of work of its own.
   if (others.length === 0) return ['git switch -c feature', 'git branch', 'git log --oneline']
+
+  // A branch with work this one doesn't have yet is waiting to be merged in.
+  const head = headCommitId(state)
+  const behind = others.find((name) => head !== null && !contains(state, head, state.branches[name]))
+  if (behind) return [`git merge ${behind}`, `git switch ${others[0]}`, 'git log --oneline']
   return [`git switch ${others[0]}`, 'git branch', 'git log --oneline']
 }

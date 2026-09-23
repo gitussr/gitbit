@@ -50,3 +50,17 @@ export interface TextProps extends HTMLAttributes<HTMLParagraphElement> {
 export function Text({ variant = 'body', tone = 'primary', as: Tag = 'p', className, ...props }: TextProps) {
   return <Tag className={cn(textStyles[variant], toneStyles[tone], className)} {...props} />
 }
+
+/**
+ * A command or path inside a sentence — the ink chip the reference card
+ * uses for `git init`. Monospace matters beyond looks: in Manrope, `--abort`
+ * renders with a dash ligature and stops being something you can type.
+ */
+export function InlineCode({ className, ...props }: HTMLAttributes<HTMLElement>) {
+  return (
+    <code
+      className={cn('bg-code-bg px-1.5 py-0.5 font-mono text-[0.85em] whitespace-nowrap text-code-text', className)}
+      {...props}
+    />
+  )
+}

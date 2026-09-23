@@ -1,31 +1,10 @@
-import { treeDiffDetailed } from '../diff'
+import { changeSummary } from '../diff'
 import type { GitEvent } from '../events'
 import { commitId } from '../hash'
 import type { ParsedCommand } from '../parse'
 import { currentBranch, headCommitId, headTree, stagedChanges, unstagedChanges, untrackedFiles } from '../repo'
 import { gitError, ok, type CommandResult } from '../result'
 import type { Commit, RepoState } from '../types'
-
-/** `N files changed, N insertions(+), N deletions(-)` — counted from the real diff, not estimated. */
-function summarize(state: RepoState): string {
-  const diffs = treeDiffDetailed(headTree(state), state.index)
-  let insertions = 0
-  let deletions = 0
-
-  for (const diff of diffs) {
-    for (const hunk of diff.hunks) {
-      for (const line of hunk.lines) {
-        if (line.kind === 'add') insertions += 1
-        if (line.kind === 'remove') deletions += 1
-      }
-    }
-  }
-
-  const parts = [`${diffs.length} file${diffs.length === 1 ? '' : 's'} changed`]
-  if (insertions > 0) parts.push(`${insertions} insertion${insertions === 1 ? '' : 's'}(+)`)
-  if (deletions > 0) parts.push(`${deletions} deletion${deletions === 1 ? '' : 's'}(-)`)
-  return ` ${parts.join(', ')}`
-}
 
 /**
  * `git commit` — recording the index as a permanent snapshot.
@@ -37,6 +16,8 @@ function summarize(state: RepoState): string {
  * the new HEAD now hold the same thing (Section 38).
  */
 export function commit(state: RepoState, parsed: ParsedCommand): CommandResult {
+  if (state.merging) return concludeMerge(state, parsed)
+
   const staged = stagedChanges(state)
 
   if (staged.length === 0) {
@@ -85,6 +66,53 @@ export function commit(state: RepoState, parsed: ParsedCommand): CommandResult {
   return {
     state: next,
     events,
-    outcome: ok([`[${prefix}${root} ${id}] ${message}`, summarize(state)]),
+    outcome: ok([`[${prefix}${root} ${id}] ${message}`, changeSummary(headTree(state), state.index)]),
+  }
+}
+
+/**
+ * `git commit` during a merge: records the merge commit the conflicts
+ * interrupted. Two parents — where you were, and what you merged in — and
+ * the index as you've resolved it. It may even match HEAD exactly (you
+ * kept your side everywhere); it's still a merge commit, because the
+ * history *was* combined.
+ */
+function concludeMerge(state: RepoState, parsed: ParsedCommand): CommandResult {
+  const merging = state.merging as NonNullable<RepoState['merging']>
+
+  if (merging.conflicts.length > 0) {
+    return {
+      state,
+      events: [],
+      outcome: gitError(
+        "error: Committing is not possible because you have unmerged files.\nhint: Fix them up in the work tree, and then use 'git add/rm <file>'\nhint: as appropriate to mark resolution and make a commit.\nfatal: Exiting because of an unresolved conflict.",
+        `Still unresolved: ${merging.conflicts.join(', ')}. Edit each one to what it should say, then \`git add\` it to tell Git it's settled.`,
+      ),
+    }
+  }
+
+  const message = typeof parsed.flags.m === 'string' ? parsed.flags.m : merging.message
+  const ours = headCommitId(state) as string
+  const parents = [ours, merging.theirs]
+  const tree = { ...state.index }
+  const id = commitId(parents, message, tree, state.commitCounter)
+  const branch = currentBranch(state)
+
+  const next: RepoState = {
+    ...state,
+    commits: { ...state.commits, [id]: { id, message, parents, tree, order: state.commitCounter } },
+    branches: branch ? { ...state.branches, [branch]: id } : state.branches,
+    HEAD: branch ? state.HEAD : { type: 'detached', commit: id },
+    commitCounter: state.commitCounter + 1,
+    merging: null,
+  }
+
+  return {
+    state: next,
+    events: [
+      { type: 'MERGE_CREATED', id, parents, paths: [] },
+      { type: 'HEAD_MOVED', from: ours, to: id },
+    ],
+    outcome: ok([`[${branch ?? 'detached HEAD'} ${id}] ${message}`]),
   }
 }

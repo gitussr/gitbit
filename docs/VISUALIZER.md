@@ -114,6 +114,7 @@ src/services/git-sim/
   validate.ts    Can this command start? -> GitError | null
   commands/      One module per command: (state, parsed) -> CommandResult
   graph.ts       RepoState -> rows, lanes and edges for the history graph
+  merge3.ts      Line-level three-way merge of one file
   suggest.ts     RepoState -> the commands that make sense next
   complete.ts    RepoState + partial input -> Tab completions
   execute.ts     The single entry point
@@ -184,14 +185,36 @@ HEAD's visual treatment is ink with a lime core (node) and ink with lime
 text (label), never a plain lime fill: the panel HEAD lives in turns lime
 when it lights, which is exactly the moment HEAD has just moved.
 
+### Merging
+
+`git merge` has three outcomes, and telling them apart is the lesson
+(§16): **already up to date**, **fast-forward** (the branch label slides
+forward, no new commit — `FAST_FORWARD`, never `MERGE_CREATED`), and a
+**merge commit** with two parents. `--no-ff` and `--ff-only` exist so the
+difference can be produced on purpose.
+
+Merging is line-level, not file-level (`merge3.ts`, a small diff3 against
+the merge base). Two branches that change different lines of one file
+merge cleanly, as in Git; a file-level simulator would report conflicts
+Git never shows and teach that sharing a file is dangerous.
+
+A conflict is not a refusal. Git merges what it can, writes both versions
+between markers, keeps yours in the index, and waits: `RepoState.merging`
+is `MERGE_HEAD`. `git add` resolves a path (without checking for leftover
+markers — Git doesn't either), `git commit` concludes with the prepared
+message and two parents, `git merge --abort` restores what the merge
+wrote. Switching and merging again are refused meanwhile. `switch`,
+`checkout` and `merge` share one rule for when rewriting files would
+destroy local work (`rewriteFiles` in `commands/moveHead.ts`).
+
 ### Events
 
 ```
 REPO_INITIALIZED  FILE_MODIFIED  FILE_STAGED  FILE_UNSTAGED
 FILE_RESTORED  COMMIT_CREATED  HEAD_MOVED  BRANCH_CREATED
 BRANCH_DELETED  BRANCH_SWITCHED  HEAD_DETACHED  MERGE_CREATED
-FAST_FORWARD  REMOTE_UPDATED  RESET_PERFORMED  WORK_STASHED
-NOTHING_HAPPENED
+FAST_FORWARD  MERGE_CONFLICT  CONFLICT_RESOLVED  MERGE_ABORTED
+REMOTE_UPDATED  RESET_PERFORMED  WORK_STASHED  NOTHING_HAPPENED
 ```
 
 A **failed** command emits no events at all. Events describe change; a
@@ -246,8 +269,9 @@ rejected command is a lesson, not an error state.
 | `HEAD_MOVED` | HEAD's label travels to its new row (FLIP, `hooks/useFlip.ts`) | Label re-renders at the new node; panel highlights |
 | `BRANCH_CREATED` | Label appears at the node it points to; HEAD stays put | Label appears |
 | `BRANCH_SWITCHED` / `HEAD_DETACHED` | HEAD travels; the files the switch rewrote (`paths`) drop into the Working Directory | Both re-render; both panels highlight |
-| `MERGE_CREATED` | New node draws with **two** parent edges | Node and both edges appear |
-| `FAST_FORWARD` | Branch label slides along existing edges — **no new node** | Label re-renders, with the "no new commit" line |
+| `MERGE_CREATED` | New ◆ node draws with **two** parent edges | Node and both edges appear |
+| `FAST_FORWARD` | HEAD's label travels along existing commits — **no new node** | Label re-renders, with the "no new commit" line |
+| `MERGE_CONFLICT` | Conflicted files turn dashed/danger in the Working Directory; a banner says what's waiting | Same — nothing here is motion |
 | `REMOTE_UPDATED` | Nodes mirror across the local/remote boundary | Nodes appear on the far side |
 | `RESET_PERFORMED` | The affected layers highlight in sequence (§18) | Affected layers highlight statically |
 | `WORK_STASHED` | Node moves to the stash drawer | Drawer opens with the node in it |

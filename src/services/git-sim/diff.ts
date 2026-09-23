@@ -154,3 +154,28 @@ export function formatDiff(diffs: FileDiff[]): string[] {
 
   return out
 }
+
+/**
+ * ` N files changed, N insertions(+), N deletions(-)` — the line Git
+ * prints after a commit or a merge, counted from the real diff rather than
+ * estimated.
+ */
+export function changeSummary(from: Tree, to: Tree): string {
+  const diffs = treeDiffDetailed(from, to)
+  let insertions = 0
+  let deletions = 0
+
+  for (const diff of diffs) {
+    for (const hunk of diff.hunks) {
+      for (const line of hunk.lines) {
+        if (line.kind === 'add') insertions += 1
+        if (line.kind === 'remove') deletions += 1
+      }
+    }
+  }
+
+  const parts = [`${diffs.length} file${diffs.length === 1 ? '' : 's'} changed`]
+  if (insertions > 0) parts.push(`${insertions} insertion${insertions === 1 ? '' : 's'}(+)`)
+  if (deletions > 0) parts.push(`${deletions} deletion${deletions === 1 ? '' : 's'}(-)`)
+  return ` ${parts.join(', ')}`
+}

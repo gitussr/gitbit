@@ -24,6 +24,7 @@ const FLAGS: Record<string, string[]> = {
   branch: ['-d', '-D'],
   switch: ['-c', '--detach'],
   checkout: ['-b'],
+  merge: ['--no-ff', '--ff-only', '--abort'],
 }
 
 /**
@@ -42,6 +43,7 @@ function argsFor(state: RepoState, name: string, flags: string[]): string[] {
 
   const others = Object.keys(state.branches).filter((branch) => branch !== currentBranch(state))
   // A new branch's name is yours to invent; there's nothing to complete.
+  if (name === 'merge') return flags.includes('--abort') ? [] : others
   if (name === 'switch' || name === 'checkout') return flags.some((flag) => ['-c', '-b'].includes(flag)) ? [] : others
   if (name === 'branch') return flags.some((flag) => ['-d', '-D'].includes(flag)) ? others : []
   return []

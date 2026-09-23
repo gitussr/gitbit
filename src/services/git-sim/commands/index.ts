@@ -16,6 +16,7 @@ import { commit } from './commit'
 import { diff } from './diff'
 import { init } from './init'
 import { log } from './log'
+import { merge } from './merge'
 import { status } from './status'
 import { switchCommand } from './switch'
 
@@ -32,4 +33,5 @@ export const handlers: Record<string, CommandHandler> = {
   // `switch` is a reserved word.
   switch: switchCommand,
   checkout,
+  merge,
 }

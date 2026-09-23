@@ -42,6 +42,16 @@ export function describeEvent(event: GitEvent): string | null {
       return `Branch ${event.name} was deleted. It pointed at ${event.at}.`
     case 'BRANCH_SWITCHED':
       return `HEAD moved${event.from ? ` from ${event.from}` : ''} to ${event.to}. ${filesRewritten(event.paths)}`
+    case 'FAST_FORWARD':
+      return `Fast-forward: ${event.branch ?? 'HEAD'} slid ahead to ${event.to}. No new commit — the commits were already there. ${filesRewritten(event.paths)}`
+    case 'MERGE_CREATED':
+      return `Merge commit ${event.id} recorded, with two parents: ${event.parents.join(' and ')}.${event.paths.length > 0 ? ` ${filesRewritten(event.paths)}` : ''}`
+    case 'MERGE_CONFLICT':
+      return `The merge stopped. ${event.conflicts.join(', ')} ${event.conflicts.length === 1 ? 'has' : 'have'} both versions in ${event.conflicts.length === 1 ? 'it' : 'them'}, waiting for you. No commit yet.`
+    case 'CONFLICT_RESOLVED':
+      return `${event.path} marked as resolved.`
+    case 'MERGE_ABORTED':
+      return `Merge abandoned. ${event.paths.length > 0 ? `Put back: ${event.paths.join(', ')}.` : ''}`.trim()
     case 'HEAD_DETACHED':
       return `HEAD now points straight at commit ${event.at}, with no branch in between. ${filesRewritten(event.paths)}`
     case 'NOTHING_HAPPENED':

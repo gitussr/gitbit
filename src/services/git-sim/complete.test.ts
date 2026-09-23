@@ -23,6 +23,7 @@ describe('complete', () => {
       'git diff ',
       'git init ',
       'git log ',
+      'git merge ',
       'git status ',
       'git switch ',
     ])

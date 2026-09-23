@@ -31,8 +31,21 @@ export type GitEvent =
   | { type: 'BRANCH_SWITCHED'; from: BranchName | null; to: BranchName; paths: FilePath[] }
   /** HEAD now names a commit directly, with no branch in between (Section 14). */
   | { type: 'HEAD_DETACHED'; at: CommitId; paths: FilePath[] }
-  | { type: 'MERGE_CREATED'; id: CommitId; parents: CommitId[] }
-  | { type: 'FAST_FORWARD'; branch: BranchName; from: CommitId; to: CommitId }
+  /** A commit with two parents: histories combined (Section 16). `paths` were rewritten on disk. */
+  | { type: 'MERGE_CREATED'; id: CommitId; parents: CommitId[]; paths: FilePath[] }
+  /**
+   * The branch label slid forward along commits that already existed.
+   * No new commit — kept apart from MERGE_CREATED because showing that not
+   * every merge makes a commit is the point (Section 16). `branch` is null
+   * when HEAD was detached.
+   */
+  | { type: 'FAST_FORWARD'; branch: BranchName | null; from: CommitId | null; to: CommitId; paths: FilePath[] }
+  /** The merge did everything it could and stopped: these paths need you. */
+  | { type: 'MERGE_CONFLICT'; conflicts: FilePath[]; paths: FilePath[] }
+  /** `git add` on a conflicted path: you've told Git this file is settled. */
+  | { type: 'CONFLICT_RESOLVED'; path: FilePath }
+  /** `git merge --abort`: everything the merge wrote is put back. */
+  | { type: 'MERGE_ABORTED'; paths: FilePath[] }
   | { type: 'REMOTE_UPDATED'; ref: string; to: CommitId }
   | { type: 'RESET_PERFORMED'; mode: 'soft' | 'mixed' | 'hard'; to: CommitId }
   | { type: 'WORK_STASHED'; paths: FilePath[] }

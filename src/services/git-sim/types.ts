@@ -51,6 +51,27 @@ export interface StashEntry {
   index: Tree
 }
 
+/**
+ * A merge in progress (Section 16).
+ *
+ * Git doesn't refuse a conflicting merge: it does every part it can, writes
+ * both versions into the conflicted files, and waits. Until you resolve
+ * each file (`git add`) and conclude (`git commit`) — or give up
+ * (`git merge --abort`) — the repository is in this in-between state.
+ */
+export interface MergeState {
+  /** The commit being merged in. It becomes the merge commit's second parent. */
+  theirs: CommitId
+  /** How to name it in conflict markers and the default message: the branch, or the commit id. */
+  theirsName: string
+  /** Paths still unresolved. `git add` removes a path from here. */
+  conflicts: FilePath[]
+  /** Every path the merge wrote to, so `--abort` knows what to put back. */
+  touched: FilePath[]
+  /** The message the merge commit gets if you don't give one. */
+  message: string
+}
+
 export interface RepoState {
   /** False until `git init`. Files can still sit on disk — a folder is not a repository. */
   initialized: boolean
@@ -81,6 +102,12 @@ export interface RepoState {
   remoteBranches: Record<string, CommitId>
 
   stash: StashEntry[]
+
+  /**
+   * A merge that stopped for conflicts and is waiting for you — Git's
+   * `MERGE_HEAD`. Null the rest of the time.
+   */
+  merging: MergeState | null
 
   /** Monotonic, feeds `Commit.order`. */
   commitCounter: number

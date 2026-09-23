@@ -1,11 +1,13 @@
 import { ArrowDown } from 'lucide-react'
+import { Alert } from '@/components/ui/Alert'
 import { FileNode, type FileNodeStatus } from '@/components/ui/FileNode'
 import { StatePanel } from '@/components/ui/StatePanel'
-import { Text } from '@/components/ui/Typography'
+import { InlineCode, Text } from '@/components/ui/Typography'
 import { gitStates } from '@/services/content'
 import { CommitGraph } from './CommitGraph'
 import type { GitStateId } from '@/content/states'
 import {
+  currentBranch,
   headCommitId,
   stagedChanges,
   unstagedChanges,
@@ -28,7 +30,7 @@ function Hop({ command }: { command: string }) {
   return (
     <div className="flex items-center justify-center gap-2 py-1.5" aria-hidden="true">
       <ArrowDown className="size-4" />
-      <code className="bg-code-bg px-1.5 py-0.5 font-mono text-xs text-code-text">{command}</code>
+      <InlineCode className="text-xs">{command}</InlineCode>
     </div>
   )
 }
@@ -57,6 +59,7 @@ export function VisualizerStage({ repo, active, entering }: VisualizerStageProps
   const staged = stagedChanges(repo)
   const unstaged = new Map(unstagedChanges(repo).map((change) => [change.path, change.kind]))
   const untracked = new Set(untrackedFiles(repo))
+  const conflicted = new Set(repo.merging?.conflicts ?? [])
 
   const onDisk = Object.keys(repo.workingTree).sort()
   // A tracked file deleted from disk is still the Working Directory's business —
@@ -68,7 +71,13 @@ export function VisualizerStage({ repo, active, entering }: VisualizerStageProps
   const workingFiles: { path: string; status: FileNodeStatus }[] = [
     ...onDisk.map((path): { path: string; status: FileNodeStatus } => ({
       path,
-      status: untracked.has(path) ? 'untracked' : unstaged.has(path) ? 'modified' : 'unchanged',
+      status: conflicted.has(path)
+        ? 'conflicted'
+        : untracked.has(path)
+          ? 'untracked'
+          : unstaged.has(path)
+            ? 'modified'
+            : 'unchanged',
     })),
     ...deleted.map((path) => ({ path, status: 'deleted' as const })),
   ]
@@ -77,6 +86,25 @@ export function VisualizerStage({ repo, active, entering }: VisualizerStageProps
 
   return (
     <div className="flex flex-col">
+      {repo.merging && (
+        <Alert
+          variant={conflicted.size > 0 ? 'warning' : 'info'}
+          title={`Merging ${repo.merging.theirsName} into ${currentBranch(repo) ?? 'HEAD'}`}
+          className="mb-3"
+        >
+          {conflicted.size > 0 ? (
+            <>
+              Waiting on you: {[...conflicted].join(', ')}. Edit each one, then <InlineCode>git add</InlineCode> it —
+              or back out with <InlineCode>git merge --abort</InlineCode>.
+            </>
+          ) : (
+            <>
+              Every conflict is resolved. <InlineCode>git commit</InlineCode> finishes the merge.
+            </>
+          )}
+        </Alert>
+      )}
+
       <StatePanel
         label="Working Directory"
         hint={hintFor('working-directory')}
