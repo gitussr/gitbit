@@ -10,12 +10,26 @@ import type { ParsedCommand } from '../parse'
 import type { CommandResult } from '../result'
 import type { RepoState } from '../types'
 import { add } from './add'
+import { branch } from './branch'
+import { checkout } from './checkout'
 import { commit } from './commit'
 import { diff } from './diff'
 import { init } from './init'
 import { log } from './log'
 import { status } from './status'
+import { switchCommand } from './switch'
 
 export type CommandHandler = (state: RepoState, parsed: ParsedCommand) => CommandResult
 
-export const handlers: Record<string, CommandHandler> = { init, status, add, commit, log, diff }
+export const handlers: Record<string, CommandHandler> = {
+  init,
+  status,
+  add,
+  commit,
+  log,
+  diff,
+  branch,
+  // `switch` is a reserved word.
+  switch: switchCommand,
+  checkout,
+}

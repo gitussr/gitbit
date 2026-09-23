@@ -67,19 +67,34 @@ export default function VisualizerPage() {
     if (!last || !highlighted) return { active: panels, entering: nodes }
 
     for (const event of last.events) {
+      // File entrances are keyed by panel: the same path can arrive in one
+      // place without the copy in another replaying its entrance.
       if (event.type === 'FILE_MODIFIED') {
         panels.add('working-directory')
-        nodes.add(event.path)
+        nodes.add(`working-directory:${event.path}`)
       }
       if (event.type === 'FILE_STAGED' || event.type === 'FILE_UNSTAGED') {
         panels.add('staging-area')
-        nodes.add(event.path)
+        nodes.add(`staging-area:${event.path}`)
       }
       if (event.type === 'COMMIT_CREATED') {
         panels.add('local-repository')
         nodes.add(event.id)
       }
       if (event.type === 'REPO_INITIALIZED') panels.add('local-repository')
+      if (
+        event.type === 'BRANCH_CREATED' ||
+        event.type === 'BRANCH_DELETED' ||
+        event.type === 'BRANCH_SWITCHED' ||
+        event.type === 'HEAD_DETACHED'
+      ) {
+        panels.add('local-repository')
+      }
+      // Moving HEAD rewrites whichever files differ between the two snapshots.
+      if ((event.type === 'BRANCH_SWITCHED' || event.type === 'HEAD_DETACHED') && event.paths.length > 0) {
+        panels.add('working-directory')
+        for (const path of event.paths) nodes.add(`working-directory:${path}`)
+      }
     }
 
     return { active: panels, entering: nodes }

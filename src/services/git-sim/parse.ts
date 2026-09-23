@@ -20,7 +20,7 @@ export interface ParsedCommand {
 }
 
 /** Commands the engine runs today. */
-export const IMPLEMENTED = new Set(['init', 'status', 'add', 'commit', 'log', 'diff'])
+export const IMPLEMENTED = new Set(['init', 'status', 'add', 'commit', 'log', 'diff', 'branch', 'switch', 'checkout'])
 
 /**
  * Real Git commands the Visualizer will get to, mapped to the brief's
@@ -29,9 +29,6 @@ export const IMPLEMENTED = new Set(['init', 'status', 'add', 'commit', 'log', 'd
  * "not a git command" would be a wrong one.
  */
 const PLANNED: Record<string, string> = {
-  branch: 'branches and HEAD',
-  switch: 'branches and HEAD',
-  checkout: 'branches and HEAD',
   merge: 'merging',
   clone: 'remotes',
   fetch: 'remotes',
@@ -49,8 +46,8 @@ const PLANNED: Record<string, string> = {
   reflog: 'rewriting history',
 }
 
-/** Short flags that swallow the next token as their value. */
-const VALUE_FLAGS = new Set(['m'])
+/** Short flags that swallow the next token as their value: `-m "msg"`, `switch -c name`, `checkout -b name`. */
+const VALUE_FLAGS = new Set(['m', 'c', 'b'])
 
 function tokenize(input: string): string[] | null {
   const tokens: string[] = []

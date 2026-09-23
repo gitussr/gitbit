@@ -17,13 +17,16 @@ describe('complete', () => {
   it('offers only the subcommands the engine simulates', () => {
     expect(complete(projectFolder(), 'git ')).toEqual([
       'git add ',
+      'git branch ',
+      'git checkout ',
       'git commit ',
       'git diff ',
       'git init ',
       'git log ',
       'git status ',
+      'git switch ',
     ])
-    expect(complete(projectFolder(), 'git s')).toEqual(['git status '])
+    expect(complete(projectFolder(), 'git st')).toEqual(['git status '])
     // A real command that isn't simulated yet is not offered.
     expect(complete(projectFolder(), 'git pu')).toEqual([])
   })
@@ -42,6 +45,19 @@ describe('complete', () => {
     expect(complete(projectFolder(), 'git log --o')).toEqual(['git log --oneline '])
     expect(complete(projectFolder(), 'git commit -')).toEqual(['git commit -m "'])
     expect(complete(projectFolder(), 'git status -')).toEqual([])
+  })
+
+  it('completes switch to the branches you are not on', () => {
+    const state = after('git init', 'git add .', 'git commit -m "First"', 'git branch feature', 'git branch fix')
+    expect(complete(state, 'git switch ')).toEqual(['git switch feature ', 'git switch fix '])
+    expect(complete(state, 'git switch fe')).toEqual(['git switch feature '])
+    expect(complete(state, 'git branch -d f')).toEqual(['git branch -d feature ', 'git branch -d fix '])
+  })
+
+  it('offers nothing for a branch name you are inventing', () => {
+    const state = after('git init', 'git add .', 'git commit -m "First"', 'git branch feature')
+    expect(complete(state, 'git switch -c ')).toEqual([])
+    expect(complete(state, 'git branch f')).toEqual([])
   })
 
   it('leaves shell commands alone', () => {

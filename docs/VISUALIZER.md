@@ -165,13 +165,33 @@ Three properties this buys, and the reasons they're worth the structure:
 The engine emits events; it does **not** emit prose. It has no import of
 `src/content/**`. Teaching is the Explainer's job.
 
+### Switching
+
+`switch` and `checkout` share `commands/moveHead.ts`, which rewrites only
+the paths that differ between the snapshot you leave and the one you
+reach. Everything else on disk is left alone, so uncommitted work
+*follows you* to the other branch, and Git refuses only when a path it
+must rewrite has local changes (or an untracked file is in its way).
+That falls out of the rule rather than being a special case, and it's
+one of the better surprises available.
+
+`checkout <commit>` detaches HEAD without being asked, the way people
+actually end up there; `switch` refuses a bare commit unless given
+`--detach`. `checkout <file>` says it isn't simulated yet rather than
+guessing.
+
+HEAD's visual treatment is ink with a lime core (node) and ink with lime
+text (label), never a plain lime fill: the panel HEAD lives in turns lime
+when it lights, which is exactly the moment HEAD has just moved.
+
 ### Events
 
 ```
 REPO_INITIALIZED  FILE_MODIFIED  FILE_STAGED  FILE_UNSTAGED
 FILE_RESTORED  COMMIT_CREATED  HEAD_MOVED  BRANCH_CREATED
-BRANCH_SWITCHED  MERGE_CREATED  FAST_FORWARD  REMOTE_UPDATED
-RESET_PERFORMED  WORK_STASHED  NOTHING_HAPPENED
+BRANCH_DELETED  BRANCH_SWITCHED  HEAD_DETACHED  MERGE_CREATED
+FAST_FORWARD  REMOTE_UPDATED  RESET_PERFORMED  WORK_STASHED
+NOTHING_HAPPENED
 ```
 
 A **failed** command emits no events at all. Events describe change; a
@@ -223,9 +243,9 @@ rejected command is a lesson, not an error state.
 | `FILE_STAGED` | Node travels Working Directory → Staging Area | Node appears in Staging, target panel highlights once |
 | `FILE_UNSTAGED` / `FILE_RESTORED` | The same journey, reversed | As above |
 | `COMMIT_CREATED` | Staged nodes converge into a new graph node; Staging empties | New node appears; Staging empties |
-| `HEAD_MOVED` | HEAD pointer travels to its new node | Pointer re-renders at the new node |
-| `BRANCH_CREATED` | Label fades in at the node it points to | Label appears |
-| `BRANCH_SWITCHED` | `HEAD_MOVED` + Working Directory contents swap | Both re-render |
+| `HEAD_MOVED` | HEAD's label travels to its new row (FLIP, `hooks/useFlip.ts`) | Label re-renders at the new node; panel highlights |
+| `BRANCH_CREATED` | Label appears at the node it points to; HEAD stays put | Label appears |
+| `BRANCH_SWITCHED` / `HEAD_DETACHED` | HEAD travels; the files the switch rewrote (`paths`) drop into the Working Directory | Both re-render; both panels highlight |
 | `MERGE_CREATED` | New node draws with **two** parent edges | Node and both edges appear |
 | `FAST_FORWARD` | Branch label slides along existing edges — **no new node** | Label re-renders, with the "no new commit" line |
 | `REMOTE_UPDATED` | Nodes mirror across the local/remote boundary | Nodes appear on the far side |

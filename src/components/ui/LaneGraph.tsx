@@ -18,7 +18,11 @@ export interface LaneGraphRow {
   lane: number
   /** `diamond` marks a node with more than one parent — a merge (Section 31's ◆). */
   shape?: 'dot' | 'diamond'
-  /** Lime fill. The graph uses it for the node HEAD resolves to. */
+  /**
+   * A larger ink ring with a lime core. The graph uses it for the node HEAD
+   * resolves to. Not a plain lime fill: that vanishes against a lit (lime)
+   * panel, which is exactly when HEAD has just moved.
+   */
   emphasis?: boolean
   /** Plays the entrance when this row has just arrived. */
   entering?: boolean
@@ -109,27 +113,19 @@ export function LaneGraph({ rows, edges, lanes, label, className }: LaneGraphPro
         {rows.map((row, index) => {
           const cx = x(row.lane)
           const cy = y(index)
+          const r = row.emphasis ? NODE_R + 2 : NODE_R
           return (
             <g
               key={row.id}
-              className={cn(
-                'stroke-accent',
-                row.emphasis ? 'fill-highlight' : 'fill-accent',
-                row.entering && 'motion-safe:animate-viz-drop',
-              )}
+              className={cn('fill-accent stroke-accent', row.entering && 'motion-safe:animate-viz-drop')}
               strokeWidth={2}
             >
               {row.shape === 'diamond' ? (
-                <rect
-                  x={cx - NODE_R}
-                  y={cy - NODE_R}
-                  width={NODE_R * 2}
-                  height={NODE_R * 2}
-                  transform={`rotate(45 ${cx} ${cy})`}
-                />
+                <rect x={cx - r} y={cy - r} width={r * 2} height={r * 2} transform={`rotate(45 ${cx} ${cy})`} />
               ) : (
-                <circle cx={cx} cy={cy} r={NODE_R} />
+                <circle cx={cx} cy={cy} r={r} />
               )}
+              {row.emphasis && <circle cx={cx} cy={cy} r={NODE_R - 3} className="fill-highlight stroke-none" />}
             </g>
           )
         })}

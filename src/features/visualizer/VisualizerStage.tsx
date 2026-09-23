@@ -19,7 +19,7 @@ export interface VisualizerStageProps {
   repo: RepoState
   /** Panels to light because something just landed in them. */
   active: Set<GitStateId>
-  /** Paths and commit ids that have just arrived, and should play their entrance. */
+  /** What has just arrived and should play its entrance: `<panel>:<path>` for files, the id for commits. */
   entering: Set<string>
 }
 
@@ -91,7 +91,7 @@ export function VisualizerStage({ repo, active, entering }: VisualizerStageProps
                 key={file.path}
                 path={file.path}
                 status={file.status}
-                entering={entering.has(file.path) && file.status === 'modified'}
+                entering={entering.has(`working-directory:${file.path}`)}
               />
             ))}
           </ul>
@@ -114,7 +114,7 @@ export function VisualizerStage({ repo, active, entering }: VisualizerStageProps
                 key={change.path}
                 path={change.path}
                 status={change.kind === 'deleted' ? 'deleted' : 'staged'}
-                entering={entering.has(change.path)}
+                entering={entering.has(`staging-area:${change.path}`)}
               />
             ))}
           </ul>

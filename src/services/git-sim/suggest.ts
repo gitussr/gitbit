@@ -8,7 +8,7 @@
  * not because a tutorial says step four comes after step three.
  */
 
-import { isClean, stagedChanges, unstagedChanges, untrackedFiles, headCommitId } from './repo'
+import { currentBranch, isClean, stagedChanges, unstagedChanges, untrackedFiles, headCommitId } from './repo'
 import type { RepoState } from './types'
 
 export function suggest(state: RepoState): string[] {
@@ -24,5 +24,15 @@ export function suggest(state: RepoState): string[] {
 
   if (isClean(state) && headCommitId(state) === null) return ['git status']
 
-  return ['git log --oneline', 'git status']
+  const branch = currentBranch(state)
+  const others = Object.keys(state.branches)
+    .filter((name) => name !== branch)
+    .sort()
+
+  // Standing on a bare commit: the two ways out are "go back" and "keep this".
+  if (branch === null) return [`git switch ${others[0] ?? state.defaultBranch}`, 'git switch -c experiment', 'git log --oneline']
+
+  // Clean, with history: the natural next thing is a line of work of its own.
+  if (others.length === 0) return ['git switch -c feature', 'git branch', 'git log --oneline']
+  return [`git switch ${others[0]}`, 'git branch', 'git log --oneline']
 }

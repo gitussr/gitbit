@@ -21,7 +21,16 @@ export type GitEvent =
   | { type: 'COMMIT_CREATED'; id: CommitId; message: string; paths: FilePath[] }
   | { type: 'HEAD_MOVED'; from: CommitId | null; to: CommitId }
   | { type: 'BRANCH_CREATED'; name: BranchName; at: CommitId }
-  | { type: 'BRANCH_SWITCHED'; from: BranchName | null; to: BranchName }
+  | { type: 'BRANCH_DELETED'; name: BranchName; at: CommitId }
+  /**
+   * HEAD now names a different branch. `paths` are the files the switch
+   * rewrote on disk — empty when both branches point at the same snapshot,
+   * which is itself worth seeing: switching moved a pointer and nothing
+   * else.
+   */
+  | { type: 'BRANCH_SWITCHED'; from: BranchName | null; to: BranchName; paths: FilePath[] }
+  /** HEAD now names a commit directly, with no branch in between (Section 14). */
+  | { type: 'HEAD_DETACHED'; at: CommitId; paths: FilePath[] }
   | { type: 'MERGE_CREATED'; id: CommitId; parents: CommitId[] }
   | { type: 'FAST_FORWARD'; branch: BranchName; from: CommitId; to: CommitId }
   | { type: 'REMOTE_UPDATED'; ref: string; to: CommitId }

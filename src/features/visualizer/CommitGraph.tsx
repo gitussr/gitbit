@@ -1,7 +1,9 @@
-import { memo } from 'react'
+import { memo, useRef, type Ref } from 'react'
 import { BranchLabel } from '@/components/ui/BranchLabel'
 import { CommitNode } from '@/components/ui/CommitNode'
 import { LaneGraph, type LaneGraphRow } from '@/components/ui/LaneGraph'
+import { useFlip } from '@/hooks/useFlip'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { historyGraph, type GraphNode, type RepoState } from '@/services/git-sim'
 
 export interface CommitGraphProps {
@@ -18,16 +20,28 @@ function lineage({ commit }: GraphNode): string {
   return `Merge of ${[first, ...rest].join(' and ')}.`
 }
 
-function Refs({ node, headBranch }: { node: GraphNode; headBranch: string | null }) {
+function Refs({
+  node,
+  headBranch,
+  headRef,
+}: {
+  node: GraphNode
+  headBranch: string | null
+  headRef: Ref<HTMLSpanElement>
+}) {
   const detached = node.isHead && headBranch === null
   if (!detached && node.branches.length === 0 && node.remotes.length === 0) return null
 
   return (
     <span className="flex shrink-0 items-center gap-1">
-      {detached && <BranchLabel name="HEAD" variant="head" />}
-      {node.branches.map((branch) => (
-        <BranchLabel key={branch} name={branch} variant={branch === headBranch ? 'current' : 'branch'} />
-      ))}
+      {detached && <BranchLabel ref={headRef} name="HEAD" variant="head" />}
+      {node.branches.map((branch) =>
+        branch === headBranch ? (
+          <BranchLabel key={branch} ref={headRef} name={branch} variant="current" />
+        ) : (
+          <BranchLabel key={branch} name={branch} variant="branch" />
+        ),
+      )}
       {node.remotes.map((ref) => (
         <BranchLabel key={ref} name={ref} variant="remote" />
       ))}
@@ -45,6 +59,13 @@ function Refs({ node, headBranch }: { node: GraphNode; headBranch: string | null
  */
 export const CommitGraph = memo(function CommitGraph({ repo, entering }: CommitGraphProps) {
   const graph = historyGraph(repo)
+  const head = graph.nodes.find((node) => node.isHead)
+
+  // HEAD's label is re-rendered on whichever row HEAD reaches; this makes
+  // it travel there instead of blinking out and in (Section 14).
+  const anchor = useRef<HTMLDivElement>(null)
+  const reduced = useReducedMotion()
+  const headRef = useFlip<HTMLSpanElement>(anchor, `${graph.headBranch}@${head?.commit.id}`, !reduced)
 
   const rows: LaneGraphRow[] = graph.nodes.map((node) => ({
     id: node.commit.id,
@@ -57,11 +78,15 @@ export const CommitGraph = memo(function CommitGraph({ repo, entering }: CommitG
         id={node.commit.id}
         message={node.commit.message}
         isRoot={node.commit.parents.length === 0}
-        refs={<Refs node={node} headBranch={graph.headBranch} />}
+        refs={<Refs node={node} headBranch={graph.headBranch} headRef={headRef} />}
         lineage={lineage(node)}
       />
     ),
   }))
 
-  return <LaneGraph rows={rows} edges={graph.edges} lanes={graph.lanes} label="Commits, newest first" />
+  return (
+    <div ref={anchor}>
+      <LaneGraph rows={rows} edges={graph.edges} lanes={graph.lanes} label="Commits, newest first" />
+    </div>
+  )
 })

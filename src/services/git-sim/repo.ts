@@ -120,3 +120,23 @@ export function refsAt(state: RepoState, id: CommitId): string[] {
     .sort()
   return [...refs, ...remotes]
 }
+
+/**
+ * What a name on the command line points at: a branch, `HEAD`, or a
+ * commit id — whole or abbreviated, as long as the prefix is unambiguous
+ * and at least four characters, which is Git's own minimum.
+ */
+export function resolve(state: RepoState, ref: string): CommitId | null {
+  if (ref === 'HEAD') return headCommitId(state)
+  if (ref in state.branches) return state.branches[ref]
+  if (ref in state.commits) return ref
+  if (ref.length < 4) return null
+
+  const matches = Object.keys(state.commits).filter((id) => id.startsWith(ref))
+  return matches.length === 1 ? matches[0] : null
+}
+
+/** Whether `ancestor` is `id` or somewhere in its history — "is that work already in here?". */
+export function contains(state: RepoState, id: CommitId, ancestor: CommitId): boolean {
+  return ancestry(state, id).some((commit) => commit.id === ancestor)
+}
