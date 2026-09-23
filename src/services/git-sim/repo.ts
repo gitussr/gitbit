@@ -146,6 +146,7 @@ export function resolve(state: RepoState, ref: string): CommitId | null {
 
   if (ref === 'HEAD') return headCommitId(state)
   if (ref in state.branches) return state.branches[ref]
+  if (ref in state.remoteBranches) return state.remoteBranches[ref]
   if (ref in state.commits) return ref
   if (ref.length < 4) return null
 
@@ -166,4 +167,20 @@ export function mergeBase(state: RepoState, a: CommitId, b: CommitId): CommitId 
   const inA = new Set(ancestry(state, a).map((commit) => commit.id))
   // `ancestry` is newest first, so the first shared commit is the nearest.
   return ancestry(state, b).find((commit) => inA.has(commit.id))?.id ?? null
+}
+
+/**
+ * How far a branch and the remote-tracking ref it follows have diverged:
+ * commits only you have (`ahead`, what `git push` would send) and commits
+ * only it has (`behind`, what `git pull` would bring). Counted against
+ * your *record* of the remote — as of your last fetch — exactly as
+ * `git status` counts it.
+ */
+export function aheadBehind(state: RepoState, local: CommitId, tracking: CommitId): { ahead: number; behind: number } {
+  const mine = new Set(ancestry(state, local).map((commit) => commit.id))
+  const theirs = new Set(ancestry(state, tracking).map((commit) => commit.id))
+  return {
+    ahead: [...mine].filter((id) => !theirs.has(id)).length,
+    behind: [...theirs].filter((id) => !mine.has(id)).length,
+  }
 }

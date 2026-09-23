@@ -21,11 +21,12 @@ export {
   type SnapshotStatus,
   type TimelineEntry,
 } from './timeline'
-export { historyGraph, type GraphEdge, type GraphNode, type HistoryGraph } from './graph'
-export { writeFile, deleteFile, type WorkspaceResult } from './workspace'
-export { emptyState, projectFolder, folderWith, seeds, type SeedName } from './seed'
+export { historyGraph, remoteGraph, type GraphEdge, type GraphNode, type HistoryGraph } from './graph'
+export { writeFile, deleteFile, teammatePush, type WorkspaceResult } from './workspace'
+export { emptyState, projectFolder, folderWith, oneCommit, readyToMerge, seeds, type SeedName } from './seed'
 
 export {
+  aheadBehind,
   ancestry,
   currentBranch,
   headCommit,
@@ -56,3 +57,4 @@ export type {
   StashEntry,
   Tree,
 } from './types'
+export { meets, progress, type Expectation } from './progress'

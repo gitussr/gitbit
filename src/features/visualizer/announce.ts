@@ -72,6 +72,18 @@ export function describeEvent(event: GitEvent): string | null {
           : ''
       return `${moved} with a ${event.mode} reset. ${kept}${lost}`
     }
+    case 'REMOTE_ADDED':
+      return `A remote called ${event.name} now points at ${event.url}. Nothing was sent — it's an address, and the remote starts empty.`
+    case 'REMOTE_UPDATED': {
+      const count = `${event.commits.length} ${event.commits.length === 1 ? 'commit' : 'commits'}`
+      if (event.direction === 'push') {
+        return `Sent ${count} to ${event.remote}. Its ${event.branch} now points at ${event.to}, and your ${event.remote}/${event.branch} records that.`
+      }
+      if (event.direction === 'fetch') {
+        return `Fetched ${count} from ${event.remote}. Your ${event.remote}/${event.branch} moved to ${event.to}; your own branch and files didn't change.`
+      }
+      return `Someone else pushed to ${event.remote}: its ${event.branch} is now at ${event.to}. Nothing on your machine knows yet — your ${event.remote}/${event.branch} still says ${event.from ?? 'nothing'}.`
+    }
     case 'NOTHING_HAPPENED':
       return event.reason
     default:

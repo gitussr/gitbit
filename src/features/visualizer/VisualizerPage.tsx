@@ -1,5 +1,6 @@
-import { History, Pencil, Redo2, RotateCcw, Undo2, Repeat } from 'lucide-react'
+import { History, Pencil, Redo2, Repeat, RotateCcw, Undo2, Users } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useState } from 'react'
+import { Navigate, useParams } from 'react-router-dom'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
 import { LoadingState } from '@/components/ui/LoadingState'
@@ -8,6 +9,8 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { panelClassName } from '@/components/ui/StatePanel'
 import { Text } from '@/components/ui/Typography'
 import type { GitStateId } from '@/content/states'
+import { getScenarioSummary, type ScenarioSummary } from '@/content/visualizer/catalog'
+import type { ScenarioAction } from '@/content/visualizer/scenarios'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { complete, currentBranch, suggest, type RepoState, type ResetLayer } from '@/services/git-sim'
 import { announceTransition, announceUndo, discardedBy } from './announce'
@@ -17,6 +20,13 @@ import { VisualizerStage } from './VisualizerStage'
 
 /** Opt-in, so it's its own chunk: the Visualizer's first load doesn't pay for it. */
 const TimeMachine = lazy(() => import('./TimeMachine'))
+
+/**
+ * Its own chunk too: the scenarios' step-by-step text is the bulk of it,
+ * and the stage is usable before it arrives (docs/VISUALIZER.md,
+ * Performance budget).
+ */
+const ScenarioRail = lazy(() => import('./ScenarioRail'))
 
 /** How long a replay shows the "before" state before playing the step again. */
 const REPLAY_MS = 500
@@ -62,7 +72,17 @@ function nextEdit(repo: RepoState): string {
  * translation".
  */
 export default function VisualizerPage() {
-  const [state, dispatch] = useReducer(visualizerReducer, undefined, initialVisualizerState)
+  const { scenarioSlug } = useParams()
+  const scenario = scenarioSlug ? getScenarioSummary(scenarioSlug) : undefined
+  if (scenarioSlug && !scenario) return <Navigate to="/visualizer" replace />
+
+  // Keyed by scenario, so moving between scenarios (or back to free play)
+  // starts a fresh workspace from that scenario's seed.
+  return <Workspace key={scenario?.slug ?? 'free-play'} scenario={scenario} />
+}
+
+function Workspace({ scenario }: { scenario?: ScenarioSummary }) {
+  const [state, dispatch] = useReducer(visualizerReducer, scenario?.seed, initialVisualizerState)
   const [seen, setSeen] = useState(0)
   const [highlighted, setHighlighted] = useState(false)
   const [step, setStep] = useState(1)
@@ -159,6 +179,14 @@ export default function VisualizerPage() {
         panels.add('local-repository')
       }
       if (event.type === 'MERGE_CREATED') nodes.add(event.id)
+      // Crossing the boundary: pushes (yours or a teammate's) land on the
+      // remote; a fetch lands in your repository, as a moved origin/ label.
+      if (event.type === 'REMOTE_ADDED') panels.add('remote-repository')
+      if (event.type === 'REMOTE_UPDATED') {
+        const here = event.direction === 'fetch'
+        panels.add(here ? 'local-repository' : 'remote-repository')
+        for (const id of event.commits) nodes.add(here ? id : `remote:${id}`)
+      }
       // Anything that moves you onto another snapshot rewrites whichever files differ.
       if (
         (event.type === 'BRANCH_SWITCHED' ||
@@ -191,6 +219,13 @@ export default function VisualizerPage() {
     }, REPLAY_MS)
   }
 
+  /** A scenario step's one-click action: the same dispatches the controls make. */
+  const act = (action: ScenarioAction) => {
+    if ('run' in action) dispatch({ type: 'run', input: action.run })
+    else if ('edit' in action) dispatch({ type: 'edit', path: action.edit, content: nextEdit(state.repo) })
+    else dispatch({ type: 'teammate' })
+  }
+
   const lost = last ? discardedBy(last) : []
   const suggestions = suggest(state.repo)
   const repo = state.repo
@@ -207,7 +242,7 @@ export default function VisualizerPage() {
         (entry, i): ConsoleEntry => ({
           id: state.clearedAt + i,
           input: entry.input,
-          note: entry.source === 'edit',
+          note: entry.source !== 'command',
           failed: entry.outcome.kind !== 'ok',
           // A refusal prints Git's own message; why it happened is the explainer's line.
           output: entry.outcome.kind === 'ok' ? entry.outcome.output : [entry.outcome.message],
@@ -227,6 +262,10 @@ export default function VisualizerPage() {
         Nothing here touches a repository on your computer. Break whatever you like.
       </Alert>
 
+      <Suspense fallback={<div className="min-h-7" />}>
+        <ScenarioRail slug={scenario?.slug} history={state.history} onAct={act} />
+      </Suspense>
+
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <VisualizerStage
           repo={state.repo}
@@ -245,6 +284,13 @@ export default function VisualizerPage() {
             >
               Edit {EDIT_PATH}
             </Button>
+            {/* The world moving on without you — only once there's a remote
+                branch for someone else to push to. */}
+            {state.repo.remote && Object.keys(state.repo.remote.branches).length > 0 && (
+              <Button variant="ghost" size="sm" leadingIcon={<Users className="size-4" />} onClick={() => dispatch({ type: 'teammate' })}>
+                Teammate pushes
+              </Button>
+            )}
           </div>
 
           {/* Section 27: these act on the simulator, not on Git, and say so —

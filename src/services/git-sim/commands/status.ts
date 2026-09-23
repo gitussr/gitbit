@@ -1,6 +1,7 @@
 import type { ParsedCommand } from '../parse'
 import { currentBranch, headCommitId, headTree, stagedChanges, unstagedChanges, untrackedFiles } from '../repo'
 import { ok, type CommandResult } from '../result'
+import { trackingLines } from './remote'
 import type { ChangeKind, RepoState } from '../types'
 
 /** Git pads the label to twelve columns: `new file:   `, `modified:   `, `deleted:    `. */
@@ -26,7 +27,7 @@ export function status(state: RepoState, _parsed: ParsedCommand): CommandResult 
   const untracked = untrackedFiles(state).filter((path) => !unmerged.has(path))
   const branch = currentBranch(state)
 
-  const out: string[] = [branch ? `On branch ${branch}` : `HEAD detached at ${headCommitId(state)}`]
+  const out: string[] = [branch ? `On branch ${branch}` : `HEAD detached at ${headCommitId(state)}`, ...trackingLines(state)]
 
   if (headCommitId(state) === null) out.push('', 'No commits yet')
 

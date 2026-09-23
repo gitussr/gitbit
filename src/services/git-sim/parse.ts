@@ -20,7 +20,7 @@ export interface ParsedCommand {
 }
 
 /** Commands the engine runs today. */
-export const IMPLEMENTED = new Set(['init', 'status', 'add', 'commit', 'log', 'diff', 'branch', 'switch', 'checkout', 'merge', 'restore', 'reset', 'revert'])
+export const IMPLEMENTED = new Set(['init', 'status', 'add', 'commit', 'log', 'diff', 'branch', 'switch', 'checkout', 'merge', 'restore', 'reset', 'revert', 'remote', 'push', 'fetch', 'pull'])
 
 /**
  * Real Git commands the Visualizer will get to, mapped to the brief's
@@ -29,11 +29,7 @@ export const IMPLEMENTED = new Set(['init', 'status', 'add', 'commit', 'log', 'd
  * "not a git command" would be a wrong one.
  */
 const PLANNED: Record<string, string> = {
-  clone: 'remotes',
-  fetch: 'remotes',
-  pull: 'remotes',
-  push: 'remotes',
-  remote: 'remotes',
+  clone: 'remotes (the simulator starts local and adds one)',
   stash: 'setting work aside',
   clean: 'setting work aside',
   rebase: 'rewriting history',

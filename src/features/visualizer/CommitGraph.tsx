@@ -4,7 +4,7 @@ import { CommitNode } from '@/components/ui/CommitNode'
 import { LaneGraph, type LaneGraphRow } from '@/components/ui/LaneGraph'
 import { useFlip } from '@/hooks/useFlip'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
-import { historyGraph, type GraphNode, type RepoState } from '@/services/git-sim'
+import { historyGraph, remoteGraph, type GraphNode, type RepoState } from '@/services/git-sim'
 
 export interface CommitGraphProps {
   repo: RepoState
@@ -12,6 +12,8 @@ export interface CommitGraphProps {
   entering: Set<string>
   /** The commit the Time Machine is looking at, ringed in the graph. */
   inspected?: string | null
+  /** Draw the remote's history instead of yours (Section 22). */
+  source?: 'local' | 'remote'
 }
 
 /** What the lines say, in words — the graph is decorative to a screen reader, this isn't. */
@@ -59,8 +61,8 @@ function Refs({
  * graph is the one part of the stage whose cost grows with every commit,
  * and the page re-renders on every keystroke in the console.
  */
-export const CommitGraph = memo(function CommitGraph({ repo, entering, inspected = null }: CommitGraphProps) {
-  const graph = historyGraph(repo)
+export const CommitGraph = memo(function CommitGraph({ repo, entering, inspected = null, source = 'local' }: CommitGraphProps) {
+  const graph = source === 'remote' ? remoteGraph(repo) : historyGraph(repo)
   const head = graph.nodes.find((node) => node.isHead)
 
   // HEAD's label is re-rendered on whichever row HEAD reaches; this makes
@@ -75,7 +77,9 @@ export const CommitGraph = memo(function CommitGraph({ repo, entering, inspected
     shape: node.commit.parents.length > 1 ? 'diamond' : 'dot',
     emphasis: node.isHead,
     selected: node.commit.id === inspected,
-    entering: entering.has(node.commit.id),
+    // Remote rows are keyed apart: the same commit can arrive there without
+    // your copy replaying its entrance.
+    entering: entering.has(source === 'remote' ? `remote:${node.commit.id}` : node.commit.id),
     content: (
       <CommitNode
         id={node.commit.id}
@@ -89,7 +93,12 @@ export const CommitGraph = memo(function CommitGraph({ repo, entering, inspected
 
   return (
     <div ref={anchor}>
-      <LaneGraph rows={rows} edges={graph.edges} lanes={graph.lanes} label="Commits, newest first" />
+      <LaneGraph
+        rows={rows}
+        edges={graph.edges}
+        lanes={graph.lanes}
+        label={source === 'remote' ? 'Commits on the remote, newest first' : 'Commits, newest first'}
+      />
     </div>
   )
 })

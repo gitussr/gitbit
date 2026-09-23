@@ -9,7 +9,8 @@
  */
 
 import type { GitEvent } from './events'
-import type { FilePath, RepoState } from './types'
+import { commitId } from './hash'
+import type { Commit, FilePath, RepoState } from './types'
 
 export interface WorkspaceResult {
   state: RepoState
@@ -44,4 +45,35 @@ export function deleteFile(state: RepoState, path: FilePath): WorkspaceResult {
   delete workingTree[path]
 
   return { state: { ...state, workingTree }, events: [{ type: 'FILE_MODIFIED', path }] }
+}
+
+/**
+ * Someone else pushes to the remote. Not a Git command you run — it's the
+ * world moving on without you, which is what `fetch` and `pull` exist to
+ * deal with (Section 22). Only the remote changes: your repository,
+ * including `origin/main`, has no idea until you fetch.
+ */
+export function teammatePush(state: RepoState): WorkspaceResult {
+  const remote = state.remote
+  const branch = remote && (remote.branches[state.defaultBranch] ? state.defaultBranch : Object.keys(remote.branches)[0])
+  if (!remote || !branch) {
+    return { state, events: [{ type: 'NOTHING_HAPPENED', reason: 'There is no remote branch for anyone else to push to yet.' }] }
+  }
+
+  const parent = remote.branches[branch]
+  const tree = remote.commits[parent].tree
+  const count = Object.values(remote.commits).filter((commit) => commit.message.startsWith('Teammate:')).length + 1
+  const next = { ...tree, 'NOTES.md': `${tree['NOTES.md'] ?? ''}Note ${count} from a teammate\n` }
+  const message = `Teammate: add note ${count}`
+  const id = commitId([parent], message, next, state.commitCounter)
+  const commit: Commit = { id, message, parents: [parent], tree: next, order: state.commitCounter }
+
+  return {
+    state: {
+      ...state,
+      commitCounter: state.commitCounter + 1,
+      remote: { ...remote, commits: { ...remote.commits, [id]: commit }, branches: { ...remote.branches, [branch]: id } },
+    },
+    events: [{ type: 'REMOTE_UPDATED', direction: 'elsewhere', remote: remote.name, branch, from: parent, to: id, commits: [id] }],
+  }
 }

@@ -18,6 +18,24 @@ import type { Commit, RepoState } from '../types'
 export function commit(state: RepoState, parsed: ParsedCommand): CommandResult {
   if (state.merging) return concludeInProgress(state, parsed)
 
+  // `-a` stages every change to a *tracked* file first — the shortcut
+  // everyone learns. It never picks up untracked files; those still need
+  // `git add`, which is exactly the trap it's worth seeing.
+  if (parsed.flags.a === true || parsed.flags.all === true) {
+    const index = { ...state.index }
+    const events: GitEvent[] = []
+    for (const change of unstagedChanges(state)) {
+      if (change.kind === 'deleted') delete index[change.path]
+      else index[change.path] = state.workingTree[change.path]
+      events.push({ type: 'FILE_STAGED', path: change.path })
+    }
+    const { a: _a, all: _all, ...flags } = parsed.flags
+    const result = commit({ ...state, index }, { ...parsed, flags })
+    // A refusal changes nothing — including the staging `-a` would have done.
+    if (result.outcome.kind !== 'ok') return { state, events: [], outcome: result.outcome }
+    return { ...result, events: [...events, ...result.events] }
+  }
+
   const staged = stagedChanges(state)
 
   if (staged.length === 0) {

@@ -64,3 +64,20 @@ export function InlineCode({ className, ...props }: HTMLAttributes<HTMLElement>)
     />
   )
 }
+
+/**
+ * Prose that mentions commands, written the way content already writes
+ * them: `git add` in backticks becomes an `InlineCode` chip. Without this,
+ * content either shows literal backticks or puts commands in Manrope,
+ * where `--abort` renders as a dash.
+ */
+export function TextWithCode({ children }: { children: string }) {
+  return (
+    <>
+      {children.split('`').map((part, index) =>
+        // Odd segments sat between backticks.
+        index % 2 === 1 ? <InlineCode key={index}>{part}</InlineCode> : part,
+      )}
+    </>
+  )
+}

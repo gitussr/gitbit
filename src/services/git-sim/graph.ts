@@ -88,6 +88,31 @@ function reachable(state: RepoState): Commit[] {
 export function historyGraph(state: RepoState): HistoryGraph {
   const commits = reachable(state)
   const head = headCommitId(state)
+  return layout(state, commits, head, currentBranch(state), state.remoteBranches)
+}
+
+/**
+ * The remote's history, drawn with the same layout (Section 22). It has
+ * branches but no HEAD you can see — nobody is "standing" in it — and no
+ * remote-tracking refs of its own, so its lanes follow its default branch.
+ */
+export function remoteGraph(state: RepoState): HistoryGraph {
+  const remote = state.remote
+  if (!remote) return { nodes: [], edges: [], lanes: 0, headBranch: null }
+  const view: RepoState = { ...state, commits: remote.commits, branches: remote.branches, remoteBranches: {} }
+  const trunk = remote.branches[state.defaultBranch] ?? null
+  const commits = Object.values(remote.commits).sort((a, b) => b.order - a.order)
+  const graph = layout(view, commits, trunk, null, {})
+  return { ...graph, nodes: graph.nodes.map((node) => ({ ...node, isHead: false })) }
+}
+
+function layout(
+  state: RepoState,
+  commits: Commit[],
+  head: CommitId | null,
+  headBranch: BranchName | null,
+  tracking: Record<string, CommitId>,
+): HistoryGraph {
 
   // lanes[i] is the commit lane i is heading towards, or null when free.
   const lanes: (CommitId | null)[] = head ? [head] : []
@@ -133,12 +158,12 @@ export function historyGraph(state: RepoState): HistoryGraph {
       branches: Object.keys(state.branches)
         .filter((branch) => state.branches[branch] === commit.id)
         .sort(),
-      remotes: Object.keys(state.remoteBranches)
-        .filter((ref) => state.remoteBranches[ref] === commit.id)
+      remotes: Object.keys(tracking)
+        .filter((ref) => tracking[ref] === commit.id)
         .sort(),
       isHead: commit.id === head,
     })
   })
 
-  return { nodes, edges, lanes: Math.max(widest, nodes.length > 0 ? 1 : 0), headBranch: currentBranch(state) }
+  return { nodes, edges, lanes: Math.max(widest, nodes.length > 0 ? 1 : 0), headBranch }
 }

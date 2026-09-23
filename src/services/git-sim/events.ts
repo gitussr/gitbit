@@ -52,7 +52,23 @@ export type GitEvent =
   | { type: 'CONFLICT_RESOLVED'; path: FilePath }
   /** `git merge --abort` / `git revert --abort`: everything it wrote is put back. */
   | { type: 'MERGE_ABORTED'; paths: FilePath[] }
-  | { type: 'REMOTE_UPDATED'; ref: string; to: CommitId }
+  | { type: 'REMOTE_ADDED'; name: string; url: string }
+  /**
+   * Commits crossed the boundary between your repository and the remote
+   * (Section 22). `push` sends yours there; `fetch` brings theirs here and
+   * moves your remote-tracking ref; `elsewhere` is someone else pushing to
+   * the remote — nothing on your machine changes until you fetch.
+   * `commits` are the ones that crossed.
+   */
+  | {
+      type: 'REMOTE_UPDATED'
+      direction: 'push' | 'fetch' | 'elsewhere'
+      remote: string
+      branch: BranchName
+      from: CommitId | null
+      to: CommitId
+      commits: CommitId[]
+    }
   /**
    * `git reset` (Section 18). `layers` are the places it changed, in the
    * order they change: the branch HEAD is on, then the index, then the

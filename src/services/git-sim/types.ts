@@ -78,6 +78,21 @@ export interface MergeState {
   message: string
 }
 
+/**
+ * Another repository, somewhere else (Sections 22–23). Labelled "Remote
+ * (origin)" in the UI and never "GitHub": GitHub is one place a remote can
+ * live, not what a remote is.
+ *
+ * It has its own branches and its own object store. Commits only cross
+ * between it and yours through `push`, `fetch` and `pull`.
+ */
+export interface RemoteState {
+  name: string
+  url: string
+  branches: Record<BranchName, CommitId>
+  commits: Record<CommitId, Commit>
+}
+
 export interface RepoState {
   /** False until `git init`. Files can still sit on disk — a folder is not a repository. */
   initialized: boolean
@@ -102,10 +117,16 @@ export interface RepoState {
   branches: Record<BranchName, CommitId>
   HEAD: HeadRef
 
-  /** Whether an `origin` remote is configured. A remote is a setting, not a place that always exists. */
-  hasRemote: boolean
-  /** Remote-tracking refs, e.g. `origin/main` → commit id. */
+  /** The remote, once `git remote add` has named one. Null means there is no remote — not an empty one. */
+  remote: RemoteState | null
+  /**
+   * Remote-tracking refs, e.g. `origin/main` → commit id: *your record* of
+   * where the remote's branches were the last time you pushed or fetched.
+   * Not the remote itself, which can have moved on since.
+   */
   remoteBranches: Record<string, CommitId>
+  /** Which remote-tracking ref each local branch follows (`git push -u`), e.g. `main` → `origin/main`. */
+  upstreams: Record<BranchName, string>
 
   stash: StashEntry[]
 

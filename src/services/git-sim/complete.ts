@@ -18,7 +18,7 @@ import type { RepoState } from './types'
 /** The flags each simulated command actually reads. Offering one it ignores would teach a flag that does nothing. */
 const FLAGS: Record<string, string[]> = {
   add: ['-A', '--all'],
-  commit: ['-m'],
+  commit: ['-m', '-a'],
   diff: ['--staged', '--cached'],
   log: ['--oneline'],
   branch: ['-d', '-D'],
@@ -28,6 +28,7 @@ const FLAGS: Record<string, string[]> = {
   restore: ['--staged', '--worktree', '--ours', '--theirs'],
   reset: ['--soft', '--mixed', '--hard'],
   revert: ['--abort', '--continue'],
+  push: ['-u', '--set-upstream'],
 }
 
 /**
@@ -51,6 +52,10 @@ function argsFor(state: RepoState, name: string, flags: string[]): string[] {
   if (name === 'restore') {
     const changed = flags.includes('--staged') ? stagedChanges(state) : unstagedChanges(state)
     return [...changed.map((change) => change.path), ...(state.merging?.conflicts ?? [])]
+  }
+  // `git push origin main`: the remote's name, then a branch.
+  if (name === 'push' || name === 'pull' || name === 'fetch') {
+    return state.remote ? [state.remote.name, ...Object.keys(state.branches)] : []
   }
   // Where to move HEAD: back along history, or to another branch.
   if (name === 'reset' || name === 'revert') return ['HEAD', 'HEAD~1', 'HEAD~2', ...others]

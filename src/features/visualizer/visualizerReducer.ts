@@ -1,4 +1,4 @@
-import { executeCommand, projectFolder, writeFile, type RepoState, type Transition } from '@/services/git-sim'
+import { executeCommand, seeds, teammatePush, writeFile, type RepoState, type SeedName, type Transition } from '@/services/git-sim'
 
 /**
  * The Visualizer's store (see `docs/VISUALIZER.md`).
@@ -13,12 +13,17 @@ import { executeCommand, projectFolder, writeFile, type RepoState, type Transiti
  * comes back.
  */
 
-/** A transition, and whether it came from the console or from editing a file. */
+/**
+ * A transition, and where it came from: the console, the sandbox's edit
+ * control, or the world outside your machine (a teammate pushing).
+ */
 export interface HistoryEntry extends Transition {
-  source: 'command' | 'edit'
+  source: 'command' | 'edit' | 'elsewhere'
 }
 
 export interface VisualizerState {
+  /** Where this workspace starts, and where Start over returns to. */
+  seed: SeedName
   repo: RepoState
   /** Every transition, oldest first. Each one keeps its own `before`, so nothing needs recomputing to go back. */
   history: HistoryEntry[]
@@ -43,13 +48,14 @@ export interface VisualizerState {
 export type VisualizerAction =
   | { type: 'run'; input: string }
   | { type: 'edit'; path: string; content: string }
+  | { type: 'teammate' }
   | { type: 'clear' }
   | { type: 'undo' }
   | { type: 'redo' }
   | { type: 'reset' }
 
-export function initialVisualizerState(): VisualizerState {
-  return { repo: projectFolder(), history: [], clearedAt: 0, future: [], last: null, version: 0 }
+export function initialVisualizerState(seed: SeedName = 'project-folder'): VisualizerState {
+  return { seed, repo: seeds[seed](), history: [], clearedAt: 0, future: [], last: null, version: 0 }
 }
 
 function append(state: VisualizerState, entry: HistoryEntry): VisualizerState {
@@ -108,7 +114,19 @@ export function visualizerReducer(state: VisualizerState, action: VisualizerActi
       return { ...state, repo: redone.after, history: [...state.history, redone], future, last: 'redo', version: state.version + 1 }
     }
 
+    case 'teammate': {
+      const result = teammatePush(state.repo)
+      return append(state, {
+        source: 'elsewhere',
+        input: `a teammate pushed to ${state.repo.remote?.name ?? 'the remote'}`,
+        before: state.repo,
+        after: result.state,
+        events: result.events,
+        outcome: { kind: 'ok', output: [] },
+      })
+    }
+
     case 'reset':
-      return initialVisualizerState()
+      return initialVisualizerState(state.seed)
   }
 }

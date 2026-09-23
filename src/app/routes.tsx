@@ -64,6 +64,7 @@ export const routes: RouteObject[] = [
 
       // GitBit Visualizer — the simulated repository (docs/VISUALIZER.md)
       { path: 'visualizer', element: <VisualizerPage /> },
+      { path: 'visualizer/:scenarioSlug', element: <VisualizerPage /> },
 
       // GitBit Terminal — terminal-inspired educational interface
       { path: 'terminal', element: <TerminalPage /> },

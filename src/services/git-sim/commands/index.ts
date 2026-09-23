@@ -17,6 +17,7 @@ import { diff } from './diff'
 import { init } from './init'
 import { log } from './log'
 import { merge } from './merge'
+import { fetch, pull, push, remote } from './remote'
 import { reset } from './reset'
 import { restore } from './restore'
 import { revert } from './revert'
@@ -40,4 +41,8 @@ export const handlers: Record<string, CommandHandler> = {
   restore,
   reset,
   revert,
+  remote,
+  push,
+  fetch,
+  pull,
 }

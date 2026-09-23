@@ -1,5 +1,6 @@
 import { ArrowDown } from 'lucide-react'
 import { Alert } from '@/components/ui/Alert'
+import { LabelledDivider } from '@/components/ui/LabelledDivider'
 import { FileNode, type FileNodeStatus } from '@/components/ui/FileNode'
 import { StatePanel } from '@/components/ui/StatePanel'
 import { InlineCode, Text } from '@/components/ui/Typography'
@@ -54,8 +55,10 @@ function Empty({ children }: { children: string }) {
  * why a file that was staged and then edited again correctly appears in
  * two panels at once.
  *
- * The Remote Repository panel arrives with the remote commands; drawing an
- * empty one now would be a picture of something the simulator can't yet do.
+ * The Remote Repository appears once `git remote add` has named one, below
+ * a dashed boundary: it's a different place, not a fourth box on your
+ * machine, and pushes and fetches visibly cross that line (Section 22). It
+ * is labelled with the remote's name, never "GitHub" (Section 23).
  */
 export function VisualizerStage({ repo, active, entering, inspected = null }: VisualizerStageProps) {
   const staged = stagedChanges(repo)
@@ -167,6 +170,24 @@ export function VisualizerStage({ repo, active, entering, inspected = null }: Vi
       >
         {hasCommits && <CommitGraph repo={repo} entering={entering} inspected={inspected} />}
       </StatePanel>
+
+      {repo.remote && (
+        <>
+          <LabelledDivider dashed className="my-4">
+            Remote ({repo.remote.name})
+          </LabelledDivider>
+          <StatePanel
+            label="Remote Repository"
+            hint={hintFor('remote-repository')}
+            active={active.has('remote-repository')}
+            empty={<Empty>Nothing here yet. It only gets commits when you push them.</Empty>}
+          >
+            {Object.keys(repo.remote.branches).length > 0 && (
+              <CommitGraph repo={repo} entering={entering} source="remote" />
+            )}
+          </StatePanel>
+        </>
+      )}
     </div>
   )
 }

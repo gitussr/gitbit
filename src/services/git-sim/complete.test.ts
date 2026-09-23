@@ -21,9 +21,13 @@ describe('complete', () => {
       'git checkout ',
       'git commit ',
       'git diff ',
+      'git fetch ',
       'git init ',
       'git log ',
       'git merge ',
+      'git pull ',
+      'git push ',
+      'git remote ',
       'git reset ',
       'git restore ',
       'git revert ',
@@ -32,7 +36,7 @@ describe('complete', () => {
     ])
     expect(complete(projectFolder(), 'git st')).toEqual(['git status '])
     // A real command that isn't simulated yet is not offered.
-    expect(complete(projectFolder(), 'git pu')).toEqual([])
+    expect(complete(projectFolder(), 'git reb')).toEqual([])
   })
 
   it('completes git add to files with something to stage', () => {
@@ -47,7 +51,7 @@ describe('complete', () => {
 
   it('completes the flags a command actually reads', () => {
     expect(complete(projectFolder(), 'git log --o')).toEqual(['git log --oneline '])
-    expect(complete(projectFolder(), 'git commit -')).toEqual(['git commit -m "'])
+    expect(complete(projectFolder(), 'git commit -')).toEqual(['git commit -m "', 'git commit -a '])
     expect(complete(projectFolder(), 'git status -')).toEqual([])
   })
 

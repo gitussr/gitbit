@@ -116,6 +116,7 @@ src/services/git-sim/
   graph.ts       RepoState -> rows, lanes and edges for the history graph
   merge3.ts      Line-level three-way merge of one file
   timeline.ts    Every commit, snapshots, file history (Time Machine)
+  progress.ts    Scenario steps judged by what happened
   suggest.ts     RepoState -> the commands that make sense next
   complete.ts    RepoState + partial input -> Tab completions
   execute.ts     The single entry point
@@ -366,23 +367,58 @@ JSX, same as every other content folder.
 
 ## Scenarios
 
+The five from §28 — First Commit, Push to a Remote, Branch, Merge, Undo —
+live in `content/visualizer/scenarios.ts` as plain data:
+
 ```ts
-interface VisualizerScenario {
-  slug: string
-  title: string
-  goal: string
-  seed: RepoSeed
-  steps: { instruction: string; expect: CommandMatcher; hint: string }[]
-  completion: { title: string; body: string; relatedConcepts?: string[] }
+interface ScenarioStep {
+  instruction: string
+  expect: Expectation      // judged by the engine: an event, a command, or both
+  try: { run: string } | { edit: string } | { teammate: true }
+  hint: string
 }
 ```
 
-The five from §28: First Commit, Push to a Remote, Branch, Merge, Undo.
+Steps are met by **what happened**, not by exact text (`services/git-sim/
+progress.ts`): `git add .` and `git add index.html` both stage the file.
+Where the command is the point and nothing moves (`git status`), the step
+names the command. Progress is *derived* by replaying history against the
+steps, never stored, so the simulator's undo un-does progress too and the
+two can't drift apart.
 
-Guided, not gated. A command that doesn't match the current step **still
-executes** — the rail keeps the step and adds a quiet "that works too;
-the next step is still …". Blocking exploration inside a sandbox whose
+Each step's `try` is a one-click chip in the rail, and
+`scenarios.test.ts` plays every scenario end to end by doing exactly what
+the chips offer — a step can't ask for something the simulator can't do.
+Seeds that need history (`one-commit`, `ready-to-merge`) are built by
+running real commands, so they can't contain a state the engine couldn't
+reach.
+
+Guided, not gated. A command that doesn't meet the current step **still
+executes**; the rail keeps the step and says "that works too — the next
+step is still the one above". Blocking exploration inside a sandbox whose
 entire point is safe exploration would be the wrong lesson.
+
+`content/visualizer/catalog.ts` holds only slug, title, goal and seed —
+what the page needs to route and build a first state. The step text loads
+with the lazy `ScenarioRail` chunk.
+
+## Remote
+
+A minimal remote exists because Scenario 2 needs one (§22). `RepoState.
+remote` is another repository with its own branches and object store;
+`remoteBranches` (`origin/main`) is *your record* of where it was, which
+is the distinction `fetch` exists to teach. `upstreams` is `push -u`.
+
+`git remote add`, `push` (refuses non-fast-forward, with Git's hints),
+`fetch` (moves `origin/*` only — never your branch or files), and `pull`
+(fetch, then an ordinary merge). `git status` reports ahead/behind. A
+sandbox control, "Teammate pushes", moves the remote without touching your
+machine — the world moving on, which is what fetch and pull are for.
+
+The stage draws it below a dashed boundary labelled "Remote (origin)",
+never "GitHub" (§23). A refused `pull` changes nothing, even though real
+Git would keep the fetch half: the engine keeps one rule — a failure has no
+events and no state change — and the explanation says so.
 
 ## Safety framing
 
@@ -471,8 +507,14 @@ cost grows.
 
 The route is lazy, so the main chunk must not grow. Baseline at the time
 of writing: main chunk 303.56 kB (96.60 kB gzip), 65 precached entries,
-699.34 KiB. Target for the Visualizer chunk: **≤ 25 kB gzip**, zero new
-runtime dependencies. SVG and CSS only (§39).
+699.34 KiB. Zero new runtime dependencies. SVG and CSS only (§39).
+
+The original target for the Visualizer chunk was **≤ 25 kB gzip**, set in
+Task 2 when the engine had six commands. It has seventeen now, plus a
+line-level merge, and the engine can't be deferred — every keystroke uses
+it. What *can* wait is split out: the Time Machine and the scenario rail
+(with the scenarios' text) are separate lazy chunks. See the task reports
+for current sizes.
 
 Being a pure client-side simulation with no fetch, the Visualizer
 inherits full offline support from the existing Workbox precache.
