@@ -1,12 +1,11 @@
 import { ArrowDown } from 'lucide-react'
-import { CommitNode } from '@/components/ui/CommitNode'
 import { FileNode, type FileNodeStatus } from '@/components/ui/FileNode'
 import { StatePanel } from '@/components/ui/StatePanel'
 import { Text } from '@/components/ui/Typography'
 import { gitStates } from '@/services/content'
+import { CommitGraph } from './CommitGraph'
 import type { GitStateId } from '@/content/states'
 import {
-  ancestry,
   headCommitId,
   stagedChanges,
   unstagedChanges,
@@ -74,8 +73,7 @@ export function VisualizerStage({ repo, active, entering }: VisualizerStageProps
     ...deleted.map((path) => ({ path, status: 'deleted' as const })),
   ]
 
-  const commits = ancestry(repo, headCommitId(repo))
-  const head = headCommitId(repo)
+  const hasCommits = headCommitId(repo) !== null
 
   return (
     <div className="flex flex-col">
@@ -131,20 +129,7 @@ export function VisualizerStage({ repo, active, entering }: VisualizerStageProps
         active={active.has('local-repository')}
         empty={<Empty>{repo.initialized ? 'No commits yet.' : 'Not a repository yet.'}</Empty>}
       >
-        {commits.length > 0 && (
-          <ul className="flex flex-col gap-1.5">
-            {commits.map((commit) => (
-              <CommitNode
-                key={commit.id}
-                id={commit.id}
-                message={commit.message}
-                isHead={commit.id === head}
-                isRoot={commit.parents.length === 0}
-                entering={entering.has(commit.id)}
-              />
-            ))}
-          </ul>
-        )}
+        {hasCommits && <CommitGraph repo={repo} entering={entering} />}
       </StatePanel>
     </div>
   )

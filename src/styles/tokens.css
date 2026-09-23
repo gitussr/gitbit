@@ -127,8 +127,9 @@
   --ease-out-soft: cubic-bezier(0, 0, 0.2, 1);
   --ease-in-soft: cubic-bezier(0.4, 0, 1, 1);
 
-  /* GitBit Visualizer geometry (docs/VISUALIZER.md). Graph lane/edge sizes
-     arrive with the history graph — only what is drawn today lives here. */
+  /* GitBit Visualizer geometry (docs/VISUALIZER.md). The history graph's
+     lane and row sizes are SVG coordinates, which can't read custom
+     properties — they live once, in components/ui/LaneGraph.tsx. */
   --viz-node: 0.75rem;
 
   /* A file or commit arriving in a panel: it drops in from the place it came

@@ -113,6 +113,7 @@ src/services/git-sim/
   parse.ts       string -> ParsedCommand | ParseError
   validate.ts    Can this command start? -> GitError | null
   commands/      One module per command: (state, parsed) -> CommandResult
+  graph.ts       RepoState -> rows, lanes and edges for the history graph
   suggest.ts     RepoState -> the commands that make sense next
   complete.ts    RepoState + partial input -> Tab completions
   execute.ts     The single entry point
@@ -320,9 +321,11 @@ unrecoverable — calm, once, in the Explainer (§18).
 
 - Each state region is a `<section aria-labelledby>`; file lists are
   real lists with text labels (`index.html — modified`).
-- The graph is `role="img"` with `<title>`/`<desc>`, **plus** a
-  visually-hidden ordered list of commits with their parents and refs.
-  A screen reader gets structure, not a description of a picture.
+- The graph's drawing is `aria-hidden`; the commit rows beside it are a
+  real, visible ordered list, and each row says in words what the lines
+  show (`Built on 80303ad.`, `Merge of … and …`). A screen reader gets
+  structure, not a description of a picture — without a second, hidden
+  copy of the history to keep in sync.
 - Console input is a labelled `<input>` in a `<form>`; history is a log
   region; ↑/↓ walks history, Tab accepts a suggestion, Esc clears.
 - Commit nodes are focusable; Enter inspects one (§24's snapshot view).
@@ -335,13 +338,17 @@ unrecoverable — calm, once, in the Explainer (§18).
 
 New **primitives** (`components/ui`, added before use, per §34 and the
 repo rule): `FileNode`, `CommitNode`, `BranchLabel`, `HeadPointer`,
-`StatePanel`, `CommandConsole`, `VisualizerLegend`, `Timeline`.
+`StatePanel`, `CommandConsole`, `LaneGraph`, `VisualizerLegend`,
+`Timeline`. `LaneGraph` draws nodes in lanes with lines between them and
+knows nothing about Git; `CommitGraph` is what makes its rows commits.
 
 New **composition** (`features/visualizer/`): `VisualizerStage`,
 `CommitGraph`, `ExplainerPanel`, `ScenarioRail`, `WorkspaceToolbar`.
 
-New **tokens** (`styles/tokens.css`): `--viz-node`, `--viz-node-sm`,
-`--viz-lane`, `--viz-edge`, `--viz-gap`. Colour reuses ink/lime and the
+New **tokens** (`styles/tokens.css`): `--viz-node`, and the drop-in
+animation. The graph's lane, row and edge sizes are SVG coordinates,
+which can't read custom properties, so they live once as constants in
+`LaneGraph` — the rows take their height from the same constant. Colour reuses ink/lime and the
 existing pastel `caution`/`danger` fills — no new palette.
 
 Anything with a custom size or shadow name must also be registered in
@@ -393,4 +400,5 @@ where a wrong answer would actually teach someone something false.
 | CSS/SVG, no animation library | §39, and a ~18 kB gzip library against a 96.6 kB baseline | FLIP-style transitions written by hand |
 | Stage always vertical | One direction of travel at every width | Wide screens have unused horizontal room |
 | Mono font stays Cascadia Code | §34 forbids a separate visual language; the repo replaced Ubuntu Mono deliberately | A knowing deviation from §9's letter, keeping its intent |
+| HEAD's line always takes lane 0 | The branch you're on reads as the straight trunk; `git log --graph` lets it zig-zag whenever another tip is newer | The graph's columns differ from real `git log --graph` in that case |
 | Failing commands still execute and explain | A rejected command is the teachable moment | History contains failures; the UI must style them as lessons |

@@ -10,6 +10,7 @@
 export { executeCommand } from './execute'
 export { suggest } from './suggest'
 export { complete } from './complete'
+export { historyGraph, type GraphEdge, type GraphNode, type HistoryGraph } from './graph'
 export { writeFile, deleteFile, type WorkspaceResult } from './workspace'
 export { emptyState, projectFolder, folderWith, seeds, type SeedName } from './seed'
 
