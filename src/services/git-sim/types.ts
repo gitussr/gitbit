@@ -58,9 +58,15 @@ export interface StashEntry {
  * both versions into the conflicted files, and waits. Until you resolve
  * each file (`git add`) and conclude (`git commit`) — or give up
  * (`git merge --abort`) — the repository is in this in-between state.
+ * `git revert` can stop the same way, and shares it.
  */
 export interface MergeState {
-  /** The commit being merged in. It becomes the merge commit's second parent. */
+  /**
+   * `revert` undoes a commit by merging its inverse, so it can stop for
+   * conflicts exactly the same way — and concludes with one parent, not two.
+   */
+  kind: 'merge' | 'revert'
+  /** The commit being merged in (or reverted). A merge's second parent. */
   theirs: CommitId
   /** How to name it in conflict markers and the default message: the branch, or the commit id. */
   theirsName: string

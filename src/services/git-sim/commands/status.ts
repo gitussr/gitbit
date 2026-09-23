@@ -30,11 +30,19 @@ export function status(state: RepoState, _parsed: ParsedCommand): CommandResult 
 
   if (headCommitId(state) === null) out.push('', 'No commits yet')
 
-  if (state.merging) {
+  if (state.merging?.kind === 'merge') {
     out.push(
       ...(unmerged.size > 0
         ? ['You have unmerged paths.', '  (fix conflicts and run "git commit")', '  (use "git merge --abort" to abort the merge)']
         : ['All conflicts fixed but you are still merging.', '  (use "git commit" to conclude merge)']),
+    )
+  }
+  if (state.merging?.kind === 'revert') {
+    out.push(
+      `You are currently reverting commit ${state.merging.theirs}.`,
+      ...(unmerged.size > 0
+        ? ['  (fix conflicts and run "git revert --continue")', '  (use "git revert --abort" to cancel the revert operation)']
+        : ['  (all conflicts fixed: run "git revert --continue")']),
     )
   }
 
@@ -55,7 +63,14 @@ export function status(state: RepoState, _parsed: ParsedCommand): CommandResult 
 
   if (state.merging && unmerged.size > 0) {
     const ours = headTree(state)
-    const theirs = state.commits[state.merging.theirs].tree
+    // A revert's "their" side is the reverted commit's parent.
+    const reverted = state.commits[state.merging.theirs]
+    const theirs =
+      state.merging.kind === 'merge'
+        ? reverted.tree
+        : reverted.parents[0]
+          ? state.commits[reverted.parents[0]].tree
+          : {}
     out.push('', 'Unmerged paths:', '  (use "git add <file>..." to mark resolution)')
     for (const path of unmerged) {
       const how = !(path in theirs) ? 'deleted by them:' : !(path in ours) ? 'deleted by us:' : 'both modified:'

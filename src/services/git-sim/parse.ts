@@ -20,7 +20,7 @@ export interface ParsedCommand {
 }
 
 /** Commands the engine runs today. */
-export const IMPLEMENTED = new Set(['init', 'status', 'add', 'commit', 'log', 'diff', 'branch', 'switch', 'checkout', 'merge'])
+export const IMPLEMENTED = new Set(['init', 'status', 'add', 'commit', 'log', 'diff', 'branch', 'switch', 'checkout', 'merge', 'restore', 'reset', 'revert'])
 
 /**
  * Real Git commands the Visualizer will get to, mapped to the brief's
@@ -34,11 +34,8 @@ const PLANNED: Record<string, string> = {
   pull: 'remotes',
   push: 'remotes',
   remote: 'remotes',
-  restore: 'undoing things',
-  reset: 'undoing things',
-  revert: 'undoing things',
-  stash: 'undoing things',
-  clean: 'undoing things',
+  stash: 'setting work aside',
+  clean: 'setting work aside',
   rebase: 'rewriting history',
   'cherry-pick': 'rewriting history',
   tag: 'rewriting history',

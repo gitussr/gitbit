@@ -17,6 +17,9 @@ import { diff } from './diff'
 import { init } from './init'
 import { log } from './log'
 import { merge } from './merge'
+import { reset } from './reset'
+import { restore } from './restore'
+import { revert } from './revert'
 import { status } from './status'
 import { switchCommand } from './switch'
 
@@ -34,4 +37,7 @@ export const handlers: Record<string, CommandHandler> = {
   switch: switchCommand,
   checkout,
   merge,
+  restore,
+  reset,
+  revert,
 }

@@ -89,17 +89,23 @@ export function VisualizerStage({ repo, active, entering }: VisualizerStageProps
       {repo.merging && (
         <Alert
           variant={conflicted.size > 0 ? 'warning' : 'info'}
-          title={`Merging ${repo.merging.theirsName} into ${currentBranch(repo) ?? 'HEAD'}`}
+          title={
+            repo.merging.kind === 'merge'
+              ? `Merging ${repo.merging.theirsName} into ${currentBranch(repo) ?? 'HEAD'}`
+              : `Reverting ${repo.merging.theirsName}`
+          }
           className="mb-3"
         >
           {conflicted.size > 0 ? (
             <>
               Waiting on you: {[...conflicted].join(', ')}. Edit each one, then <InlineCode>git add</InlineCode> it —
-              or back out with <InlineCode>git merge --abort</InlineCode>.
+              or back out with <InlineCode>git {repo.merging.kind} --abort</InlineCode>.
             </>
           ) : (
             <>
-              Every conflict is resolved. <InlineCode>git commit</InlineCode> finishes the merge.
+              Every conflict is resolved.{' '}
+              <InlineCode>{repo.merging.kind === 'merge' ? 'git commit' : 'git revert --continue'}</InlineCode> finishes
+              the {repo.merging.kind}.
             </>
           )}
         </Alert>

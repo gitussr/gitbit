@@ -11,10 +11,13 @@ import { Text } from './Typography'
  * No brutal shadow. Panels stack with an arrow between them and the shadow
  * falls down-left across it — the same reason `GitStateFlow` leaves it off.
  */
-export function panelClassName(active = false, className?: string) {
+export function panelClassName(active = false, className?: string, tone: 'default' | 'caution' = 'default') {
   return cn(
     'border-2 border-accent p-3 transition-colors duration-200 ease-standard',
     active ? 'bg-card' : 'bg-surface',
+    // Calm, not alarming: the pastel caution fill the Design System uses for
+    // "this can't be undone", on a panel that otherwise looks like the rest.
+    tone === 'caution' && 'border-caution-border bg-caution-subtle',
     className,
   )
 }

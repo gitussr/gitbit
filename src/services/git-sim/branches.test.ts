@@ -209,8 +209,12 @@ describe('git checkout', () => {
     expect(historyGraph(back).nodes.map((node) => node.commit.message)).not.toContain('Try')
   })
 
-  it('says file checkout is not simulated yet rather than pretending', () => {
-    expect(run(committed(), 'git checkout -- index.html').last.outcome.kind).toBe('parse-error')
-    expect(run(committed(), 'git checkout index.html').last.outcome.kind).toBe('parse-error')
+  it('treats checkout <file> as the older spelling of restore', () => {
+    const dirty = edit(committed(), 'index.html', 'oops\n')
+    for (const input of ['git checkout -- index.html', 'git checkout index.html']) {
+      const { state, last } = run(dirty, input)
+      expect(state.workingTree['index.html']).toBe(committed().workingTree['index.html'])
+      expect(types(last)).toEqual(['FILE_RESTORED'])
+    }
   })
 })

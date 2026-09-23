@@ -68,7 +68,7 @@ export function validate(parsed: ParsedCommand, state: RepoState): GitError | nu
       unresolved.length > 0
         ? `error: you need to resolve your current index first\n${unresolved.map((path) => `${path}: needs merge`).join('\n')}`
         : 'fatal: cannot switch branch while merging\nConsider "git merge --quit" or "git worktree add".',
-      'You are in the middle of a merge. Finish it (`git add` the resolved files, then `git commit`) or back out with `git merge --abort` before going anywhere else.',
+      `You are in the middle of a ${state.merging.kind}. Finish it (\`git add\` the resolved files, then \`git commit\`) or back out with \`git ${state.merging.kind} --abort\` before going anywhere else.`,
     )
   }
 

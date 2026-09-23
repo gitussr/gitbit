@@ -29,9 +29,14 @@ export function describeEvent(event: GitEvent): string | null {
     case 'FILE_UNSTAGED':
       return `${event.path} moved back from Staging Area to Working Directory.`
     case 'FILE_RESTORED':
-      return `${event.path} was restored in the Working Directory.`
+      return event.discarded
+        ? `${event.path} was put back in the Working Directory. The edits it had were never staged or committed, so they are gone.`
+        : `${event.path} was put back in the Working Directory.`
     case 'COMMIT_CREATED': {
       const count = event.paths.length
+      if (event.reverts) {
+        return `Commit ${event.id} undoes ${event.reverts} by applying its opposite. ${event.reverts} is still in the history — nothing was removed.`
+      }
       return `Commit ${event.id} recorded ${count} ${count === 1 ? 'file' : 'files'} in the Local Repository: "${event.message}".`
     }
     case 'HEAD_MOVED':
@@ -47,13 +52,26 @@ export function describeEvent(event: GitEvent): string | null {
     case 'MERGE_CREATED':
       return `Merge commit ${event.id} recorded, with two parents: ${event.parents.join(' and ')}.${event.paths.length > 0 ? ` ${filesRewritten(event.paths)}` : ''}`
     case 'MERGE_CONFLICT':
-      return `The merge stopped. ${event.conflicts.join(', ')} ${event.conflicts.length === 1 ? 'has' : 'have'} both versions in ${event.conflicts.length === 1 ? 'it' : 'them'}, waiting for you. No commit yet.`
+      return `The ${event.operation} stopped. ${event.conflicts.join(', ')} ${event.conflicts.length === 1 ? 'has' : 'have'} both versions in ${event.conflicts.length === 1 ? 'it' : 'them'}, waiting for you. No commit yet.`
     case 'CONFLICT_RESOLVED':
       return `${event.path} marked as resolved.`
     case 'MERGE_ABORTED':
-      return `Merge abandoned. ${event.paths.length > 0 ? `Put back: ${event.paths.join(', ')}.` : ''}`.trim()
+      return `Abandoned. ${event.paths.length > 0 ? `Put back: ${event.paths.join(', ')}.` : ''}`.trim()
     case 'HEAD_DETACHED':
       return `HEAD now points straight at commit ${event.at}, with no branch in between. ${filesRewritten(event.paths)}`
+    case 'RESET_PERFORMED': {
+      const moved = event.from === event.to ? `HEAD stayed at ${event.to}` : `HEAD moved to ${event.to}`
+      const kept = {
+        soft: 'The Staging Area and the files on disk were left as they were.',
+        mixed: 'The Staging Area now matches it too; the files on disk were left as they were.',
+        hard: 'The Staging Area and the files on disk now match it too.',
+      }[event.mode]
+      const lost =
+        event.discarded.length > 0
+          ? ` Uncommitted changes to ${event.discarded.join(', ')} were discarded, and Git keeps no copy of them.`
+          : ''
+      return `${moved} with a ${event.mode} reset. ${kept}${lost}`
+    }
     case 'NOTHING_HAPPENED':
       return event.reason
     default:
@@ -67,11 +85,26 @@ export function describeEvent(event: GitEvent): string | null {
 export function announceTransition(transition: Transition): string {
   if (transition.outcome.kind !== 'ok') return `${transition.input} was refused. ${transition.outcome.message}`
 
-  // A detached HEAD's own sentence already names the commit; saying it again reads as a second move.
-  const detached = transition.events.some((event) => event.type === 'HEAD_DETACHED')
+  // A detached HEAD's or a reset's own sentence already names the commit;
+  // saying it again reads as a second move.
+  const named = transition.events.some((event) => event.type === 'HEAD_DETACHED' || event.type === 'RESET_PERFORMED')
   const sentences = transition.events
-    .filter((event) => !(detached && event.type === 'HEAD_MOVED'))
+    .filter((event) => !(named && event.type === 'HEAD_MOVED'))
     .map(describeEvent)
     .filter((line): line is string => line !== null)
   return sentences.length > 0 ? sentences.join(' ') : `${transition.input} ran.`
+}
+
+/**
+ * What the last change destroyed, if anything — uncommitted work Git kept
+ * no copy of. Read from the events rather than decided here: the engine
+ * knows what was lost, this only lists it.
+ */
+export function discardedBy(transition: Transition): string[] {
+  const lost = new Set<string>()
+  for (const event of transition.events) {
+    if (event.type === 'FILE_RESTORED' && event.discarded) lost.add(event.path)
+    if (event.type === 'RESET_PERFORMED') for (const path of event.discarded) lost.add(path)
+  }
+  return [...lost]
 }

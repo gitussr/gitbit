@@ -207,6 +207,39 @@ wrote. Switching and merging again are refused meanwhile. `switch`,
 `checkout` and `merge` share one rule for when rewriting files would
 destroy local work (`rewriteFiles` in `commands/moveHead.ts`).
 
+### Undoing
+
+`restore`, `reset` and `revert` are three different undos, and the
+Visualizer keeps them visibly different (§18):
+
+- `git restore <file>` puts the **disk** back to the index;
+  `--staged` puts the **index** back to HEAD (unstaging — nothing lost);
+  `--source=<commit>` restores an older version; during a conflict
+  `--ours`/`--theirs` pick a side without resolving it.
+  `git checkout -- <file>` is the same operation under its older name.
+- `git reset` moves the branch, and its mode says how far down the layers
+  it reaches: `--soft` HEAD only, `--mixed` (default) HEAD + index,
+  `--hard` all three. `RESET_PERFORMED.layers` lists the layers it
+  *actually* changed — HEAD is omitted when it didn't move, so
+  `git reset --hard` alone doesn't claim to have moved anything. The stage
+  lights those panels one after another (`STEP_MS`), together under
+  reduced motion, and a readout beside it says changed/kept per layer.
+  Undone commits drop out of the graph but stay in the object store.
+  `git reset <file>` is the older spelling of `restore --staged`.
+- `git revert` adds a commit that applies another's opposite — a
+  three-way merge with the commit as base and its parent as "theirs"
+  (`combine` in `commands/merge.ts`). It can conflict, and shares
+  `RepoState.merging` (`kind: 'revert'`), concluding with one parent via
+  `git commit` or `git revert --continue`. Merge commits need `-m 1|2`.
+
+`HEAD~n`, `^` and `^2` resolve in `repo.resolve`.
+
+Anything that destroys uncommitted work says so in its event
+(`FILE_RESTORED.discarded`, `RESET_PERFORMED.discarded`). That, and only
+that, gives the "What just happened" panel the caution tone
+(`panelClassName(…, 'caution')`) — calm, once, with the sentence that
+names what Git kept no copy of.
+
 ### Events
 
 ```
@@ -273,7 +306,7 @@ rejected command is a lesson, not an error state.
 | `FAST_FORWARD` | HEAD's label travels along existing commits — **no new node** | Label re-renders, with the "no new commit" line |
 | `MERGE_CONFLICT` | Conflicted files turn dashed/danger in the Working Directory; a banner says what's waiting | Same — nothing here is motion |
 | `REMOTE_UPDATED` | Nodes mirror across the local/remote boundary | Nodes appear on the far side |
-| `RESET_PERFORMED` | The affected layers highlight in sequence (§18) | Affected layers highlight statically |
+| `RESET_PERFORMED` | The layers it changed light in sequence — HEAD, Staging, Working Directory — with a changed/kept readout (§18) | Those layers light together |
 | `WORK_STASHED` | Node moves to the stash drawer | Drawer opens with the node in it |
 
 Motion uses `--duration-base` / `--ease-standard` from

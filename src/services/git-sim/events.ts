@@ -17,8 +17,14 @@ export type GitEvent =
   | { type: 'FILE_MODIFIED'; path: FilePath }
   | { type: 'FILE_STAGED'; path: FilePath }
   | { type: 'FILE_UNSTAGED'; path: FilePath }
-  | { type: 'FILE_RESTORED'; path: FilePath }
-  | { type: 'COMMIT_CREATED'; id: CommitId; message: string; paths: FilePath[] }
+  /**
+   * A file's contents were put back from the index or a commit.
+   * `discarded` is true when that destroyed uncommitted work on disk —
+   * Git keeps no copy, so this is the event the caution treatment hangs on.
+   */
+  | { type: 'FILE_RESTORED'; path: FilePath; discarded: boolean }
+  /** `reverts` is set when the commit is `git revert` undoing an earlier one. */
+  | { type: 'COMMIT_CREATED'; id: CommitId; message: string; paths: FilePath[]; reverts?: CommitId }
   | { type: 'HEAD_MOVED'; from: CommitId | null; to: CommitId }
   | { type: 'BRANCH_CREATED'; name: BranchName; at: CommitId }
   | { type: 'BRANCH_DELETED'; name: BranchName; at: CommitId }
@@ -41,13 +47,27 @@ export type GitEvent =
    */
   | { type: 'FAST_FORWARD'; branch: BranchName | null; from: CommitId | null; to: CommitId; paths: FilePath[] }
   /** The merge did everything it could and stopped: these paths need you. */
-  | { type: 'MERGE_CONFLICT'; conflicts: FilePath[]; paths: FilePath[] }
+  | { type: 'MERGE_CONFLICT'; operation: 'merge' | 'revert'; conflicts: FilePath[]; paths: FilePath[] }
   /** `git add` on a conflicted path: you've told Git this file is settled. */
   | { type: 'CONFLICT_RESOLVED'; path: FilePath }
-  /** `git merge --abort`: everything the merge wrote is put back. */
+  /** `git merge --abort` / `git revert --abort`: everything it wrote is put back. */
   | { type: 'MERGE_ABORTED'; paths: FilePath[] }
   | { type: 'REMOTE_UPDATED'; ref: string; to: CommitId }
-  | { type: 'RESET_PERFORMED'; mode: 'soft' | 'mixed' | 'hard'; to: CommitId }
+  /**
+   * `git reset` (Section 18). `layers` are the places it changed, in the
+   * order they change: the branch HEAD is on, then the index, then the
+   * disk — which is the whole difference between the three modes.
+   * `discarded` are paths whose uncommitted changes `--hard` destroyed.
+   */
+  | {
+      type: 'RESET_PERFORMED'
+      mode: 'soft' | 'mixed' | 'hard'
+      from: CommitId | null
+      to: CommitId
+      layers: ResetLayer[]
+      paths: FilePath[]
+      discarded: FilePath[]
+    }
   | { type: 'WORK_STASHED'; paths: FilePath[] }
   /**
    * Nothing changed, and that is the point.
@@ -60,3 +80,6 @@ export type GitEvent =
   | { type: 'NOTHING_HAPPENED'; reason: string }
 
 export type GitEventType = GitEvent['type']
+
+/** The three places `git reset` can change, named the way Section 18 draws them. */
+export type ResetLayer = 'head' | 'index' | 'worktree'

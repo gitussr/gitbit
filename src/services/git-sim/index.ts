@@ -32,7 +32,7 @@ export {
 export { fileDiff, formatDiff, treeDiffDetailed, type DiffHunk, type DiffLine, type FileDiff } from './diff'
 export { isFailure, type CommandResult, type GitError, type GitOk, type Outcome, type ParseError, type Transition } from './result'
 export { parse, IMPLEMENTED, type ParsedCommand } from './parse'
-export type { GitEvent, GitEventType } from './events'
+export type { GitEvent, GitEventType, ResetLayer } from './events'
 export type {
   BranchName,
   ChangeKind,

@@ -1,8 +1,9 @@
 import type { ParsedCommand } from '../parse'
 import { currentBranch, resolve } from '../repo'
-import { gitError, ok, parseError, type CommandResult } from '../result'
+import { gitError, ok, type CommandResult } from '../result'
 import type { RepoState } from '../types'
 import { moveHead } from './moveHead'
+import { restore } from './restore'
 import { alreadyOn, createAndSwitch } from './switch'
 
 /**
@@ -13,8 +14,8 @@ import { alreadyOn, createAndSwitch } from './switch'
  * tutorials and answers online use. Unlike `switch` it detaches HEAD at a
  * commit without being asked, which is exactly how people end up in
  * "detached HEAD" without knowing what it means — so here they can see it
- * happen. Its other job, discarding changes to a file, belongs with the
- * undo commands.
+ * happen. Its other job, discarding changes to a file, is `restore`
+ * under an older name.
  */
 export function checkout(state: RepoState, parsed: ParsedCommand): CommandResult {
   const create = parsed.flags.b
@@ -29,15 +30,10 @@ export function checkout(state: RepoState, parsed: ParsedCommand): CommandResult
   // `--` (which the parser reads as an empty flag) always means files.
   const isRef = target !== undefined && (target in state.branches || resolve(state, target) !== null)
   const isFile = target !== undefined && (target in state.workingTree || target in state.index)
+  // `git checkout -- <file>` is the older spelling of `git restore <file>`:
+  // the file on disk goes back to what's staged. Same rule, same result.
   if ('' in parsed.flags || (isFile && !isRef)) {
-    return {
-      state,
-      events: [],
-      outcome: parseError(
-        '`git checkout <file>` isn’t simulated yet.',
-        'Discarding changes to a file arrives with undoing things. For now `git checkout` goes to branches and commits.',
-      ),
-    }
+    return restore(state, { ...parsed, name: 'restore', slug: 'git-restore', flags: {} })
   }
 
   if (target === undefined) {

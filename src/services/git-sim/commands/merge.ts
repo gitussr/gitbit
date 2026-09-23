@@ -16,14 +16,49 @@ function advance(state: RepoState, id: CommitId): Pick<RepoState, 'branches' | '
     : { branches: state.branches, HEAD: { type: 'detached', commit: id } }
 }
 
-function abort(state: RepoState): CommandResult {
-  if (!state.merging) {
+/**
+ * Three-way combine, every path: what goes in the index, what goes on
+ * disk, and which paths conflicted. A merge combines their commit into
+ * yours against the commit you share; a revert combines the *inverse* of
+ * a commit — same function, different three trees.
+ */
+export function combine(
+  baseTree: Tree,
+  ourTree: Tree,
+  theirTree: Tree,
+  labels: { ours: string; theirs: string },
+): { toIndex: Tree; toDisk: Tree; conflicts: FilePath[] } {
+  const toIndex: Tree = {}
+  const toDisk: Tree = {}
+  const conflicts: FilePath[] = []
+  const paths = [...new Set([...Object.keys(baseTree), ...Object.keys(ourTree), ...Object.keys(theirTree)])].sort()
+
+  for (const path of paths) {
+    const merged = mergeFile(baseTree[path], ourTree[path], theirTree[path], labels)
+    if (merged.conflict) {
+      conflicts.push(path)
+      // Your version stays in the index; both versions, marked, go on disk.
+      if (path in ourTree) toIndex[path] = ourTree[path]
+    } else if (merged.content !== undefined) {
+      toIndex[path] = merged.content
+    }
+    if (merged.content !== undefined) toDisk[path] = merged.content
+  }
+
+  return { toIndex, toDisk, conflicts }
+}
+
+/** `git merge --abort` / `git revert --abort`: put back what the stopped operation wrote. */
+export function abort(state: RepoState, kind: 'merge' | 'revert'): CommandResult {
+  if (!state.merging || state.merging.kind !== kind) {
     return {
       state,
       events: [],
       outcome: gitError(
-        'fatal: There is no merge to abort (MERGE_HEAD missing).',
-        'Nothing is being merged right now, so there is nothing to back out of.',
+        kind === 'merge'
+          ? 'fatal: There is no merge to abort (MERGE_HEAD missing).'
+          : 'error: no cherry-pick or revert in progress\nfatal: revert failed',
+        `Nothing is being ${kind === 'merge' ? 'merged' : 'reverted'} right now, so there is nothing to back out of.`,
       ),
     }
   }
@@ -66,7 +101,7 @@ function abort(state: RepoState): CommandResult {
  * conflict markers, and waits for you to decide (`MergeState`).
  */
 export function merge(state: RepoState, parsed: ParsedCommand): CommandResult {
-  if (parsed.flags.abort === true) return abort(state)
+  if (parsed.flags.abort === true) return abort(state, 'merge')
 
   if (state.merging) {
     return {
@@ -161,22 +196,7 @@ export function merge(state: RepoState, parsed: ParsedCommand): CommandResult {
   const theirTree = state.commits[theirs].tree
   const labels = { ours: 'HEAD', theirs: target }
 
-  const toIndex: Tree = {}
-  const toDisk: Tree = {}
-  const conflicts: FilePath[] = []
-  const paths = [...new Set([...Object.keys(baseTree), ...Object.keys(ourTree), ...Object.keys(theirTree)])].sort()
-
-  for (const path of paths) {
-    const merged = mergeFile(baseTree[path], ourTree[path], theirTree[path], labels)
-    if (merged.conflict) {
-      conflicts.push(path)
-      // Your version stays in the index; both versions, marked, go on disk.
-      if (path in ourTree) toIndex[path] = ourTree[path]
-    } else if (merged.content !== undefined) {
-      toIndex[path] = merged.content
-    }
-    if (merged.content !== undefined) toDisk[path] = merged.content
-  }
+  const { toIndex, toDisk, conflicts } = combine(baseTree, ourTree, theirTree, labels)
 
   const rewrite = rewriteFiles(state, toIndex, toDisk, 'merge')
   if ('kind' in rewrite) return { state, events: [], outcome: rewrite }
@@ -190,9 +210,9 @@ export function merge(state: RepoState, parsed: ParsedCommand): CommandResult {
         ...state,
         index: rewrite.index,
         workingTree: rewrite.workingTree,
-        merging: { theirs, theirsName: target, conflicts, touched: rewrite.paths, message },
+        merging: { kind: 'merge', theirs, theirsName: target, conflicts, touched: rewrite.paths, message },
       },
-      events: [{ type: 'MERGE_CONFLICT', conflicts, paths: rewrite.paths }],
+      events: [{ type: 'MERGE_CONFLICT', operation: 'merge', conflicts, paths: rewrite.paths }],
       // Real Git exits non-zero here, but the repository *did* change —
       // it's mid-merge now — so this is an outcome with events, not a refusal.
       outcome: ok([

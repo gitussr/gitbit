@@ -7,13 +7,25 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { panelClassName } from '@/components/ui/StatePanel'
 import { Text } from '@/components/ui/Typography'
 import type { GitStateId } from '@/content/states'
-import { complete, currentBranch, suggest, type RepoState } from '@/services/git-sim'
-import { announceTransition } from './announce'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
+import { complete, currentBranch, suggest, type RepoState, type ResetLayer } from '@/services/git-sim'
+import { announceTransition, discardedBy } from './announce'
+import { ResetLayers } from './ResetLayers'
 import { initialVisualizerState, visualizerReducer } from './visualizerReducer'
 import { VisualizerStage } from './VisualizerStage'
 
 /** How long a panel stays lit after something lands in it. Long enough to notice, short enough not to linger. */
 const HIGHLIGHT_MS = 1400
+
+/** The beat between one layer of a reset lighting and the next. */
+const STEP_MS = 450
+
+/** Which stage panel each of `git reset`'s layers is. */
+const LAYER_PANEL: Record<ResetLayer, GitStateId> = {
+  head: 'local-repository',
+  index: 'staging-area',
+  worktree: 'working-directory',
+}
 
 /**
  * The file the edit control rewrites — a stand-in for an editor, so there
@@ -46,6 +58,7 @@ export default function VisualizerPage() {
   const [state, dispatch] = useReducer(visualizerReducer, undefined, initialVisualizerState)
   const [seen, setSeen] = useState(0)
   const [highlighted, setHighlighted] = useState(false)
+  const [step, setStep] = useState(1)
 
   const last = state.history[state.history.length - 1]
 
@@ -63,18 +76,38 @@ export default function VisualizerPage() {
   if (seen !== state.history.length) {
     setSeen(state.history.length)
     setHighlighted(state.history.length > 0)
+    setStep(1)
   }
+
+  /**
+   * A reset lights its layers one after another — HEAD, then the Staging
+   * Area, then the disk — because *how far down it goes* is the whole
+   * difference between its three modes (Section 18). Under reduced motion
+   * they light together: same information, no sequence to watch.
+   */
+  const reset = last?.events.find((event) => event.type === 'RESET_PERFORMED')
+  const sequence = useMemo(() => reset?.layers.map((layer) => LAYER_PANEL[layer]) ?? [], [reset])
+  const reduced = useReducedMotion()
+  const revealed = reduced ? sequence.length : step
+
+  useEffect(() => {
+    if (!highlighted || revealed >= sequence.length) return
+    const timer = window.setTimeout(() => setStep((current) => current + 1), STEP_MS)
+    return () => window.clearTimeout(timer)
+  }, [highlighted, revealed, sequence.length])
 
   useEffect(() => {
     if (!highlighted) return
-    const timer = window.setTimeout(() => setHighlighted(false), HIGHLIGHT_MS)
+    const timer = window.setTimeout(() => setHighlighted(false), HIGHLIGHT_MS + Math.max(0, sequence.length - 1) * STEP_MS)
     return () => window.clearTimeout(timer)
-  }, [highlighted, seen])
+  }, [highlighted, seen, sequence.length])
 
   const { active, entering } = useMemo(() => {
     const panels = new Set<GitStateId>()
     const nodes = new Set<string>()
     if (!last || !highlighted) return { active: panels, entering: nodes }
+
+    for (const panel of sequence.slice(0, revealed)) panels.add(panel)
 
     for (const event of last.events) {
       // File entrances are keyed by panel: the same path can arrive in one
@@ -86,6 +119,16 @@ export default function VisualizerPage() {
       if (event.type === 'FILE_STAGED' || event.type === 'FILE_UNSTAGED') {
         panels.add('staging-area')
         nodes.add(`staging-area:${event.path}`)
+      }
+      // Unstaging hands the file back to the Working Directory, where it now shows as modified.
+      if (event.type === 'FILE_UNSTAGED') panels.add('working-directory')
+      if (event.type === 'FILE_RESTORED') {
+        panels.add('working-directory')
+        nodes.add(`working-directory:${event.path}`)
+      }
+      // Files a hard reset rewrote drop in once the Working Directory's turn comes.
+      if (event.type === 'RESET_PERFORMED' && revealed >= event.layers.length) {
+        for (const path of event.paths) nodes.add(`working-directory:${path}`)
       }
       if (event.type === 'COMMIT_CREATED') {
         panels.add('local-repository')
@@ -119,8 +162,9 @@ export default function VisualizerPage() {
     }
 
     return { active: panels, entering: nodes }
-  }, [last, highlighted])
+  }, [last, highlighted, sequence, revealed])
 
+  const lost = last ? discardedBy(last) : []
   const suggestions = suggest(state.repo)
   const repo = state.repo
   const completeInput = useCallback((input: string) => complete(repo, input), [repo])
@@ -181,7 +225,7 @@ export default function VisualizerPage() {
 
           {/* The textual meaning of the last change (Section 40). Announced to
               screen readers, and shown to everyone — it is not a fallback. */}
-          <div className={panelClassName(false, 'flex flex-col gap-1')}>
+          <div className={panelClassName(false, 'flex flex-col gap-1', lost.length > 0 ? 'caution' : 'default')}>
             <Text variant="caption" tone="secondary" className="font-bold uppercase">
               What just happened
             </Text>
@@ -194,6 +238,8 @@ export default function VisualizerPage() {
               </Text>
             )}
           </div>
+
+          {reset && <ResetLayers event={reset} revealed={revealed} />}
         </div>
       </div>
 

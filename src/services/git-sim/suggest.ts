@@ -14,19 +14,23 @@ import type { RepoState } from './types'
 export function suggest(state: RepoState): string[] {
   if (!state.initialized) return ['git init']
 
-  // Mid-merge, the only sensible moves are finishing it or backing out.
+  // Mid-merge (or mid-revert), the only sensible moves are finishing it or backing out.
   if (state.merging) {
-    const [unresolved] = state.merging.conflicts
-    if (unresolved) return [`git add ${unresolved}`, 'git diff', 'git merge --abort']
-    return ['git commit', 'git status', 'git merge --abort']
+    const { kind, conflicts } = state.merging
+    const [unresolved] = conflicts
+    if (unresolved) return [`git add ${unresolved}`, `git restore --theirs ${unresolved}`, `git ${kind} --abort`]
+    return [kind === 'merge' ? 'git commit' : 'git revert --continue', 'git status', `git ${kind} --abort`]
   }
 
-  if (stagedChanges(state).length > 0) {
-    return ['git commit -m "Add homepage"', 'git diff --staged', 'git status']
+  // Every forward step comes with the way to take it back.
+  const [staged] = stagedChanges(state)
+  if (staged) {
+    return ['git commit -m "Add homepage"', 'git diff --staged', `git restore --staged ${staged.path}`]
   }
 
-  if (unstagedChanges(state).length > 0 || untrackedFiles(state).length > 0) {
-    return ['git status', 'git add .', 'git diff']
+  const [modified] = unstagedChanges(state)
+  if (modified || untrackedFiles(state).length > 0) {
+    return modified ? ['git add .', 'git diff', `git restore ${modified.path}`] : ['git status', 'git add .', 'git diff']
   }
 
   if (isClean(state) && headCommitId(state) === null) return ['git status']

@@ -25,6 +25,9 @@ const FLAGS: Record<string, string[]> = {
   switch: ['-c', '--detach'],
   checkout: ['-b'],
   merge: ['--no-ff', '--ff-only', '--abort'],
+  restore: ['--staged', '--worktree', '--ours', '--theirs'],
+  reset: ['--soft', '--mixed', '--hard'],
+  revert: ['--abort', '--continue'],
 }
 
 /**
@@ -44,6 +47,13 @@ function argsFor(state: RepoState, name: string, flags: string[]): string[] {
   const others = Object.keys(state.branches).filter((branch) => branch !== currentBranch(state))
   // A new branch's name is yours to invent; there's nothing to complete.
   if (name === 'merge') return flags.includes('--abort') ? [] : others
+  // What restore can put back: files Git has a copy of that differ from it.
+  if (name === 'restore') {
+    const changed = flags.includes('--staged') ? stagedChanges(state) : unstagedChanges(state)
+    return [...changed.map((change) => change.path), ...(state.merging?.conflicts ?? [])]
+  }
+  // Where to move HEAD: back along history, or to another branch.
+  if (name === 'reset' || name === 'revert') return ['HEAD', 'HEAD~1', 'HEAD~2', ...others]
   if (name === 'switch' || name === 'checkout') return flags.some((flag) => ['-c', '-b'].includes(flag)) ? [] : others
   if (name === 'branch') return flags.some((flag) => ['-d', '-D'].includes(flag)) ? others : []
   return []

@@ -127,6 +127,23 @@ export function refsAt(state: RepoState, id: CommitId): string[] {
  * and at least four characters, which is Git's own minimum.
  */
 export function resolve(state: RepoState, ref: string): CommitId | null {
+  // `HEAD~2` walks two first parents back; `main^2` is main's *second*
+  // parent (the merged-in side). `~` only ever follows first parents, as in
+  // Git, so it never wanders into a branch that was merged in.
+  const walk = /^(.+?)((?:[~^]\d*)+)$/.exec(ref)
+  if (walk) {
+    let id = resolve(state, walk[1])
+    for (const [, op, count] of walk[2].matchAll(/([~^])(\d*)/g)) {
+      if (id === null) return null
+      if (op === '^') {
+        id = state.commits[id]?.parents[count === '' ? 0 : Number(count) - 1] ?? null
+        continue
+      }
+      for (let i = 0; i < Number(count || 1) && id !== null; i += 1) id = state.commits[id]?.parents[0] ?? null
+    }
+    return id
+  }
+
   if (ref === 'HEAD') return headCommitId(state)
   if (ref in state.branches) return state.branches[ref]
   if (ref in state.commits) return ref

@@ -2,7 +2,7 @@ import { changeSummary } from '../diff'
 import type { GitEvent } from '../events'
 import { commitId } from '../hash'
 import type { ParsedCommand } from '../parse'
-import { currentBranch, headCommitId, headTree, stagedChanges, unstagedChanges, untrackedFiles } from '../repo'
+import { currentBranch, headCommitId, headTree, stagedChanges, treeDiff, unstagedChanges, untrackedFiles } from '../repo'
 import { gitError, ok, type CommandResult } from '../result'
 import type { Commit, RepoState } from '../types'
 
@@ -16,7 +16,7 @@ import type { Commit, RepoState } from '../types'
  * the new HEAD now hold the same thing (Section 38).
  */
 export function commit(state: RepoState, parsed: ParsedCommand): CommandResult {
-  if (state.merging) return concludeMerge(state, parsed)
+  if (state.merging) return concludeInProgress(state, parsed)
 
   const staged = stagedChanges(state)
 
@@ -71,13 +71,15 @@ export function commit(state: RepoState, parsed: ParsedCommand): CommandResult {
 }
 
 /**
- * `git commit` during a merge: records the merge commit the conflicts
- * interrupted. Two parents — where you were, and what you merged in — and
- * the index as you've resolved it. It may even match HEAD exactly (you
- * kept your side everywhere); it's still a merge commit, because the
- * history *was* combined.
+ * `git commit` during a stopped merge or revert: records the commit the
+ * conflicts interrupted, with the index as you've resolved it.
+ *
+ * A merge concludes with two parents — where you were, and what you
+ * merged in — even if you kept your side everywhere, because the history
+ * *was* combined. A revert concludes with one: it's an ordinary commit
+ * that happens to undo another.
  */
-function concludeMerge(state: RepoState, parsed: ParsedCommand): CommandResult {
+export function concludeInProgress(state: RepoState, parsed: ParsedCommand): CommandResult {
   const merging = state.merging as NonNullable<RepoState['merging']>
 
   if (merging.conflicts.length > 0) {
@@ -93,7 +95,7 @@ function concludeMerge(state: RepoState, parsed: ParsedCommand): CommandResult {
 
   const message = typeof parsed.flags.m === 'string' ? parsed.flags.m : merging.message
   const ours = headCommitId(state) as string
-  const parents = [ours, merging.theirs]
+  const parents = merging.kind === 'merge' ? [ours, merging.theirs] : [ours]
   const tree = { ...state.index }
   const id = commitId(parents, message, tree, state.commitCounter)
   const branch = currentBranch(state)
@@ -110,7 +112,9 @@ function concludeMerge(state: RepoState, parsed: ParsedCommand): CommandResult {
   return {
     state: next,
     events: [
-      { type: 'MERGE_CREATED', id, parents, paths: [] },
+      merging.kind === 'merge'
+        ? { type: 'MERGE_CREATED', id, parents, paths: [] }
+        : { type: 'COMMIT_CREATED', id, message, paths: treeDiff(headTree(state), tree).map((change) => change.path), reverts: merging.theirs },
       { type: 'HEAD_MOVED', from: ours, to: id },
     ],
     outcome: ok([`[${branch ?? 'detached HEAD'} ${id}] ${message}`]),

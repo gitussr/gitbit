@@ -24,6 +24,9 @@ describe('complete', () => {
       'git init ',
       'git log ',
       'git merge ',
+      'git reset ',
+      'git restore ',
+      'git revert ',
       'git status ',
       'git switch ',
     ])
