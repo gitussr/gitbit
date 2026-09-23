@@ -10,6 +10,8 @@ export interface CommitGraphProps {
   repo: RepoState
   /** Commit ids that have just been created, and should play their entrance. */
   entering: Set<string>
+  /** The commit the Time Machine is looking at, ringed in the graph. */
+  inspected?: string | null
 }
 
 /** What the lines say, in words — the graph is decorative to a screen reader, this isn't. */
@@ -57,7 +59,7 @@ function Refs({
  * graph is the one part of the stage whose cost grows with every commit,
  * and the page re-renders on every keystroke in the console.
  */
-export const CommitGraph = memo(function CommitGraph({ repo, entering }: CommitGraphProps) {
+export const CommitGraph = memo(function CommitGraph({ repo, entering, inspected = null }: CommitGraphProps) {
   const graph = historyGraph(repo)
   const head = graph.nodes.find((node) => node.isHead)
 
@@ -72,6 +74,7 @@ export const CommitGraph = memo(function CommitGraph({ repo, entering }: CommitG
     lane: node.lane,
     shape: node.commit.parents.length > 1 ? 'diamond' : 'dot',
     emphasis: node.isHead,
+    selected: node.commit.id === inspected,
     entering: entering.has(node.commit.id),
     content: (
       <CommitNode

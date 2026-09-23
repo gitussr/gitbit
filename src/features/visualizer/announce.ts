@@ -108,3 +108,9 @@ export function discardedBy(transition: Transition): string[] {
   }
   return [...lost]
 }
+
+/** The sentence for the simulator's own undo — which is not a Git command, and says so. */
+export function announceUndo(undone: Transition): string {
+  const what = undone.input.startsWith('edited ') ? `your edit to ${undone.input.slice('edited '.length)}` : undone.input
+  return `Undid ${what} in the simulator — everything is exactly as it was before it. Real Git has no button like this; its undos are commands.`
+}

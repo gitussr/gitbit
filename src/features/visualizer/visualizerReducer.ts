@@ -28,23 +28,44 @@ export interface VisualizerState {
    * read from isn't the console's to throw away.
    */
   clearedAt: number
+  /** Transitions undone and not yet redone, next-to-redo first. Anything new clears it, as in an editor. */
+  future: HistoryEntry[]
+  /**
+   * What the last action was. An undo shortens `history` exactly the way
+   * nothing else does, and the page must not describe the entry that's now
+   * last as if it had just happened.
+   */
+  last: 'run' | 'undo' | 'redo' | null
+  /** Bumped by every action, so the page can tell "something happened" even when history's length didn't change. */
+  version: number
 }
 
 export type VisualizerAction =
   | { type: 'run'; input: string }
   | { type: 'edit'; path: string; content: string }
   | { type: 'clear' }
+  | { type: 'undo' }
+  | { type: 'redo' }
   | { type: 'reset' }
 
 export function initialVisualizerState(): VisualizerState {
-  return { repo: projectFolder(), history: [], clearedAt: 0 }
+  return { repo: projectFolder(), history: [], clearedAt: 0, future: [], last: null, version: 0 }
 }
 
+function append(state: VisualizerState, entry: HistoryEntry): VisualizerState {
+  return { ...state, repo: entry.after, history: [...state.history, entry], future: [], last: 'run', version: state.version + 1 }
+}
+
+/**
+ * Undo, redo and reset act on the *simulator*, not on Git (Section 27).
+ * Undo isn't `git reset` or `git revert` — it puts the whole simulated
+ * repository back to exactly how it was before the last step, which is
+ * something real Git can't do. The page labels it that way.
+ */
 export function visualizerReducer(state: VisualizerState, action: VisualizerAction): VisualizerState {
   switch (action.type) {
     case 'run': {
-      const transition = executeCommand(state.repo, action.input)
-      return { ...state, repo: transition.after, history: [...state.history, { ...transition, source: 'command' }] }
+      return append(state, { ...executeCommand(state.repo, action.input), source: 'command' })
     }
 
     case 'edit': {
@@ -60,11 +81,32 @@ export function visualizerReducer(state: VisualizerState, action: VisualizerActi
         events: result.events,
         outcome: { kind: 'ok', output: [] },
       }
-      return { ...state, repo: result.state, history: [...state.history, transition] }
+      return append(state, transition)
     }
 
     case 'clear':
       return { ...state, clearedAt: state.history.length }
+
+    case 'undo': {
+      const undone = state.history[state.history.length - 1]
+      if (!undone) return state
+      const history = state.history.slice(0, -1)
+      return {
+        ...state,
+        repo: undone.before,
+        history,
+        clearedAt: Math.min(state.clearedAt, history.length),
+        future: [undone, ...state.future],
+        last: 'undo',
+        version: state.version + 1,
+      }
+    }
+
+    case 'redo': {
+      const [redone, ...future] = state.future
+      if (!redone) return state
+      return { ...state, repo: redone.after, history: [...state.history, redone], future, last: 'redo', version: state.version + 1 }
+    }
 
     case 'reset':
       return initialVisualizerState()

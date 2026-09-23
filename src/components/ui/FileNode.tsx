@@ -9,7 +9,7 @@ import { cn } from '@/utils/cn'
  * status a file has, this decides what that looks like. Keeping the
  * primitive ignorant of Git is what lets Learn reuse it later.
  */
-export type FileNodeStatus = 'untracked' | 'modified' | 'staged' | 'deleted' | 'unchanged' | 'conflicted'
+export type FileNodeStatus = 'untracked' | 'modified' | 'staged' | 'deleted' | 'unchanged' | 'conflicted' | 'added'
 
 const statusMeta: Record<FileNodeStatus, { icon: ComponentType<{ className?: string }>; label: string; className: string }> = {
   untracked: { icon: FilePlus, label: 'untracked', className: 'bg-surface' },
@@ -17,6 +17,9 @@ const statusMeta: Record<FileNodeStatus, { icon: ComponentType<{ className?: str
   staged: { icon: Check, label: 'staged', className: 'bg-safe-subtle' },
   deleted: { icon: FileX, label: 'deleted', className: 'bg-danger-subtle' },
   unchanged: { icon: File, label: 'unchanged', className: 'bg-surface' },
+  // A file a commit introduced — used when looking at a snapshot, where
+  // "untracked" would be false: a committed file is tracked by definition.
+  added: { icon: FilePlus, label: 'added', className: 'bg-safe-subtle' },
   // Danger fill with a dashed edge, so it can't be mistaken for `deleted` in
   // greyscale either: this file is waiting on a decision, not gone.
   conflicted: { icon: FileWarning, label: 'conflict', className: 'border-dashed bg-danger-subtle' },
@@ -31,28 +34,47 @@ export interface FileNodeProps {
    * node renders in its final position.
    */
   entering?: boolean
+  /** Makes the row a button — e.g. to show this file's history. */
+  onSelect?: () => void
+  selected?: boolean
   className?: string
 }
 
 /** One file, in one place. The unit that moves between panels (Section 11). */
-export function FileNode({ path, status = 'unchanged', entering = false, className }: FileNodeProps) {
+export function FileNode({ path, status = 'unchanged', entering = false, onSelect, selected = false, className }: FileNodeProps) {
   const meta = statusMeta[status]
   const Icon = meta.icon
 
-  return (
-    <li
-      className={cn(
-        'flex items-center gap-2 border-2 border-accent px-2 py-1.5',
-        meta.className,
-        entering && 'motion-safe:animate-viz-drop',
-        className,
-      )}
-    >
+  const content = (
+    <>
       <Icon className="size-3.5 shrink-0" aria-hidden="true" />
       <span className="truncate font-mono text-body-sm">{path}</span>
       {/* The status in words, visible and readable — colour and icon carry the
           same fact for people who can see it, so nothing needs an sr-only twin. */}
       <span className="ml-auto text-xs font-bold text-foreground-secondary">{meta.label}</span>
+    </>
+  )
+
+  const row = 'flex items-center gap-2 px-2 py-1.5'
+
+  return (
+    <li
+      className={cn(
+        'border-2 border-accent',
+        meta.className,
+        selected && 'outline-2 outline-offset-2 outline-accent',
+        entering && 'motion-safe:animate-viz-drop',
+        !onSelect && row,
+        className,
+      )}
+    >
+      {onSelect ? (
+        <button type="button" onClick={onSelect} aria-pressed={selected} className={cn(row, 'w-full text-left')}>
+          {content}
+        </button>
+      ) : (
+        content
+      )}
     </li>
   )
 }

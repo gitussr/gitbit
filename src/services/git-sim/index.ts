@@ -10,6 +10,17 @@
 export { executeCommand } from './execute'
 export { suggest } from './suggest'
 export { complete } from './complete'
+export {
+  fileHistory,
+  relationToHead,
+  snapshot,
+  timeline,
+  type FileHistoryEntry,
+  type HeadRelation,
+  type SnapshotFile,
+  type SnapshotStatus,
+  type TimelineEntry,
+} from './timeline'
 export { historyGraph, type GraphEdge, type GraphNode, type HistoryGraph } from './graph'
 export { writeFile, deleteFile, type WorkspaceResult } from './workspace'
 export { emptyState, projectFolder, folderWith, seeds, type SeedName } from './seed'

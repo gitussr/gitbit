@@ -1,7 +1,8 @@
-import { Pencil, RotateCcw } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
+import { History, Pencil, Redo2, RotateCcw, Undo2, Repeat } from 'lucide-react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
+import { LoadingState } from '@/components/ui/LoadingState'
 import { CommandConsole, type ConsoleEntry } from '@/components/ui/CommandConsole'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { panelClassName } from '@/components/ui/StatePanel'
@@ -9,10 +10,16 @@ import { Text } from '@/components/ui/Typography'
 import type { GitStateId } from '@/content/states'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { complete, currentBranch, suggest, type RepoState, type ResetLayer } from '@/services/git-sim'
-import { announceTransition, discardedBy } from './announce'
+import { announceTransition, announceUndo, discardedBy } from './announce'
 import { ResetLayers } from './ResetLayers'
 import { initialVisualizerState, visualizerReducer } from './visualizerReducer'
 import { VisualizerStage } from './VisualizerStage'
+
+/** Opt-in, so it's its own chunk: the Visualizer's first load doesn't pay for it. */
+const TimeMachine = lazy(() => import('./TimeMachine'))
+
+/** How long a replay shows the "before" state before playing the step again. */
+const REPLAY_MS = 500
 
 /** How long a panel stays lit after something lands in it. Long enough to notice, short enough not to linger. */
 const HIGHLIGHT_MS = 1400
@@ -59,8 +66,14 @@ export default function VisualizerPage() {
   const [seen, setSeen] = useState(0)
   const [highlighted, setHighlighted] = useState(false)
   const [step, setStep] = useState(1)
+  const [replaying, setReplaying] = useState(false)
+  const [timeMachineOpen, setTimeMachineOpen] = useState(false)
+  const [inspected, setInspected] = useState<string | null>(null)
 
-  const last = state.history[state.history.length - 1]
+  // After an undo, the entry now at the end of history didn't just happen —
+  // nothing did, except the undo. It gets no highlight and no description.
+  const last = state.last === 'undo' ? undefined : state.history[state.history.length - 1]
+  const undone = state.last === 'undo' ? state.future[0] : undefined
 
   /**
    * Lighting the panels is React state rather than a CSS animation on
@@ -73,9 +86,9 @@ export default function VisualizerPage() {
    * uses for closing the menu on navigation) so the highlight is on in the
    * same paint as the state it describes, with no flash of an unlit panel.
    */
-  if (seen !== state.history.length) {
-    setSeen(state.history.length)
-    setHighlighted(state.history.length > 0)
+  if (seen !== state.version) {
+    setSeen(state.version)
+    setHighlighted(last !== undefined)
     setStep(1)
   }
 
@@ -164,6 +177,20 @@ export default function VisualizerPage() {
     return { active: panels, entering: nodes }
   }, [last, highlighted, sequence, revealed])
 
+  /**
+   * Replay (Section 27) is undo, a beat, then redo — so every animation
+   * plays again for real, from the actual "before", rather than a canned
+   * re-run of one highlight.
+   */
+  const replay = () => {
+    setReplaying(true)
+    dispatch({ type: 'undo' })
+    window.setTimeout(() => {
+      dispatch({ type: 'redo' })
+      setReplaying(false)
+    }, REPLAY_MS)
+  }
+
   const lost = last ? discardedBy(last) : []
   const suggestions = suggest(state.repo)
   const repo = state.repo
@@ -201,7 +228,12 @@ export default function VisualizerPage() {
       </Alert>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <VisualizerStage repo={state.repo} active={active} entering={entering} />
+        <VisualizerStage
+          repo={state.repo}
+          active={active}
+          entering={entering}
+          inspected={timeMachineOpen ? (inspected ?? null) : null}
+        />
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap gap-2">
@@ -213,14 +245,55 @@ export default function VisualizerPage() {
             >
               Edit {EDIT_PATH}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              leadingIcon={<RotateCcw className="size-4" />}
-              onClick={() => dispatch({ type: 'reset' })}
-            >
-              Start over
-            </Button>
+          </div>
+
+          {/* Section 27: these act on the simulator, not on Git, and say so —
+              real Git has no undo button, and nobody should leave thinking it does. */}
+          <div className="flex flex-col gap-1.5" role="group" aria-labelledby="simulator-controls">
+            <Text id="simulator-controls" variant="caption" tone="secondary">
+              Simulator controls — these don&apos;t run Git
+            </Text>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                leadingIcon={<Undo2 className="size-4" />}
+                disabled={state.history.length === 0 || replaying}
+                onClick={() => dispatch({ type: 'undo' })}
+              >
+                Undo
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                leadingIcon={<Redo2 className="size-4" />}
+                disabled={state.future.length === 0 || replaying}
+                onClick={() => dispatch({ type: 'redo' })}
+              >
+                Redo
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                leadingIcon={<Repeat className="size-4" />}
+                disabled={state.history.length === 0 || replaying}
+                onClick={replay}
+              >
+                Replay
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                leadingIcon={<RotateCcw className="size-4" />}
+                disabled={replaying}
+                onClick={() => {
+                  setInspected(null)
+                  dispatch({ type: 'reset' })
+                }}
+              >
+                Start over
+              </Button>
+            </div>
           </div>
 
           {/* The textual meaning of the last change (Section 40). Announced to
@@ -230,7 +303,13 @@ export default function VisualizerPage() {
               What just happened
             </Text>
             <Text variant="body-sm" aria-live="polite">
-              {last ? announceTransition(last) : 'Nothing yet. Run a command to begin.'}
+              {replaying && undone
+                ? `Replaying ${undone.input}…`
+                : last
+                  ? announceTransition(last)
+                  : undone
+                    ? announceUndo(undone)
+                    : 'Nothing yet. Run a command to begin.'}
             </Text>
             {last && last.outcome.kind !== 'ok' && (
               <Text variant="body-sm" tone="secondary">
@@ -240,6 +319,32 @@ export default function VisualizerPage() {
           </div>
 
           {reset && <ResetLayers event={reset} revealed={revealed} />}
+
+          <div className="flex flex-col gap-3">
+            <Button
+              variant="secondary"
+              size="sm"
+              leadingIcon={<History className="size-4" />}
+              aria-expanded={timeMachineOpen}
+              aria-controls="time-machine"
+              onClick={() => setTimeMachineOpen((open) => !open)}
+              className="self-start"
+            >
+              {timeMachineOpen ? 'Close the Time Machine' : 'Open the Time Machine'}
+            </Button>
+            {timeMachineOpen && (
+              <div id="time-machine" className={panelClassName(false)}>
+                <Suspense fallback={<LoadingState rows={1} />}>
+                  <TimeMachine
+                    repo={state.repo}
+                    selected={inspected}
+                    onSelect={setInspected}
+                    onRun={(input) => dispatch({ type: 'run', input })}
+                  />
+                </Suspense>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

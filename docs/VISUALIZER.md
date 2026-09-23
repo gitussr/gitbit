@@ -115,6 +115,7 @@ src/services/git-sim/
   commands/      One module per command: (state, parsed) -> CommandResult
   graph.ts       RepoState -> rows, lanes and edges for the history graph
   merge3.ts      Line-level three-way merge of one file
+  timeline.ts    Every commit, snapshots, file history (Time Machine)
   suggest.ts     RepoState -> the commands that make sense next
   complete.ts    RepoState + partial input -> Tab completions
   execute.ts     The single entry point
@@ -439,12 +440,30 @@ justified: the whole feature is a single state machine, and the
 timeline.
 
 ```ts
-{ repo: RepoState, history: Transition[], cursor: number,
-  mode: 'beginner' | 'advanced', scenario?: ScenarioProgress }
+{ repo: RepoState, history: HistoryEntry[], future: HistoryEntry[],
+  clearedAt: number, last: 'run' | 'undo' | 'redo' | null, version: number }
 ```
 
-`history` + `cursor` gives §27's undo/replay and §19's Time Machine from
-one structure. Slices pass down as props; `CommitGraph` is `React.memo`'d
+§27's undo is a pop: every entry keeps its `before`, so undo restores it
+and moves the entry to `future`; redo moves it back; anything new clears
+`future`. Replay is undo, a beat (`REPLAY_MS`), then redo — every
+animation plays again from the real "before" instead of a canned re-run.
+All three are labelled as simulator controls: real Git has no undo
+button, and nobody should leave thinking it does. `last` exists so the
+page never describes the entry an undo exposed as if it had just
+happened; `version` drives highlighting.
+
+The Time Machine (§19) is **not** built on `history`. It walks commits,
+not commands: `services/git-sim/timeline.ts` lists every commit ever
+made — including ones a reset or deleted branch left unreachable, which
+the graph stops drawing — with the snapshot at each (§24) and a file's
+created/modified/deleted story (§20, skipping merges that took one side
+as-is, like `git log -- <file>`). It is read-only: scrubbing rings the
+commit in the graph and moves nothing. "Go here" runs the real
+`git switch`, and "Keep it on a branch" runs `git branch` for an
+unreachable commit — time travel in Git is a command, not a mode. The
+panel is opt-in and lazy-loaded, so the Visualizer's first load doesn't
+pay for it. Slices pass down as props; `CommitGraph` is `React.memo`'d
 on commit count and HEAD, since it's the only component whose render
 cost grows.
 

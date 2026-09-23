@@ -26,6 +26,8 @@ export interface LaneGraphRow {
   emphasis?: boolean
   /** Plays the entrance when this row has just arrived. */
   entering?: boolean
+  /** Rings the node — the one being looked at elsewhere, e.g. in the Time Machine. */
+  selected?: boolean
   content: ReactNode
 }
 
@@ -126,6 +128,9 @@ export function LaneGraph({ rows, edges, lanes, label, className }: LaneGraphPro
                 <circle cx={cx} cy={cy} r={r} />
               )}
               {row.emphasis && <circle cx={cx} cy={cy} r={NODE_R - 3} className="fill-highlight stroke-none" />}
+              {row.selected && (
+                <circle cx={cx} cy={cy} r={r + 5} className="fill-none" strokeDasharray="3 2" />
+              )}
             </g>
           )
         })}

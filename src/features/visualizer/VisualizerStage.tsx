@@ -23,6 +23,8 @@ export interface VisualizerStageProps {
   active: Set<GitStateId>
   /** What has just arrived and should play its entrance: `<panel>:<path>` for files, the id for commits. */
   entering: Set<string>
+  /** The commit the Time Machine is looking at, if it's open. */
+  inspected?: string | null
 }
 
 /** The arrow between two panels, carrying the command that moves work along it. */
@@ -55,7 +57,7 @@ function Empty({ children }: { children: string }) {
  * The Remote Repository panel arrives with the remote commands; drawing an
  * empty one now would be a picture of something the simulator can't yet do.
  */
-export function VisualizerStage({ repo, active, entering }: VisualizerStageProps) {
+export function VisualizerStage({ repo, active, entering, inspected = null }: VisualizerStageProps) {
   const staged = stagedChanges(repo)
   const unstaged = new Map(unstagedChanges(repo).map((change) => [change.path, change.kind]))
   const untracked = new Set(untrackedFiles(repo))
@@ -163,7 +165,7 @@ export function VisualizerStage({ repo, active, entering }: VisualizerStageProps
         active={active.has('local-repository')}
         empty={<Empty>{repo.initialized ? 'No commits yet.' : 'Not a repository yet.'}</Empty>}
       >
-        {hasCommits && <CommitGraph repo={repo} entering={entering} />}
+        {hasCommits && <CommitGraph repo={repo} entering={entering} inspected={inspected} />}
       </StatePanel>
     </div>
   )
