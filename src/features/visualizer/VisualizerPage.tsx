@@ -1,12 +1,13 @@
 import { Pencil, RotateCcw } from 'lucide-react'
-import { useEffect, useMemo, useReducer, useState } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
+import { CommandConsole, type ConsoleEntry } from '@/components/ui/CommandConsole'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { panelClassName } from '@/components/ui/StatePanel'
 import { Text } from '@/components/ui/Typography'
 import type { GitStateId } from '@/content/states'
-import { suggest } from '@/services/git-sim'
+import { complete, suggest } from '@/services/git-sim'
 import { announceTransition } from './announce'
 import { initialVisualizerState, visualizerReducer } from './visualizerReducer'
 import { VisualizerStage } from './VisualizerStage'
@@ -24,11 +25,12 @@ const EDITS = ['<h1>Hello</h1>\n', '<h1>Welcome to GitBit</h1>\n']
 /**
  * GitBit Visualizer — the workspace (Section 2).
  *
- * Task 4 draws the first state visualization: Working Directory → Staging
- * Area → Local Repository, rendered from the simulation engine and
- * animated by the events it emits. The command console (Section 9) is the
- * next task; until it exists, the suggestion buttons below run commands so
- * the stage can actually be exercised.
+ * The stage draws Working Directory → Staging Area → Local Repository
+ * from the simulation engine, animated by the events it emits; the
+ * console docked beneath it (Section 9) is how commands get in. The
+ * console shows what Git *said*; the panel beside the stage says what it
+ * *meant* — the same split as the Terminal page's "Git says" / "Human
+ * translation".
  */
 export default function VisualizerPage() {
   const [state, dispatch] = useReducer(visualizerReducer, undefined, initialVisualizerState)
@@ -84,6 +86,28 @@ export default function VisualizerPage() {
   }, [last, highlighted])
 
   const suggestions = suggest(state.repo)
+  const repo = state.repo
+  const completeInput = useCallback((input: string) => complete(repo, input), [repo])
+
+  const commands = useMemo(
+    () => state.history.filter((entry) => entry.source === 'command').map((entry) => entry.input),
+    [state.history],
+  )
+
+  const entries = useMemo(
+    () =>
+      state.history.slice(state.clearedAt).map(
+        (entry, i): ConsoleEntry => ({
+          id: state.clearedAt + i,
+          input: entry.input,
+          note: entry.source === 'edit',
+          failed: entry.outcome.kind !== 'ok',
+          // A refusal prints Git's own message; why it happened is the explainer's line.
+          output: entry.outcome.kind === 'ok' ? entry.outcome.output : [entry.outcome.message],
+        }),
+      ),
+    [state.history, state.clearedAt],
+  )
   const nextEdit = EDITS.find((content) => content !== state.repo.workingTree[EDIT_PATH]) ?? EDITS[1]
 
   return (
@@ -101,25 +125,6 @@ export default function VisualizerPage() {
         <VisualizerStage repo={state.repo} active={active} entering={entering} />
 
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Text variant="body-sm" className="font-bold">
-              Run a command
-            </Text>
-            <div className="flex flex-wrap gap-2">
-              {suggestions.map((command) => (
-                <Button
-                  key={command}
-                  variant="secondary"
-                  size="sm"
-                  className="font-mono"
-                  onClick={() => dispatch({ type: 'run', input: command })}
-                >
-                  {command}
-                </Button>
-              ))}
-            </div>
-          </div>
-
           <div className="flex flex-wrap gap-2">
             <Button
               variant="ghost"
@@ -156,6 +161,20 @@ export default function VisualizerPage() {
           </div>
         </div>
       </div>
+
+      {/* Docked, not fixed: it sticks to the bottom of the viewport while the
+          stage scrolls past, and stays in the page's flow at every width
+          (docs/VISUALIZER.md, Layout). */}
+      <CommandConsole
+        className="sticky bottom-[env(safe-area-inset-bottom)]"
+        label="Git command"
+        entries={entries}
+        history={commands}
+        suggestions={suggestions}
+        complete={completeInput}
+        onRun={(input) => dispatch({ type: 'run', input })}
+        onClear={() => dispatch({ type: 'clear' })}
+      />
     </div>
   )
 }

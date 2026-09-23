@@ -114,6 +114,7 @@ src/services/git-sim/
   validate.ts    Can this command start? -> GitError | null
   commands/      One module per command: (state, parsed) -> CommandResult
   suggest.ts     RepoState -> the commands that make sense next
+  complete.ts    RepoState + partial input -> Tab completions
   execute.ts     The single entry point
   index.ts       The public surface feature code imports
 ```

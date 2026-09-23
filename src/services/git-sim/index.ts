@@ -9,6 +9,7 @@
 
 export { executeCommand } from './execute'
 export { suggest } from './suggest'
+export { complete } from './complete'
 export { writeFile, deleteFile, type WorkspaceResult } from './workspace'
 export { emptyState, projectFolder, folderWith, seeds, type SeedName } from './seed'
 
