@@ -488,13 +488,35 @@ unrecoverable — calm, once, in the Explainer (§18).
   show (`Built on 80303ad.`, `Merge of … and …`). A screen reader gets
   structure, not a description of a picture — without a second, hidden
   copy of the history to keep in sync.
-- Console input is a labelled `<input>` in a `<form>`; history is a log
-  region; ↑/↓ walks history, Tab accepts a suggestion, Esc clears.
-- Commit nodes are focusable; Enter inspects one (§24's snapshot view).
-- Tab order: scenario rail → stage → console. Roving tabindex inside a
-  panel's file list, matching the `Tabs` primitive's existing pattern.
+- Console input is a labelled `<input>` in a `<form>`; ↑/↓ walks
+  history, Tab accepts a completion, Esc clears. The scrollback is a
+  `role="log"` wrapper around a real `<ol>` (the role on the list itself
+  would strip the list semantics its items need), `aria-live="off"`: the
+  "What just happened" line is the live region, so nothing is read twice.
+- Inspecting a commit (§24's snapshot view) is the Time Machine's job,
+  not the graph's: its timeline is a native range input (arrows, touch,
+  screen readers with the commit as value text) and the graph rings the
+  commit it's on. Graph rows themselves aren't focusable — they'd be tab
+  stops that do nothing.
+- Tab order follows the screen: scenario rail → stage → explainer column
+  (what happened, controls, Aha/Recall, Time Machine) → console. It's DOM
+  order, never CSS `order`.
+- Nothing focused is ever hidden under the sticky header or the docked
+  console (WCAG 2.4.11): `scroll-padding-top` in `base.css` clears the
+  header, and `useScrollPaddingBottom` keeps `scroll-padding-bottom`
+  equal to the dock's measured height.
+- Recall and Quiz choices lock with `aria-disabled`, not `disabled`:
+  disabling the button that has focus drops focus to `<body>`.
+- Reduced motion lights a reset's layers together and plays no
+  animation; the live region carries the same sentence either way.
 - Focus is never trapped; every interactive element keeps the global
   `:focus-visible` ring.
+
+Checked in Task 14 with axe-core (WCAG 2.2 AA + best practice) across
+eight states at 375px and 1280px, a keyboard-only walkthrough at both
+widths, and emulated reduced motion. The one standing axe finding is
+`meta-viewport`: zoom is locked in `index.html` by request, which fails
+WCAG 1.4.4.
 
 ## Components
 
@@ -566,6 +588,21 @@ for current sizes.
 
 Being a pure client-side simulation with no fetch, the Visualizer
 inherits full offline support from the existing Workbox precache.
+
+Runtime, measured in Task 14 on the production build with the CPU
+throttled 4× (Lighthouse's mobile profile): a command costs ~40 ms of
+main thread at the start of a session and ~80 ms at 100 commits, the DOM
+is ~1,100 nodes at 100 commits, there is no `requestAnimationFrame` or
+infinite animation on an idle page, and the Time Machine scrubs at a
+frame per step. `CommitGraph` compares only its own entrance keys
+(`sameGraphProps`), so highlights lighting and dimming — two or three
+renders per command — don't redraw the history; that cut long tasks over
+a 100-commit session by a third.
+
+Lighthouse mobile scores the Visualizer the same as other pages (~62-68,
+run to run); the cost there is the site-wide main chunk, which bundles
+every content module because search and other shell pieces import
+`services/content`. That is a site-wide change, not a Visualizer one.
 
 ## Testing
 

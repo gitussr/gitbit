@@ -11,6 +11,12 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* The sticky header (h-14, plus the notch) covers the top of the page.
+     Without this, focus moving upward — or a jump to an anchor — lands on
+     something hidden underneath it (WCAG 2.4.11, Focus Not Obscured). A
+     page with a bottom dock sets the bottom padding the same way, measured
+     (hooks/useScrollPaddingBottom.ts). */
+  scroll-padding-top: calc(3.5rem + env(safe-area-inset-top) + 0.5rem);
 }
 
 body {

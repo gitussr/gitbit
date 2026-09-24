@@ -1,5 +1,5 @@
 import { History, Pencil, Redo2, Repeat, RotateCcw, Undo2, Users } from 'lucide-react'
-import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
@@ -12,6 +12,7 @@ import type { GitStateId } from '@/content/states'
 import { getScenarioSummary, type ScenarioSummary } from '@/content/visualizer/catalog'
 import type { ScenarioAction } from '@/content/visualizer/scenarios'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
+import { useScrollPaddingBottom } from '@/hooks/useScrollPaddingBottom'
 import { complete, currentBranch, suggest, type RepoState, type ResetLayer } from '@/services/git-sim'
 import { announceTransition, announceUndo, discardedBy } from './announce'
 import { ResetLayers } from './ResetLayers'
@@ -92,6 +93,10 @@ function Workspace({ scenario }: { scenario?: ScenarioSummary }) {
   const [replaying, setReplaying] = useState(false)
   const [timeMachineOpen, setTimeMachineOpen] = useState(false)
   const [inspected, setInspected] = useState<string | null>(null)
+
+  // Tabbing to something under the docked console scrolls it clear of the dock.
+  const dock = useRef<HTMLDivElement>(null)
+  useScrollPaddingBottom(dock)
 
   // After an undo, the entry now at the end of history didn't just happen —
   // nothing did, except the undo. It gets no highlight and no description.
@@ -415,16 +420,17 @@ function Workspace({ scenario }: { scenario?: ScenarioSummary }) {
       {/* Docked, not fixed: it sticks to the bottom of the viewport while the
           stage scrolls past, and stays in the page's flow at every width
           (docs/VISUALIZER.md, Layout). */}
-      <CommandConsole
-        className="sticky bottom-[env(safe-area-inset-bottom)]"
-        label="Git command"
-        entries={entries}
-        history={commands}
-        suggestions={suggestions}
-        complete={completeInput}
-        onRun={(input) => dispatch({ type: 'run', input })}
-        onClear={() => dispatch({ type: 'clear' })}
-      />
+      <div ref={dock} className="sticky bottom-[env(safe-area-inset-bottom)] z-10">
+        <CommandConsole
+          label="Git command"
+          entries={entries}
+          history={commands}
+          suggestions={suggestions}
+          complete={completeInput}
+          onRun={(input) => dispatch({ type: 'run', input })}
+          onClear={() => dispatch({ type: 'clear' })}
+        />
+      </div>
     </div>
   )
 }

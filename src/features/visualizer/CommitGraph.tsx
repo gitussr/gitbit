@@ -17,6 +17,26 @@ export interface CommitGraphProps {
   source?: 'local' | 'remote'
 }
 
+/** The `entering` keys this graph draws: commit ids, or `remote:`-prefixed ones for the remote's. */
+function ownKeys(entering: Set<string>, source: CommitGraphProps['source']): string[] {
+  const remote = source === 'remote'
+  return [...entering].filter((key) => (remote ? key.startsWith('remote:') : !key.includes(':')))
+}
+
+/**
+ * `entering` is rebuilt every time a panel lights or dims — two or three
+ * times per command — and mostly holds keys for other panels
+ * (`working-directory:index.html`). Comparing only this graph's own keys
+ * means an edit or a `git status` doesn't redraw every row of the history.
+ */
+function sameGraphProps(before: CommitGraphProps, after: CommitGraphProps): boolean {
+  if (before.repo !== after.repo || before.inspected !== after.inspected || before.source !== after.source) return false
+  if (before.entering === after.entering) return true
+  const a = ownKeys(before.entering, before.source)
+  const b = ownKeys(after.entering, after.source)
+  return a.length === b.length && a.every((key) => after.entering.has(key))
+}
+
 /** A row's narrowest: short hash, one branch label and a few words of the message. */
 const MIN_ROW = 200
 
@@ -61,9 +81,9 @@ function Refs({
  * The Local Repository's history, as a graph (Section 13).
  *
  * The engine decides the shape (`historyGraph`); `LaneGraph` draws it.
- * This only says what each row means. Memoised on `repo` because the
- * graph is the one part of the stage whose cost grows with every commit,
- * and the page re-renders on every keystroke in the console.
+ * This only says what each row means. Memoised because the graph is the
+ * one part of the stage whose cost grows with every commit, and the page
+ * re-renders whenever a panel lights up or goes dark (`sameGraphProps`).
  */
 export const CommitGraph = memo(function CommitGraph({ repo, entering, inspected = null, source = 'local' }: CommitGraphProps) {
   const graph = source === 'remote' ? remoteGraph(repo) : historyGraph(repo)
@@ -106,4 +126,4 @@ export const CommitGraph = memo(function CommitGraph({ repo, entering, inspected
       </div>
     </ScrollX>
   )
-})
+}, sameGraphProps)

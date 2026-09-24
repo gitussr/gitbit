@@ -18,9 +18,9 @@ export interface ChoiceListProps {
  * Visualizer's Quick Recall, so a question looks and behaves the same
  * wherever it is asked.
  *
- * One try: once answered, every choice locks, the right one turns safe and
- * a wrong pick turns danger, each with an icon as well as a colour. The
- * explanation is the caller's to show.
+ * One try: once answered, every choice locks (staying focusable, so focus
+ * isn't lost), the right one turns safe and a wrong pick turns danger, each
+ * with an icon as well as a colour. The explanation is the caller's to show.
  */
 export function ChoiceList({ choices, correctIndex, selected, onSelect, label = 'Answer choices', size = 'md', className }: ChoiceListProps) {
   const answered = selected !== null
@@ -37,11 +37,15 @@ export function ChoiceList({ choices, correctIndex, selected, onSelect, label = 
             key={choice}
             type="button"
             aria-pressed={isSelected}
-            disabled={answered}
-            onClick={() => onSelect(index)}
+            // aria-disabled, not disabled: disabling the button that has focus
+            // drops focus to <body>, and a keyboard user loses their place.
+            aria-disabled={answered}
+            onClick={() => {
+              if (!answered) onSelect(index)
+            }}
             className={cn(
               'flex items-center justify-between gap-3 border-2 text-left font-bold transition-colors duration-150 ease-standard',
-              'disabled:cursor-default',
+              'aria-disabled:cursor-default',
               size === 'md' ? 'px-3.5 py-2.5 text-sm' : 'min-h-9 px-3 py-1.5 text-body-sm',
               !answered && 'border-accent bg-surface shadow-brutal-sm hover:bg-accent-subtle',
               showState && isRightAnswer && 'border-safe-border bg-safe-subtle text-foreground',

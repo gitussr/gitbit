@@ -121,7 +121,7 @@ export function CommandConsole({
   const hintId = useId()
   const logId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
-  const logRef = useRef<HTMLOListElement>(null)
+  const logRef = useRef<HTMLDivElement>(null)
   const [value, setValue] = useState('')
   // Walking back through history: where we are, and what was being typed before we started.
   const [recall, setRecall] = useState<{ index: number; draft: string } | null>(null)
@@ -213,7 +213,7 @@ export function CommandConsole({
             </span>
           </button>
 
-          <span className="ml-auto hidden items-center gap-1 text-xs whitespace-nowrap text-white/45 lg:inline-flex">
+          <span className="ml-auto hidden items-center gap-1 text-xs whitespace-nowrap text-white/60 lg:inline-flex">
             <Kbd className={legendKey}>↑</Kbd>
             <Kbd className={legendKey}>↓</Kbd> history · <Kbd className={legendKey}>Tab</Kbd> complete ·{' '}
             <Kbd className={legendKey}>Esc</Kbd> clear line
@@ -236,14 +236,16 @@ export function CommandConsole({
         </div>
 
         {entries.length > 0 && (
-          <ol
+          // The log role sits on a wrapper: on the <ol> itself it would replace
+          // the list semantics its <li>s need.
+          <div
             ref={logRef}
             id={logId}
             role="log"
             aria-live="off"
             aria-label={expanded ? 'Command history' : 'Last command'}
             className={cn(
-              'flex flex-col gap-2 overflow-y-auto overscroll-contain px-3 py-2',
+              'overflow-y-auto overscroll-contain px-3 py-2',
               // Collapsed: the command and two whole lines of what it printed (20px
               // lines, plus padding) — a line cut in half reads as a rendering bug.
               // On a short screen (a phone on its side) the preview goes, and the
@@ -254,10 +256,12 @@ export function CommandConsole({
                 : 'max-h-20 sm:max-h-24 [@media(max-height:32rem)]:hidden',
             )}
           >
-            {visible.map((entry) => (
-              <Entry key={entry.id} entry={entry} />
-            ))}
-          </ol>
+            <ol className="flex flex-col gap-2">
+              {visible.map((entry) => (
+                <Entry key={entry.id} entry={entry} />
+              ))}
+            </ol>
+          </div>
         )}
 
         <form
@@ -325,7 +329,7 @@ export function CommandConsole({
               role="group"
               aria-label="Suggested commands"
             >
-              <span className="hidden text-xs text-white/45 sm:inline">Try</span>
+              <span className="hidden text-xs text-white/60 sm:inline">Try</span>
               {suggestions.map((suggestion) => (
                 <button
                   key={suggestion}
@@ -343,7 +347,7 @@ export function CommandConsole({
               ))}
             </div>
           ) : (
-            <p className="text-xs text-white/45">Type a Git command and press Enter.</p>
+            <p className="text-xs text-white/60">Type a Git command and press Enter.</p>
           )}
         </div>
       </div>
