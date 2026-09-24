@@ -43,7 +43,20 @@ export function momentsFor(history: Transition[], rules: VisualizerMoment[] = vi
   })
 }
 
-/** The moment the latest change earned, if any. */
-export function latestMoment(history: Transition[]): MomentPick | null {
-  return momentsFor(history).at(-1) ?? null
+/**
+ * The most recent moment in the history, and which change earned it.
+ *
+ * Not just the last change's: a card that vanished on the next command
+ * would shrink the page by its whole height under the reader, and the
+ * lesson doesn't stop being true because they typed `git status`. It stays
+ * until a newer moment replaces it; undo, which shortens the history,
+ * still takes it away.
+ */
+export function latestMoment(history: Transition[]): { pick: MomentPick; index: number } | null {
+  const picks = momentsFor(history)
+  for (let index = picks.length - 1; index >= 0; index -= 1) {
+    const pick = picks[index]
+    if (pick) return { pick, index }
+  }
+  return null
 }

@@ -1,8 +1,8 @@
-import { Check, ChevronUp, Copy, CornerDownLeft, Eraser } from 'lucide-react'
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
+import { Check, Copy, CornerDownLeft, Eraser } from 'lucide-react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
 import { cn } from '@/utils/cn'
-import { Kbd } from './Kbd'
+import { ScrollX } from './ScrollX'
 
 export interface ConsoleEntry {
   id: string | number
@@ -14,6 +14,10 @@ export interface ConsoleEntry {
   failed?: boolean
   /** Not a command: something that changed the same state from elsewhere (e.g. editing a file). */
   note?: boolean
+  /** The prompt it ran under, e.g. `project (main) $` — a shell prints the prompt of its moment. */
+  prompt?: string
+  /** One plain-English line on what it did, printed under the output as a comment. */
+  summary?: string
 }
 
 export interface CommandConsoleProps {
@@ -21,9 +25,9 @@ export interface CommandConsoleProps {
   onRun: (input: string) => void
   /** Clears the scrollback. Typing `clear` does the same, because people will. */
   onClear?: () => void
-  /** One-click commands, shown as chips under the input. */
+  /** One-click commands, shown in the footer. */
   suggestions?: string[]
-  /** Whole-input completions for what has been typed so far. Tab takes them. */
+  /** Whole-input completions for what has been typed so far. Tab (or a tap) takes them. */
   complete?: (input: string) => string[]
   /**
    * What ↑/↓ walk through, oldest first. Defaults to the commands in
@@ -31,6 +35,12 @@ export interface CommandConsoleProps {
    * what was typed should survive that, as it does in a real shell.
    */
   history?: string[]
+  /** The live prompt, e.g. `project (main) $`. */
+  prompt?: string
+  /** The window's title bar. */
+  title?: string
+  /** Dim lines at the top of the scrollback, where a shell prints its login banner. */
+  banner?: string[]
   label?: string
   placeholder?: string
   className?: string
@@ -47,21 +57,40 @@ function commonPrefix(input: string, candidates: string[]): string {
   return prefix.length > input.length ? prefix : input
 }
 
-function Entry({ entry }: { entry: ConsoleEntry }) {
+/**
+ * A git-aware prompt, coloured the way shells colour one: the directory,
+ * then the branch in parentheses, then `$`. Any string without that shape
+ * prints as it is.
+ */
+function Prompt({ text, failed = false }: { text: string; failed?: boolean }) {
+  const match = /^(.*?)(?: \((.+)\))? ?\$$/.exec(text)
+  if (!match) return <span className="text-terminal-prompt">{text}</span>
+  const [, path, branch] = match
+  return (
+    <span className="whitespace-nowrap" aria-hidden="true">
+      <span className="text-terminal-accent">{path}</span>
+      {branch && <span className="text-terminal-prompt"> ({branch})</span>}
+      <span className={failed ? 'text-terminal-error' : 'text-terminal-text'}> $</span>
+    </span>
+  )
+}
+
+function Entry({ entry, latest }: { entry: ConsoleEntry; latest: boolean }) {
   const { copied, copy } = useCopyToClipboard()
 
   if (entry.note) {
-    return <li className="text-white/55 wrap-anywhere"># {entry.input}</li>
+    return (
+      <li data-latest={latest || undefined} className="wrap-anywhere text-white/60">
+        # {entry.input}
+      </li>
+    )
   }
 
   return (
-    <li className="group flex flex-col gap-0.5">
+    <li data-latest={latest || undefined} className="group flex flex-col gap-0.5">
       <div className="flex items-start gap-2">
         <p className="min-w-0 flex-1 wrap-anywhere text-terminal-text">
-          <span className={entry.failed ? 'text-terminal-error' : 'text-terminal-prompt'} aria-hidden="true">
-            $
-          </span>{' '}
-          {entry.input}
+          <Prompt text={entry.prompt ?? '$'} failed={entry.failed} /> {entry.input}
           {entry.failed && <span className="sr-only"> (refused)</span>}
         </p>
         {/* Always visible below `sm`, where there's no hover to reveal it. */}
@@ -75,36 +104,34 @@ function Entry({ entry }: { entry: ConsoleEntry }) {
         </button>
       </div>
       {entry.output && entry.output.length > 0 && (
-        <pre
-          className={cn(
-            'font-mono whitespace-pre-wrap wrap-anywhere',
-            entry.failed ? 'text-terminal-error' : 'text-terminal-text/80',
-          )}
-        >
+        <pre className={cn('font-mono whitespace-pre-wrap wrap-anywhere', entry.failed ? 'text-terminal-error' : 'text-terminal-text/85')}>
           {entry.output.join('\n')}
         </pre>
       )}
+      {entry.summary && <p className="wrap-anywhere text-terminal-accent"># {entry.summary}</p>}
     </li>
   )
 }
 
 /**
- * A console for running simulated commands (Visualizer Section 9).
+ * A terminal window for running simulated commands (Visualizer Section 9).
  *
- * Terminal-inspired, not a terminal: it keeps the parts of a shell that
- * help someone learn — Enter to run, ↑/↓ through what you've typed, Tab to
- * complete, a scrollback of what Git said — and drops the rest. It knows
- * nothing about Git; what counts as a completion or a suggestion is passed
- * in.
+ * It looks and behaves like one, so it reads as one: macOS window chrome,
+ * a single scrollback where each command is followed by what it printed,
+ * and the prompt as the last line of it — type, press Enter, and the answer
+ * appears right under what you typed. Each entry can carry a `summary`,
+ * printed as a `#` comment, so what the command *meant* is where the eye
+ * already is, not in a panel elsewhere on the page.
  *
- * The scrollback is a `log`, but not a live one: whatever runs the console
- * already announces what each command *did*, and reading Git's raw output
- * aloud on top of that would say everything twice.
+ * Fixed size, always. It docks over whatever it's used with, and anything
+ * it does to its own height moves the page under the reader — so running a
+ * command scrolls the scrollback, never the window. The footer is one row
+ * either way: suggestions, or completions while typing.
  *
- * It docks over whatever it's used with, so it stays small: collapsed, the
- * scrollback shows only the last command and what it printed, and the whole
- * history opens on request. A console that grows with every command ends up
- * covering the thing the commands are changing.
+ * It knows nothing about Git; prompts, completions, suggestions and
+ * summaries are passed in. The scrollback is a `log`, but not a live one:
+ * whatever runs the console announces what each command did, and reading
+ * the raw output aloud as well would say everything twice.
  */
 export function CommandConsole({
   entries,
@@ -113,37 +140,64 @@ export function CommandConsole({
   suggestions = [],
   complete,
   history,
+  prompt = '$',
+  title = 'Terminal',
+  banner = [],
   label = 'Command',
-  placeholder = 'git status',
+  placeholder = 'type a command',
   className,
 }: CommandConsoleProps) {
   const inputId = useId()
+  const formId = useId()
   const hintId = useId()
-  const logId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
-  const logRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const [value, setValue] = useState('')
   // Walking back through history: where we are, and what was being typed before we started.
   const [recall, setRecall] = useState<{ index: number; draft: string } | null>(null)
-  const [expanded, setExpanded] = useState(false)
 
   const typed = history ?? entries.filter((entry) => !entry.note).map((entry) => entry.input)
   const candidates = value.trim() && complete ? complete(value) : []
-  const visible = expanded ? entries : entries.slice(-1)
-  const commandCount = entries.filter((entry) => !entry.note).length
 
-  // The full history reads from its newest end. Collapsed, the one entry
-  // shown reads from its top, so a long `git log` doesn't hide the command
-  // that printed it.
+  /*
+   * After each new entry: show it from its command line if it's taller than
+   * the window (a long `git log`), otherwise scroll to the bottom so the
+   * prompt is in view too. Before paint, so there's no frame of the old
+   * position.
+   */
+  useLayoutEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const latest = el.querySelector<HTMLElement>('[data-latest]')
+    const bottom = el.scrollHeight - el.clientHeight
+    el.scrollTop = latest ? Math.min(bottom, latest.offsetTop - 8) : 0
+  }, [entries.length])
+
+  /*
+   * Keep the prompt line in view while typing into a scrolled-up window.
+   * By hand, not scrollIntoView(): that scrolls every ancestor, and for an
+   * element in a sticky dock it scrolls the *page* toward the dock's in-flow
+   * position — the whole page jumped each time Run cleared the line.
+   */
   useEffect(() => {
-    const log = logRef.current
-    if (log) log.scrollTop = expanded ? log.scrollHeight : 0
-  }, [entries.length, expanded])
+    const el = scrollRef.current
+    const line = inputRef.current?.closest('form')
+    // Only while typing: when Run clears the line, the new entry's own scroll
+    // (above) decides what's in view, and this mustn't undo it.
+    if (!value || !el || !line || document.activeElement !== inputRef.current) return
+    const bottom = line.offsetTop + line.offsetHeight + 8
+    if (bottom > el.scrollTop + el.clientHeight) el.scrollTop = bottom - el.clientHeight
+  }, [value])
+
+  const focusInput = () => inputRef.current?.focus({ preventScroll: true })
 
   const run = (input: string) => {
     const command = input.trim()
     setValue('')
     setRecall(null)
+    // Whatever was clicked to get here, typing carries on at the prompt —
+    // and on a phone, the keyboard stays up.
+    focusInput()
     if (!command) return
     if (command === 'clear' && onClear) onClear()
     else onRun(command)
@@ -180,175 +234,149 @@ export function CommandConsole({
     }
   }
 
-  const legendKey = 'border-white/30 bg-transparent text-white/70'
+  const chip =
+    'inline-flex h-7 shrink-0 items-center border border-white/25 px-2 text-xs whitespace-nowrap text-terminal-text transition-colors duration-150 hover:border-terminal-prompt hover:text-terminal-prompt'
 
   return (
     // The page-coloured band above the dock gives whatever scrolls behind it
-    // a clean edge, instead of the stage running straight into the console.
+    // a clean edge, instead of the stage running straight into the window.
     <div className={cn('z-10 bg-background pt-3', className)}>
-      <div className="flex flex-col border-2 border-accent bg-terminal-bg font-mono text-sm shadow-brutal-sm">
-        <div className="flex items-center gap-2 border-b border-white/10 py-1 pr-1 pl-1.5">
-          <button
-            type="button"
-            onClick={() => setExpanded((open) => !open)}
-            disabled={entries.length === 0}
-            aria-expanded={expanded}
-            aria-controls={logId}
-            className="inline-flex h-7 min-w-0 items-center gap-1.5 px-1.5 text-xs text-white/70 transition-colors duration-150 hover:text-terminal-text disabled:cursor-default disabled:hover:text-white/70"
-          >
-            <ChevronUp
-              className={cn(
-                'size-3.5 shrink-0 transition-transform duration-150',
-                expanded && 'rotate-180',
-                entries.length === 0 && 'opacity-0',
-              )}
-              aria-hidden="true"
-            />
-            <span className="truncate">
-              {commandCount === 0
-                ? 'Console'
-                : expanded
-                  ? 'Hide history'
-                  : `History · ${commandCount} ${commandCount === 1 ? 'command' : 'commands'}`}
-            </span>
-          </button>
-
-          <span className="ml-auto hidden items-center gap-1 text-xs whitespace-nowrap text-white/60 lg:inline-flex">
-            <Kbd className={legendKey}>↑</Kbd>
-            <Kbd className={legendKey}>↓</Kbd> history · <Kbd className={legendKey}>Tab</Kbd> complete ·{' '}
-            <Kbd className={legendKey}>Esc</Kbd> clear line
+      {/* While the prompt has focus the window takes the page's focus outline,
+          since the input inside draws none of its own. */}
+      <div className="flex flex-col border-2 border-accent bg-terminal-bg font-mono text-sm shadow-brutal-sm outline-offset-2 has-[input:focus]:outline-3 has-[input:focus]:outline-accent">
+        {/* Title bar. The traffic lights quote macOS so it reads as "terminal"
+            at a glance; they're decorative and do nothing. */}
+        <div className="grid h-8 shrink-0 grid-cols-[1fr_auto_1fr] items-center border-b border-white/10 px-3">
+          <span className="flex items-center gap-2" aria-hidden="true">
+            <span className="size-3 rounded-full bg-terminal-close" />
+            <span className="size-3 rounded-full bg-terminal-minimize" />
+            <span className="size-3 rounded-full bg-terminal-zoom" />
           </span>
-
-          {onClear && (
+          <p className="truncate px-2 text-center text-xs text-white/60">{title}</p>
+          {onClear ? (
             <button
               type="button"
               onClick={() => {
                 onClear()
-                setExpanded(false)
+                focusInput()
               }}
               disabled={entries.length === 0}
-              className="ml-auto inline-flex h-7 shrink-0 items-center gap-1.5 px-2 text-xs text-white/55 transition-colors duration-150 hover:text-terminal-text disabled:opacity-40 lg:ml-0"
+              className="inline-flex h-7 items-center gap-1.5 justify-self-end px-1.5 text-xs text-white/60 transition-colors duration-150 hover:text-terminal-text disabled:opacity-40"
             >
               <Eraser className="size-3.5" aria-hidden="true" />
-              Clear
+              <span className="hidden sm:inline">Clear</span>
+              <span className="sr-only sm:hidden">Clear</span>
             </button>
+          ) : (
+            <span />
           )}
         </div>
 
-        {entries.length > 0 && (
-          // The log role sits on a wrapper: on the <ol> itself it would replace
-          // the list semantics its <li>s need.
-          <div
-            ref={logRef}
-            id={logId}
-            role="log"
-            aria-live="off"
-            aria-label={expanded ? 'Command history' : 'Last command'}
-            className={cn(
-              'overflow-y-auto overscroll-contain px-3 py-2',
-              // Collapsed: the command and two whole lines of what it printed (20px
-              // lines, plus padding) — a line cut in half reads as a rendering bug.
-              // On a short screen (a phone on its side) the preview goes, and the
-              // toggle above is the way to it: a dock there would otherwise
-              // cover most of the page.
-              expanded
-                ? 'max-h-[45vh] [@media(max-height:32rem)]:max-h-[25vh]'
-                : 'max-h-20 sm:max-h-24 [@media(max-height:32rem)]:hidden',
+        {/* The window. Fixed height: running a command scrolls this, never the page.
+            A click anywhere in it puts you at the prompt — unless you were selecting text. */}
+        <div
+          ref={scrollRef}
+          onClick={() => {
+            if (!window.getSelection()?.toString()) focusInput()
+          }}
+          className="relative h-40 cursor-text overflow-y-auto overscroll-contain px-3 py-2 sm:h-52 [@media(max-height:32rem)]:h-24"
+        >
+          <div role="log" aria-live="off" aria-label="Command history" className="flex flex-col gap-2.5">
+            {banner.length > 0 && (
+              <div className="text-white/60">
+                {banner.map((line) => (
+                  <p key={line}>{line}</p>
+                ))}
+              </div>
             )}
-          >
-            <ol className="flex flex-col gap-2">
-              {visible.map((entry) => (
-                <Entry key={entry.id} entry={entry} />
+            <ol className="flex flex-col gap-2.5">
+              {entries.map((entry, index) => (
+                <Entry key={entry.id} entry={entry} latest={index === entries.length - 1} />
               ))}
             </ol>
           </div>
-        )}
 
-        <form
-          className="flex items-center gap-2 border-t border-white/10 px-3 py-1.5"
-          onSubmit={(event) => {
-            event.preventDefault()
-            run(value)
-          }}
-        >
-          <label htmlFor={inputId} className="sr-only">
-            {label}
-          </label>
-          <span className="select-none text-terminal-prompt" aria-hidden="true">
-            $
-          </span>
-          <input
-            ref={inputRef}
-            id={inputId}
-            value={value}
-            onChange={(event) => {
-              setValue(event.target.value)
-              setRecall(null)
+          <form
+            id={formId}
+            className="mt-2.5 flex items-baseline gap-2"
+            onSubmit={(event) => {
+              event.preventDefault()
+              run(value)
             }}
-            onKeyDown={onKeyDown}
-            placeholder={placeholder}
-            aria-describedby={hintId}
-            autoComplete="off"
-            autoCapitalize="off"
-            autoCorrect="off"
-            spellCheck={false}
-            enterKeyHint="go"
-            // 16px below `sm`: anything smaller and mobile Safari zooms the page on focus.
-            className="h-11 min-w-0 flex-1 bg-transparent text-base [@media(max-height:32rem)]:h-9 text-terminal-text placeholder:text-white/35 sm:text-sm"
-          />
+          >
+            <label htmlFor={inputId} className="sr-only">
+              {label}
+            </label>
+            <Prompt text={prompt} />
+            <input
+              ref={inputRef}
+              id={inputId}
+              value={value}
+              onChange={(event) => {
+                setValue(event.target.value)
+                setRecall(null)
+              }}
+              onKeyDown={onKeyDown}
+              placeholder={placeholder}
+              aria-describedby={hintId}
+              autoComplete="off"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="go"
+              // No box round a terminal line: the window takes the focus ring
+              // (data-focus-ring, base.css) and the caret marks the spot.
+              // 16px below `sm`: anything smaller and mobile Safari zooms on focus.
+              className="min-w-0 flex-1 bg-transparent text-base text-terminal-text caret-terminal-prompt placeholder:text-white/35 sm:text-sm"
+              data-focus-ring="container"
+            />
+          </form>
+        </div>
+
+        {/* Footer: always one row. Completions while typing (tap or Tab to take
+            one), the commands that make sense next otherwise, and Run. */}
+        <div id={hintId} className="flex h-11 shrink-0 items-center gap-2 border-t border-white/10 pr-1.5 pl-3">
+          <ScrollX label={candidates.length > 0 ? 'Completions' : 'Suggested commands'} className="min-w-0 flex-1">
+            <div className="flex w-max items-center gap-2 py-1" role="group" aria-label={candidates.length > 0 ? 'Completions' : 'Suggested commands'}>
+              {candidates.length > 0 ? (
+                <>
+                  <span className="text-xs text-white/60">Tab</span>
+                  {candidates.slice(0, 6).map((candidate) => (
+                    <button
+                      key={candidate}
+                      type="button"
+                      onClick={() => {
+                        setValue(candidate)
+                        focusInput()
+                      }}
+                      className={cn(chip, 'text-terminal-accent')}
+                    >
+                      {candidate.trim()}
+                    </button>
+                  ))}
+                </>
+              ) : suggestions.length > 0 ? (
+                <>
+                  <span className="text-xs text-white/60">Try</span>
+                  {suggestions.map((suggestion) => (
+                    <button key={suggestion} type="button" onClick={() => run(suggestion)} className={chip}>
+                      {suggestion}
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <span className="text-xs text-white/60">↑/↓ history · Tab completes · Esc clears the line</span>
+              )}
+            </div>
+          </ScrollX>
           <button
             type="submit"
-            disabled={!value.trim()}
-            className="inline-flex h-9 shrink-0 items-center gap-1.5 border-2 border-terminal-prompt bg-terminal-prompt px-3 text-xs font-bold text-terminal-bg transition-colors duration-150 hover:bg-transparent hover:text-terminal-prompt disabled:border-white/25 disabled:bg-transparent disabled:text-white/40"
+            form={formId}
+            className="inline-flex h-8 shrink-0 items-center gap-1.5 border-2 border-terminal-prompt bg-terminal-prompt px-3 text-xs font-bold text-terminal-bg transition-colors duration-150 hover:bg-transparent hover:text-terminal-prompt"
           >
             Run
             <CornerDownLeft className="size-3.5" aria-hidden="true" />
           </button>
-        </form>
-
-        {/* One row, two jobs: while typing it offers completions (Tab takes
-            them); otherwise it offers the commands that make sense next. */}
-        <div id={hintId} className="border-t border-white/10 px-3 py-2">
-          {candidates.length > 0 ? (
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/55">
-              <span className="inline-flex items-center gap-1.5">
-                <Kbd className={legendKey}>Tab</Kbd>
-                {candidates.length === 1 ? 'completes' : 'fills in; options:'}
-              </span>
-              {candidates.slice(0, 4).map((candidate) => (
-                <span key={candidate} className="text-terminal-accent">
-                  {candidate.trim()}
-                </span>
-              ))}
-            </p>
-          ) : suggestions.length > 0 ? (
-            // Two below `sm`: a third chip wraps to a second row, and every row
-            // here is taken from the stage above it.
-            <div
-              className="flex flex-wrap items-center gap-2 max-sm:[&>button:nth-of-type(n+3)]:hidden"
-              role="group"
-              aria-label="Suggested commands"
-            >
-              <span className="hidden text-xs text-white/60 sm:inline">Try</span>
-              {suggestions.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  onClick={() => {
-                    run(suggestion)
-                    // The chip that was clicked is usually replaced by the next set
-                    // of suggestions; without this, focus falls to <body>.
-                    inputRef.current?.focus()
-                  }}
-                  className="min-h-8 border border-white/25 px-2 py-1 text-left text-xs text-terminal-text transition-colors duration-150 hover:border-terminal-prompt hover:text-terminal-prompt"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-white/60">Type a Git command and press Enter.</p>
-          )}
         </div>
       </div>
     </div>

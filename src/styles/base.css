@@ -62,6 +62,16 @@ mark {
   box-shadow: 0 0 0 2px var(--color-palette-lime);
 }
 
+/* The one opt-out, and it moves the indicator rather than removing it: an
+   element whose container shows its focus instead. The Visualizer terminal's
+   prompt line is the case — a ring round a line of text reads as a form
+   field, not a terminal, so the window takes the ring and the caret shows
+   where you are. */
+[data-focus-ring='container']:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 /* Thin, subtle, still-usable scrollbar (Section 19) */
 * {
   scrollbar-width: thin;

@@ -12,9 +12,11 @@ import type { GitStateId } from '@/content/states'
 import { getScenarioSummary, type ScenarioSummary } from '@/content/visualizer/catalog'
 import type { ScenarioAction } from '@/content/visualizer/scenarios'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
+import { useHighWaterHeight } from '@/hooks/useHighWaterHeight'
 import { useScrollPaddingBottom } from '@/hooks/useScrollPaddingBottom'
 import { complete, currentBranch, suggest, type RepoState, type ResetLayer } from '@/services/git-sim'
 import { announceTransition, announceUndo, discardedBy } from './announce'
+import { promptFor } from './prompt'
 import { ResetLayers } from './ResetLayers'
 import { initialVisualizerState, visualizerReducer } from './visualizerReducer'
 import { VisualizerLegend } from './VisualizerLegend'
@@ -32,6 +34,12 @@ const ScenarioRail = lazy(() => import('./ScenarioRail'))
 
 /** Aha and Quick Recall (Sections 25-26) — with the Aha and Quiz banks they read. */
 const LearningMoment = lazy(() => import('./LearningMoment'))
+
+/** What the terminal says before anything has run — a shell's login banner. */
+const TERMINAL_BANNER = [
+  'GitBit simulated terminal. Nothing here touches your computer.',
+  'Type a Git command and press Enter, or tap a suggestion below.',
+]
 
 /** How long a replay shows the "before" state before playing the step again. */
 const REPLAY_MS = 500
@@ -98,6 +106,7 @@ function Workspace({ scenario }: { scenario?: ScenarioSummary }) {
   // Tabbing to something under the docked console scrolls it clear of the dock.
   const dock = useRef<HTMLDivElement>(null)
   useScrollPaddingBottom(dock)
+  const { container: columnRef, content: columnContentRef } = useHighWaterHeight(state.history.length === 0)
 
   // After an undo, the entry now at the end of history didn't just happen —
   // nothing did, except the undo. It gets no highlight and no description.
@@ -253,8 +262,15 @@ function Workspace({ scenario }: { scenario?: ScenarioSummary }) {
           input: entry.input,
           note: entry.source !== 'command',
           failed: entry.outcome.kind !== 'ok',
-          // A refusal prints Git's own message; why it happened is the explainer's line.
+          // A refusal prints Git's own message; why it happened is the comment under it.
           output: entry.outcome.kind === 'ok' ? entry.outcome.output : [entry.outcome.message],
+          prompt: promptFor(entry.before),
+          // What it meant, printed where the reader is already looking. Backticks
+          // are prose markup; inside a terminal everything is already monospace.
+          summary:
+            entry.source === 'command'
+              ? (entry.outcome.kind === 'ok' ? announceTransition(entry) : entry.outcome.why).replaceAll('`', '')
+              : undefined,
         }),
       ),
     [state.history, state.clearedAt],
@@ -289,14 +305,22 @@ function Workspace({ scenario }: { scenario?: ScenarioSummary }) {
           inspected={timeMachineOpen ? (inspected ?? null) : null}
         />
 
-        <div className="flex flex-col gap-4">
+        {/* Grows but never shrinks during a session (Start over resets it): near
+            the end of the page, a shorter card would otherwise pull the stage
+            down under someone scrolled to the bottom. */}
+        <div ref={columnRef}>
+        <div ref={columnContentRef} className="flex flex-col gap-4">
           {/* Explanation first, at every width: below lg this column follows
               the stage, and what just happened is what someone who just ran a
-              command is looking for. DOM order, not CSS order, so tab order
-              and a screen reader agree with what's on screen. */}
+              command is looking for. Aha and Recall come last, so a card
+              arriving adds to the end instead of pushing the controls down.
+              DOM order, not CSS order, so tab order and a screen reader agree
+              with what's on screen. */}
           {/* The textual meaning of the last change (Section 40). Announced to
               screen readers, and shown to everyone — it is not a fallback. */}
-          <div className={panelClassName(false, 'flex flex-col gap-1', lost.length > 0 ? 'caution' : 'default')}>
+          {/* A steady height (room for four lines) so a short sentence after a long
+              one doesn't pull everything below it up the page. */}
+          <div className={panelClassName(false, 'flex min-h-32 flex-col gap-1', lost.length > 0 ? 'caution' : 'default')}>
             <Text variant="caption" tone="secondary" className="font-bold uppercase">
               What just happened
             </Text>
@@ -385,14 +409,6 @@ function Workspace({ scenario }: { scenario?: ScenarioSummary }) {
             </div>
           </div>
 
-          {/* Only for a change that just happened: after an undo, the entry
-              now last didn't just happen, and it doesn't get to teach again. */}
-          {last && !replaying && (
-            <Suspense fallback={null}>
-              <LearningMoment history={state.history} />
-            </Suspense>
-          )}
-
           <div className="flex flex-col gap-3">
             <Button
               variant="secondary"
@@ -418,14 +434,30 @@ function Workspace({ scenario }: { scenario?: ScenarioSummary }) {
               </div>
             )}
           </div>
+
+          {/* Only for a change that just happened: after an undo, the entry
+              now last didn't just happen, and it doesn't get to teach again. */}
+          {last && !replaying && (
+            <Suspense fallback={null}>
+              <LearningMoment history={state.history} />
+            </Suspense>
+          )}
+        </div>
         </div>
       </div>
 
       {/* Docked, not fixed: it sticks to the bottom of the viewport while the
           stage scrolls past, and stays in the page's flow at every width
           (docs/VISUALIZER.md, Layout). */}
-      <div ref={dock} className="sticky bottom-[env(safe-area-inset-bottom)] z-10">
+      {/* The negative margin cancels the page's bottom padding under the dock, so
+          it sits at the same spot at the end of the page as while pinned — no
+          40px hop when you scroll all the way down. */}
+      <div ref={dock} className="sticky bottom-[env(safe-area-inset-bottom)] z-10 -mb-10 sm:-mb-12">
         <CommandConsole
+          title="project — git (simulated)"
+          banner={TERMINAL_BANNER}
+          prompt={promptFor(state.repo)}
+          placeholder="type a git command"
           label="Git command"
           entries={entries}
           history={commands}

@@ -102,11 +102,30 @@ also don't build two products).
   few words); past that, many lanes on a phone scroll sideways, with the
   far edge fading as the cue, instead of crushing every message to a
   letter. The usual one- or two-lane graph fits at 320px and doesn't scroll.
-- The console dock stays collapsed to its last entry (two whole lines of
-  output), shows at most two suggestions below `sm`, and on short screens
-  (a phone on its side, under 32rem tall) drops the preview for the
-  History toggle. Portrait phones: about 30% of the screen; landscape,
-  about 40%.
+- The console is a terminal window, and a fixed-size one. macOS chrome
+  (traffic lights, a title bar), one scrollback where each command is
+  followed by what Git printed and then a `#` comment saying what it
+  meant (the "What just happened" sentence, or a refusal's *why*), and the
+  prompt as the last line of it — so the result appears exactly where
+  the reader typed. The prompt is git-aware, like `__git_ps1`
+  (`features/visualizer/prompt.ts`): `project (main) $`, the commit when
+  detached, `|MERGING`/`|REVERTING` mid-conflict, and each entry keeps
+  the prompt it ran under. A long result is shown from its command line.
+  The footer is one row: suggestions, or tappable completions while
+  typing (a phone has no Tab key), and Run. Focus stays in the prompt
+  after Run, so a phone keyboard stays up. Scrollback: 160px on phones,
+  208px from `sm`, 96px on short landscape screens.
+- **Nothing moves when a command runs.** Measured with the browser's
+  layout-shift API, the worst command went from 0.53 (phone) to 0.01.
+  What it takes: the terminal never changes height; it scrolls its own
+  scrollback by hand, never with `scrollIntoView()`, which on an element
+  in a sticky dock scrolls the *page*; the dock cancels the page's bottom
+  padding, so it sits at the same spot pinned or not; the Aha/Recall
+  cards stay until a newer moment replaces them, with a "From `…`"
+  caption that's always there, and sit last in their column so a new one
+  pushes nothing; "What just happened" has a four-line minimum; and the
+  column only grows during a session (`useHighWaterHeight`), because a
+  shrink at the bottom of the page clamps the scroll and slides the stage.
 
 The legend (§31) is a closed `<details>` directly above the stage — one
 23px line until opened, never a permanent column. Its words are content
@@ -496,7 +515,11 @@ unrecoverable — calm, once, in the Explainer (§18).
   structure, not a description of a picture — without a second, hidden
   copy of the history to keep in sync.
 - Console input is a labelled `<input>` in a `<form>`; ↑/↓ walks
-  history, Tab accepts a completion, Esc clears. The scrollback is a
+  history, Tab accepts a completion, Esc clears. It draws no focus ring
+  of its own — a ring round a line of text reads as a form field — and
+  opts out with `data-focus-ring="container"` (`base.css`), the one
+  sanctioned exception: the terminal window takes the ink outline while
+  the prompt has focus, and the caret marks the spot. The scrollback is a
   `role="log"` wrapper around a real `<ol>` (the role on the list itself
   would strip the list semantics its items need), `aria-live="off"`: the
   "What just happened" line is the live region, so nothing is read twice.
