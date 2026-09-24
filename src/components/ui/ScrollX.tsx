@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { cn } from '@/utils/cn'
 
 /** How far the fade reaches in from an edge with more content past it. */
@@ -26,24 +26,32 @@ export function ScrollX({ children, label, className }: ScrollXProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [edges, setEdges] = useState({ start: false, end: false })
 
+  const update = useCallback(() => {
+    const el = ref.current
+    if (!el) return
+    // No tolerance: this must agree with the browser (and axe) about whether
+    // the region scrolls, or it can scroll without being reachable by keyboard.
+    const start = el.scrollLeft > 0
+    const end = Math.ceil(el.scrollLeft + el.clientWidth) < el.scrollWidth
+    setEdges((current) => (current.start === start && current.end === end ? current : { start, end }))
+  }, [])
+
+  // After every render: content can outgrow the region without any box
+  // changing size (a second branch label landing on a row), which a
+  // ResizeObserver never reports. It only renders when its content does.
+  useEffect(update)
+
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    const update = () => {
-      const start = el.scrollLeft > 1
-      const end = el.scrollLeft + el.clientWidth < el.scrollWidth - 1
-      setEdges((current) => (current.start === start && current.end === end ? current : { start, end }))
-    }
-    update()
     el.addEventListener('scroll', update, { passive: true })
     const observer = new ResizeObserver(update)
     observer.observe(el)
-    if (el.firstElementChild) observer.observe(el.firstElementChild)
     return () => {
       el.removeEventListener('scroll', update)
       observer.disconnect()
     }
-  }, [])
+  }, [update])
 
   const scrollable = edges.start || edges.end
   const mask = scrollable
