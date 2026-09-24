@@ -57,6 +57,53 @@ export interface LaneGraphProps {
 const x = (lane: number) => LANE / 2 + lane * LANE
 const y = (row: number) => ROW / 2 + row * ROW
 
+interface NodeGlyphProps {
+  cx: number
+  cy: number
+  shape?: LaneGraphRow['shape']
+  emphasis?: boolean
+  selected?: boolean
+  entering?: boolean
+}
+
+/** One node, as the graph draws it — shared with the swatches, so a legend can't disagree with the graph. */
+function NodeGlyph({ cx, cy, shape = 'dot', emphasis = false, selected = false, entering = false }: NodeGlyphProps) {
+  const r = emphasis ? NODE_R + 2 : NODE_R
+  return (
+    <g className={cn('fill-accent stroke-accent', entering && 'motion-safe:animate-viz-drop')} strokeWidth={2}>
+      {shape === 'diamond' ? (
+        <rect x={cx - r} y={cy - r} width={r * 2} height={r * 2} transform={`rotate(45 ${cx} ${cy})`} />
+      ) : (
+        <circle cx={cx} cy={cy} r={r} />
+      )}
+      {emphasis && <circle cx={cx} cy={cy} r={NODE_R - 3} className="fill-highlight stroke-none" />}
+      {selected && <circle cx={cx} cy={cy} r={r + 5} className="fill-none" strokeDasharray="3 2" />}
+    </g>
+  )
+}
+
+/** A single graph node at legend size (Section 31). Decorative: the legend's words carry the meaning. */
+export function LaneNodeSwatch(props: Omit<NodeGlyphProps, 'cx' | 'cy' | 'entering'>) {
+  return (
+    <svg aria-hidden="true" width={LANE} height={LANE} viewBox={`0 0 ${LANE} ${LANE}`} className="shrink-0 overflow-visible">
+      <NodeGlyph cx={LANE / 2} cy={LANE / 2} {...props} />
+    </svg>
+  )
+}
+
+/** A parent line between two nodes, at legend size. */
+export function LaneEdgeSwatch() {
+  const top = 4
+  const bottom = LANE - 4
+  return (
+    <svg aria-hidden="true" width={LANE} height={LANE} viewBox={`0 0 ${LANE} ${LANE}`} className="shrink-0">
+      <path d={`M ${LANE / 2} ${top} V ${bottom}`} className="fill-none stroke-accent" strokeWidth={2} />
+      <circle cx={LANE / 2} cy={top} r={3} className="fill-accent" />
+      <circle cx={LANE / 2} cy={bottom} r={3} className="fill-accent" />
+    </svg>
+  )
+}
+
 /**
  * A line from a child down to its parent: out of the child's lane into the
  * travel lane, straight down, then into the parent's lane. Each bend takes
@@ -118,28 +165,17 @@ export function LaneGraph({ rows, edges, lanes, label, minRowWidth = 0, classNam
           })}
         </g>
 
-        {rows.map((row, index) => {
-          const cx = x(row.lane)
-          const cy = y(index)
-          const r = row.emphasis ? NODE_R + 2 : NODE_R
-          return (
-            <g
-              key={row.id}
-              className={cn('fill-accent stroke-accent', row.entering && 'motion-safe:animate-viz-drop')}
-              strokeWidth={2}
-            >
-              {row.shape === 'diamond' ? (
-                <rect x={cx - r} y={cy - r} width={r * 2} height={r * 2} transform={`rotate(45 ${cx} ${cy})`} />
-              ) : (
-                <circle cx={cx} cy={cy} r={r} />
-              )}
-              {row.emphasis && <circle cx={cx} cy={cy} r={NODE_R - 3} className="fill-highlight stroke-none" />}
-              {row.selected && (
-                <circle cx={cx} cy={cy} r={r + 5} className="fill-none" strokeDasharray="3 2" />
-              )}
-            </g>
-          )
-        })}
+        {rows.map((row, index) => (
+          <NodeGlyph
+            key={row.id}
+            cx={x(row.lane)}
+            cy={y(index)}
+            shape={row.shape}
+            emphasis={row.emphasis}
+            selected={row.selected}
+            entering={row.entering}
+          />
+        ))}
       </svg>
 
       <ol aria-label={label} style={{ paddingLeft: width + GUTTER }}>

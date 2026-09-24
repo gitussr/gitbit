@@ -17,6 +17,7 @@ import { complete, currentBranch, suggest, type RepoState, type ResetLayer } fro
 import { announceTransition, announceUndo, discardedBy } from './announce'
 import { ResetLayers } from './ResetLayers'
 import { initialVisualizerState, visualizerReducer } from './visualizerReducer'
+import { VisualizerLegend } from './VisualizerLegend'
 import { VisualizerStage } from './VisualizerStage'
 
 /** Opt-in, so it's its own chunk: the Visualizer's first load doesn't pay for it. */
@@ -273,6 +274,9 @@ function Workspace({ scenario }: { scenario?: ScenarioSummary }) {
       <Suspense fallback={<div className="min-h-7" />}>
         <ScenarioRail slug={scenario?.slug} history={state.history} onAct={act} />
       </Suspense>
+
+      {/* Section 31: present, unobtrusive — closed until someone asks what a mark means. */}
+      <VisualizerLegend />
 
       {/* grid-cols-1, not the implicit column: an implicit track sizes to its
           widest item's min-content, which pushed the page past a phone's

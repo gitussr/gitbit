@@ -108,8 +108,15 @@ also don't build two products).
   History toggle. Portrait phones: about 30% of the screen; landscape,
   about 40%.
 
-The legend (§31) is a collapsed disclosure in the workspace toolbar —
-present, unobtrusive, never a permanent column.
+The legend (§31) is a closed `<details>` directly above the stage — one
+23px line until opened, never a permanent column. Its words are content
+(`content/visualizer/legend.ts`); each entry names a glyph, and
+`VisualizerLegend` draws it with the primitive that draws it on the stage
+(`LaneNodeSwatch`/`LaneEdgeSwatch` share `LaneGraph`'s own node code,
+`FileStatusSwatch` shares `FileNode`'s status table, refs are real
+`BranchLabel`s), so the key can't drift from the picture. It lists only
+marks the stage draws: §31's ahead/behind arrows aren't one — the
+Visualizer reports those as `git status` text.
 
 ## Simulation engine
 
@@ -522,12 +529,14 @@ WCAG 1.4.4.
 
 New **primitives** (`components/ui`, added before use, per §34 and the
 repo rule): `FileNode`, `CommitNode`, `BranchLabel`, `HeadPointer`,
-`StatePanel`, `CommandConsole`, `LaneGraph`, `VisualizerLegend`,
-`Timeline`, `ChoiceList`, `ScrollX`. `LaneGraph` draws nodes in lanes with lines between them and
+`StatePanel`, `CommandConsole`, `LaneGraph` (+ `LaneNodeSwatch`,
+`LaneEdgeSwatch`), `Legend`, `Timeline`, `ChoiceList`, `ScrollX`, and
+`FileStatusSwatch` beside `FileNode`. `LaneGraph` draws nodes in lanes with lines between them and
 knows nothing about Git; `CommitGraph` is what makes its rows commits.
 
 New **composition** (`features/visualizer/`): `VisualizerStage`,
-`CommitGraph`, `ExplainerPanel`, `ScenarioRail`, `WorkspaceToolbar`.
+`CommitGraph`, `ExplainerPanel`, `ScenarioRail`, `VisualizerLegend`,
+`WorkspaceToolbar`.
 
 New **tokens** (`styles/tokens.css`): `--viz-node`, and the drop-in
 animation. The graph's lane, row and edge sizes are SVG coordinates,

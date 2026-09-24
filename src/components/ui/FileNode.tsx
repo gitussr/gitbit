@@ -40,6 +40,17 @@ export interface FileNodeProps {
   className?: string
 }
 
+/** A file status as a small square — the same fill, edge and icon as the row. For a legend (Section 31). */
+export function FileStatusSwatch({ status, className }: { status: FileNodeStatus; className?: string }) {
+  const meta = statusMeta[status]
+  const Icon = meta.icon
+  return (
+    <span aria-hidden="true" className={cn('inline-flex size-6 shrink-0 items-center justify-center border-2 border-accent', meta.className, className)}>
+      <Icon className="size-3.5" />
+    </span>
+  )
+}
+
 /** One file, in one place. The unit that moves between panels (Section 11). */
 export function FileNode({ path, status = 'unchanged', entering = false, onSelect, selected = false, className }: FileNodeProps) {
   const meta = statusMeta[status]
