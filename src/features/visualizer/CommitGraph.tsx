@@ -2,6 +2,7 @@ import { memo, useRef, type Ref } from 'react'
 import { BranchLabel } from '@/components/ui/BranchLabel'
 import { CommitNode } from '@/components/ui/CommitNode'
 import { LaneGraph, type LaneGraphRow } from '@/components/ui/LaneGraph'
+import { ScrollX } from '@/components/ui/ScrollX'
 import { useFlip } from '@/hooks/useFlip'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { historyGraph, remoteGraph, type GraphNode, type RepoState } from '@/services/git-sim'
@@ -15,6 +16,9 @@ export interface CommitGraphProps {
   /** Draw the remote's history instead of yours (Section 22). */
   source?: 'local' | 'remote'
 }
+
+/** A row's narrowest: short hash, one branch label and a few words of the message. */
+const MIN_ROW = 200
 
 /** What the lines say, in words — the graph is decorative to a screen reader, this isn't. */
 function lineage({ commit }: GraphNode): string {
@@ -71,6 +75,7 @@ export const CommitGraph = memo(function CommitGraph({ repo, entering, inspected
   const reduced = useReducedMotion()
   const headRef = useFlip<HTMLSpanElement>(anchor, `${graph.headBranch}@${head?.commit.id}`, !reduced)
 
+  const label = source === 'remote' ? 'Commits on the remote, newest first' : 'Commits, newest first'
   const rows: LaneGraphRow[] = graph.nodes.map((node) => ({
     id: node.commit.id,
     lane: node.lane,
@@ -92,13 +97,13 @@ export const CommitGraph = memo(function CommitGraph({ repo, entering, inspected
   }))
 
   return (
-    <div ref={anchor}>
-      <LaneGraph
-        rows={rows}
-        edges={graph.edges}
-        lanes={graph.lanes}
-        label={source === 'remote' ? 'Commits on the remote, newest first' : 'Commits, newest first'}
-      />
-    </div>
+    // The one part of the stage allowed to scroll sideways (docs/VISUALIZER.md,
+    // Layout): on a phone, many lanes would otherwise crush every message
+    // to a letter. MIN_ROW keeps the hash, a label and a few words readable.
+    <ScrollX label={label}>
+      <div ref={anchor}>
+        <LaneGraph rows={rows} edges={graph.edges} lanes={graph.lanes} label={label} minRowWidth={MIN_ROW} />
+      </div>
+    </ScrollX>
   )
 })

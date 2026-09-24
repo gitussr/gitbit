@@ -98,7 +98,9 @@ terminal, Section 4), Alert, Tooltip, Tabs/TabPanel, Breadcrumbs,
 Pagination (+`ProgressRing`), Dialog (built on native `<dialog>`),
 Toast/`ToastProvider`/`useToast`, EmptyState, LoadingState/`Skeleton`,
 ErrorState, Typography (`Heading`/`Text`), ChoiceList (one question's
-answer buttons — GitBit Quiz and the Visualizer's Quick Recall share it).
+answer buttons — GitBit Quiz and the Visualizer's Quick Recall share it),
+ScrollX (a contained horizontal scroll whose far edge fades as the cue,
+focusable only while it actually scrolls — for content that can't wrap).
 
 Content-bound cards (`src/components/cards`) compose those primitives
 against the typed content shapes in `src/content/types.ts`: `CommandCard`,

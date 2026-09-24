@@ -45,6 +45,12 @@ export interface LaneGraphProps {
   lanes: number
   /** Names the list for assistive tech, e.g. "Commits, newest first". */
   label: string
+  /**
+   * The narrowest a row's content may get. With many lanes on a phone the
+   * lines take most of the width; below this, the graph grows wider than
+   * its container instead, and the caller scrolls it (`ScrollX`).
+   */
+  minRowWidth?: number
   className?: string
 }
 
@@ -90,12 +96,12 @@ function edgePath(from: { row: number; lane: number }, to: { row: number; lane: 
  * Whatever the lines show — which node is built on which — the row
  * content must also say in words.
  */
-export function LaneGraph({ rows, edges, lanes, label, className }: LaneGraphProps) {
+export function LaneGraph({ rows, edges, lanes, label, minRowWidth = 0, className }: LaneGraphProps) {
   const at = new Map(rows.map((row, index) => [row.id, { row: index, lane: row.lane }]))
   const width = Math.max(lanes, 1) * LANE
 
   return (
-    <div className={cn('relative', className)}>
+    <div className={cn('relative', className)} style={{ minWidth: width + GUTTER + minRowWidth }}>
       <svg
         aria-hidden="true"
         width={width}

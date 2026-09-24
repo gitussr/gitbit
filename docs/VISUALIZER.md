@@ -87,9 +87,26 @@ also don't build two products).
   there, and a console that moves between breakpoints is a console
   people lose.
 - Below `lg` the Explainer moves beneath the Stage and the scenario rail
-  collapses to a single-line step indicator. The graph is the one
-  element allowed a horizontal scroll container, with the scroll cue the
-  Design System already uses.
+  collapses to a single-line step indicator. The workspace grid is
+  `grid-cols-1` there, not an implicit column: an implicit track sizes to
+  its widest item's min-content, which once pushed the page to 421px on a
+  375px phone.
+- The Explainer column reads the same at every width: what just happened
+  (and a reset's readout), then the edit and simulator controls, then Aha
+  and Recall, then the Time Machine. Explanation first, because below
+  `lg` this column follows the stage and it's what someone who just ran a
+  command is looking for. It's DOM order, not CSS `order`, so tab order
+  and a screen reader match the screen.
+- The graph is the one element allowed a horizontal scroll container
+  (`ScrollX`). A row never gets narrower than `MIN_ROW` (hash, a label, a
+  few words); past that, many lanes on a phone scroll sideways, with the
+  far edge fading as the cue, instead of crushing every message to a
+  letter. The usual one- or two-lane graph fits at 320px and doesn't scroll.
+- The console dock stays collapsed to its last entry (two whole lines of
+  output), shows at most two suggestions below `sm`, and on short screens
+  (a phone on its side, under 32rem tall) drops the preview for the
+  History toggle. Portrait phones: about 30% of the screen; landscape,
+  about 40%.
 
 The legend (§31) is a collapsed disclosure in the workspace toolbar —
 present, unobtrusive, never a permanent column.
@@ -484,7 +501,7 @@ unrecoverable — calm, once, in the Explainer (§18).
 New **primitives** (`components/ui`, added before use, per §34 and the
 repo rule): `FileNode`, `CommitNode`, `BranchLabel`, `HeadPointer`,
 `StatePanel`, `CommandConsole`, `LaneGraph`, `VisualizerLegend`,
-`Timeline`. `LaneGraph` draws nodes in lanes with lines between them and
+`Timeline`, `ChoiceList`, `ScrollX`. `LaneGraph` draws nodes in lanes with lines between them and
 knows nothing about Git; `CommitGraph` is what makes its rows commits.
 
 New **composition** (`features/visualizer/`): `VisualizerStage`,

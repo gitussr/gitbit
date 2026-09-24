@@ -132,9 +132,12 @@ export function CommandConsole({
   const visible = expanded ? entries : entries.slice(-1)
   const commandCount = entries.filter((entry) => !entry.note).length
 
+  // The full history reads from its newest end. Collapsed, the one entry
+  // shown reads from its top, so a long `git log` doesn't hide the command
+  // that printed it.
   useEffect(() => {
     const log = logRef.current
-    if (log) log.scrollTop = log.scrollHeight
+    if (log) log.scrollTop = expanded ? log.scrollHeight : 0
   }, [entries.length, expanded])
 
   const run = (input: string) => {
@@ -188,7 +191,7 @@ export function CommandConsole({
           <button
             type="button"
             onClick={() => setExpanded((open) => !open)}
-            disabled={entries.length < 2}
+            disabled={entries.length === 0}
             aria-expanded={expanded}
             aria-controls={logId}
             className="inline-flex h-7 min-w-0 items-center gap-1.5 px-1.5 text-xs text-white/70 transition-colors duration-150 hover:text-terminal-text disabled:cursor-default disabled:hover:text-white/70"
@@ -197,7 +200,7 @@ export function CommandConsole({
               className={cn(
                 'size-3.5 shrink-0 transition-transform duration-150',
                 expanded && 'rotate-180',
-                entries.length < 2 && 'opacity-0',
+                entries.length === 0 && 'opacity-0',
               )}
               aria-hidden="true"
             />
@@ -241,7 +244,14 @@ export function CommandConsole({
             aria-label={expanded ? 'Command history' : 'Last command'}
             className={cn(
               'flex flex-col gap-2 overflow-y-auto overscroll-contain px-3 py-2',
-              expanded ? 'max-h-[45vh]' : 'max-h-16 sm:max-h-24',
+              // Collapsed: the command and two whole lines of what it printed (20px
+              // lines, plus padding) — a line cut in half reads as a rendering bug.
+              // On a short screen (a phone on its side) the preview goes, and the
+              // toggle above is the way to it: a dock there would otherwise
+              // cover most of the page.
+              expanded
+                ? 'max-h-[45vh] [@media(max-height:32rem)]:max-h-[25vh]'
+                : 'max-h-20 sm:max-h-24 [@media(max-height:32rem)]:hidden',
             )}
           >
             {visible.map((entry) => (
@@ -280,7 +290,7 @@ export function CommandConsole({
             spellCheck={false}
             enterKeyHint="go"
             // 16px below `sm`: anything smaller and mobile Safari zooms the page on focus.
-            className="h-11 min-w-0 flex-1 bg-transparent text-base text-terminal-text placeholder:text-white/35 sm:text-sm"
+            className="h-11 min-w-0 flex-1 bg-transparent text-base [@media(max-height:32rem)]:h-9 text-terminal-text placeholder:text-white/35 sm:text-sm"
           />
           <button
             type="submit"
@@ -308,8 +318,14 @@ export function CommandConsole({
               ))}
             </p>
           ) : suggestions.length > 0 ? (
-            <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Suggested commands">
-              <span className="text-xs text-white/45">Try</span>
+            // Two below `sm`: a third chip wraps to a second row, and every row
+            // here is taken from the stage above it.
+            <div
+              className="flex flex-wrap items-center gap-2 max-sm:[&>button:nth-of-type(n+3)]:hidden"
+              role="group"
+              aria-label="Suggested commands"
+            >
+              <span className="hidden text-xs text-white/45 sm:inline">Try</span>
               {suggestions.map((suggestion) => (
                 <button
                   key={suggestion}

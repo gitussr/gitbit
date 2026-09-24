@@ -7,7 +7,7 @@ import { LoadingState } from '@/components/ui/LoadingState'
 import { CommandConsole, type ConsoleEntry } from '@/components/ui/CommandConsole'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { panelClassName } from '@/components/ui/StatePanel'
-import { Text } from '@/components/ui/Typography'
+import { Text, TextWithCode } from '@/components/ui/Typography'
 import type { GitStateId } from '@/content/states'
 import { getScenarioSummary, type ScenarioSummary } from '@/content/visualizer/catalog'
 import type { ScenarioAction } from '@/content/visualizer/scenarios'
@@ -269,7 +269,10 @@ function Workspace({ scenario }: { scenario?: ScenarioSummary }) {
         <ScenarioRail slug={scenario?.slug} history={state.history} onAct={act} />
       </Suspense>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+      {/* grid-cols-1, not the implicit column: an implicit track sizes to its
+          widest item's min-content, which pushed the page past a phone's
+          width. This one is the screen's width, and things inside wrap. */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <VisualizerStage
           repo={state.repo}
           active={active}
@@ -278,6 +281,34 @@ function Workspace({ scenario }: { scenario?: ScenarioSummary }) {
         />
 
         <div className="flex flex-col gap-4">
+          {/* Explanation first, at every width: below lg this column follows
+              the stage, and what just happened is what someone who just ran a
+              command is looking for. DOM order, not CSS order, so tab order
+              and a screen reader agree with what's on screen. */}
+          {/* The textual meaning of the last change (Section 40). Announced to
+              screen readers, and shown to everyone — it is not a fallback. */}
+          <div className={panelClassName(false, 'flex flex-col gap-1', lost.length > 0 ? 'caution' : 'default')}>
+            <Text variant="caption" tone="secondary" className="font-bold uppercase">
+              What just happened
+            </Text>
+            <Text variant="body-sm" aria-live="polite">
+              {replaying && undone
+                ? `Replaying ${undone.input}…`
+                : last
+                  ? <TextWithCode>{announceTransition(last)}</TextWithCode>
+                  : undone
+                    ? announceUndo(undone)
+                    : 'Nothing yet. Run a command to begin.'}
+            </Text>
+            {last && last.outcome.kind !== 'ok' && (
+              <Text variant="body-sm" tone="secondary">
+                <TextWithCode>{last.outcome.why}</TextWithCode>
+              </Text>
+            )}
+          </div>
+
+          {reset && <ResetLayers event={reset} revealed={revealed} />}
+
           <div className="flex flex-wrap gap-2">
             <Button
               variant="ghost"
@@ -344,30 +375,6 @@ function Workspace({ scenario }: { scenario?: ScenarioSummary }) {
               </Button>
             </div>
           </div>
-
-          {/* The textual meaning of the last change (Section 40). Announced to
-              screen readers, and shown to everyone — it is not a fallback. */}
-          <div className={panelClassName(false, 'flex flex-col gap-1', lost.length > 0 ? 'caution' : 'default')}>
-            <Text variant="caption" tone="secondary" className="font-bold uppercase">
-              What just happened
-            </Text>
-            <Text variant="body-sm" aria-live="polite">
-              {replaying && undone
-                ? `Replaying ${undone.input}…`
-                : last
-                  ? announceTransition(last)
-                  : undone
-                    ? announceUndo(undone)
-                    : 'Nothing yet. Run a command to begin.'}
-            </Text>
-            {last && last.outcome.kind !== 'ok' && (
-              <Text variant="body-sm" tone="secondary">
-                {last.outcome.why}
-              </Text>
-            )}
-          </div>
-
-          {reset && <ResetLayers event={reset} revealed={revealed} />}
 
           {/* Only for a change that just happened: after an undo, the entry
               now last didn't just happen, and it doesn't get to teach again. */}
