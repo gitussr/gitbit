@@ -75,6 +75,18 @@ Spans several files under `src/services/notifications/`,
   logs the real error via `console.error` instead of collapsing all of
   them into one silent `'unavailable'` state, so a real prod failure stays
   diagnosable.
+- The OneSignal SDK is **not loaded on page load** unless it has a job:
+  it cost ~470ms of main thread on a mid-range phone (mobile Lighthouse
+  TBT 690ms with it, ~85ms without). `useNotificationPermission` loads it
+  only (a) when someone clicks "Enable GitBit Daily" — `requestPermission`
+  initializes first — or (b) for an already-`granted` visitor, after the
+  `load` event and idle, to keep their subscription current. The
+  first-visit landing popup therefore opens from the browser's own
+  permission, not after init; a visitor whose ad blocker stops the SDK
+  learns it from the "Enable" click, and closing the panel in
+  `'unavailable'` counts as dismissing so they aren't asked every visit.
+  Headless Chromium reports `Notification.permission` as `'denied'`, so
+  automated tests of this path need Playwright's `channel: 'chromium'`.
 - The five permission states (`unsupported`/`granted`/`denied`/
   `unavailable`/error/ask) are defined once in `NotificationStatus.tsx`
   and reused by three surfaces — the embedded `/daily` card

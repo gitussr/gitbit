@@ -4,9 +4,8 @@ import { LabelledDivider } from '@/components/ui/LabelledDivider'
 import { FileNode, type FileNodeStatus } from '@/components/ui/FileNode'
 import { StatePanel } from '@/components/ui/StatePanel'
 import { InlineCode, Text } from '@/components/ui/Typography'
-import { gitStates } from '@/services/content'
+import { gitStates, type GitStateId } from '@/content/states'
 import { CommitGraph } from './CommitGraph'
-import type { GitStateId } from '@/content/states'
 import {
   currentBranch,
   headCommitId,

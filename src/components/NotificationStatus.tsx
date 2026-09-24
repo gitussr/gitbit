@@ -22,9 +22,18 @@ export function NotificationStatus({
   error,
   dismissed,
   requestPermission,
+  pending,
   dismiss,
   dismissible = false,
 }: NotificationStatusProps) {
+  // Clicking loads the provider SDK before the browser prompt appears. Busy,
+  // not disabled: disabling the focused button would drop focus to <body>.
+  const enable = (
+    <Button className="self-start" onClick={requestPermission} aria-busy={pending || undefined}>
+      {pending ? 'Enabling…' : 'Enable GitBit Daily'}
+    </Button>
+  )
+
   if (!supported) {
     return (
       <Alert variant="info" icon={<BellOff className="size-4.5" aria-hidden="true" />}>
@@ -79,9 +88,7 @@ export function NotificationStatus({
           </Heading>
           <Text tone="secondary">A command, an aha moment, or a small Git concept — delivered once a day.</Text>
         </div>
-        <Button className="self-start" onClick={requestPermission}>
-          Enable GitBit Daily
-        </Button>
+        {enable}
       </div>
     )
   }
@@ -102,9 +109,7 @@ export function NotificationStatus({
         </Heading>
         <Text tone="secondary">A command, an aha moment, or a small Git concept — delivered once a day.</Text>
       </div>
-      <Button className="self-start" onClick={requestPermission}>
-        Enable GitBit Daily
-      </Button>
+      {enable}
     </div>
   )
 }

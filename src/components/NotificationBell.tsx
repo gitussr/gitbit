@@ -1,11 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Bell, BellOff } from 'lucide-react'
 import { useNotificationPermission } from '@/hooks/useNotificationPermission'
 import { useUnreadDailyNotification } from '@/hooks/useUnreadDailyNotification'
 import { NotificationStatus } from '@/components/NotificationStatus'
-import { DailyNotificationList } from '@/components/DailyNotificationList'
 import { IconButton } from '@/components/ui/IconButton'
 import { Dialog } from '@/components/ui/Dialog'
+
+/** Reads the Daily content bank, so it loads with the open panel, not with every page. */
+const DailyNotificationList = lazy(() =>
+  import('@/components/DailyNotificationList').then((module) => ({ default: module.DailyNotificationList })),
+)
 
 /**
  * Header-wide access point for GitBit Daily notifications (Section 14/27):
@@ -33,8 +37,8 @@ export function NotificationBell() {
   const autoPrompted = useRef(false)
 
   useEffect(() => {
-    // Wait for the SDK: before it loads, state reads 'default' even where it's about to become 'unavailable',
-    // which would greet the visitor with a "couldn't load" popup they can never dismiss for good.
+    // Waits for the page to settle, not for the provider SDK — that loads only
+    // if they choose "Enable" (useNotificationPermission).
     if (autoPrompted.current || !ready || dismissed || state !== 'default') return
     autoPrompted.current = true
     setOpen(true)
@@ -44,7 +48,10 @@ export function NotificationBell() {
 
   const close = () => {
     setOpen(false)
-    if (state === 'default') dismiss()
+    // 'unavailable' too: the SDK is only tried once they click "Enable", so a
+    // visitor whose ad blocker stops it learns that here — and closing it must
+    // stop the prompt, or it would greet them again on every visit.
+    if (state === 'default' || state === 'unavailable') dismiss()
   }
 
   /** Opening the panel is the acknowledgement — it clears the tray notification and the badge with it. */
@@ -76,7 +83,9 @@ export function NotificationBell() {
         <div className="flex flex-col gap-5">
           <NotificationStatus {...permission} />
           {state === 'granted' && (
-            <DailyNotificationList newestUnread={openedWithUnread} onNavigate={() => setOpen(false)} />
+            <Suspense fallback={null}>
+              <DailyNotificationList newestUnread={openedWithUnread} onNavigate={() => setOpen(false)} />
+            </Suspense>
           )}
         </div>
       </Dialog>

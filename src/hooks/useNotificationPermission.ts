@@ -17,12 +17,16 @@ function readDismissed() {
 let permissionState: NotificationPermissionState = NotificationService.getPermissionState()
 let dismissedState = readDismissed()
 /**
- * Whether the provider SDK has finished loading. Until then `state` is only
- * the browser's raw permission, which reads 'default' even where init is
- * about to fail and flip it to 'unavailable' — so nothing should act on
- * 'default' (e.g. auto-open a prompt) before this is true.
+ * Whether the page has settled enough to auto-open the landing prompt.
+ * It no longer waits for the provider SDK: a first-time visitor is asked
+ * from the browser's own permission, and the SDK loads only when they say
+ * yes (see the effect below). Where the SDK then can't load — an ad
+ * blocker, most often — they learn it from the "Enable" click, and closing
+ * that panel counts as dismissing, so nobody is asked again every visit.
  */
 let readyState = false
+/** An "Enable" click is loading the SDK and waiting on the browser prompt. */
+let pendingState = false
 const listeners = new Set<() => void>()
 
 function emit() {
@@ -58,60 +62,81 @@ function subscribe(listener: () => void) {
 /**
  * Drives the GitBit Daily opt-in UI (Section 14/27). Never requests the
  * browser permission prompt on its own — only `requestPermission()`,
- * called from an explicit user action, does that; `initialize()` on
- * mount only loads the provider SDK so an already-subscribed returning
- * visitor's subscription stays current. State is re-read after init
- * resolves, since the provider can flip it to 'unavailable' (e.g. an
- * origin OneSignal isn't configured for) without throwing. `dismissed`
- * persists so a user who says "not now" isn't asked again on every visit
- * (Section 14: do not repeatedly ask).
+ * called from an explicit user action, does that. `dismissed` persists so
+ * a user who says "not now" isn't asked again on every visit (Section 14:
+ * do not repeatedly ask).
+ *
+ * The provider SDK is not loaded on page load unless it has a job to do.
+ * It costs ~470 ms of main thread on a mid-range phone (measured: mobile
+ * Lighthouse TBT 690 ms with it, 220 ms without), and for most visits it
+ * has none: a first-time visitor needs it only once they click "Enable",
+ * and a denied, dismissed or unsupported one can't subscribe at all. Only
+ * an already-subscribed visitor loads it unprompted, after the page has
+ * finished loading, so their subscription stays current.
  */
 export function useNotificationPermission() {
   const state = useSyncExternalStore(subscribe, () => permissionState)
   const dismissed = useSyncExternalStore(subscribe, () => dismissedState)
   const ready = useSyncExternalStore(subscribe, () => readyState)
+  const pending = useSyncExternalStore(subscribe, () => pendingState)
   const [error, setError] = useState(false)
 
   useEffect(() => {
     watchBrowserPermission()
     refreshPermission()
 
-    /*
-     * Deferred to idle rather than run during mount. Initialising pulls a
-     * third-party script and a sync request, and nothing on screen is waiting
-     * for either: the bell renders from the browser's own Notification
-     * permission until init resolves and flips `ready`. On the critical path
-     * it was competing with the app's own fonts and chunks for bandwidth
-     * (Section 25: no unnecessary network requests).
-     */
-    const start = () => {
+    // Settled: late enough that a landing prompt doesn't compete with the page
+    // itself. The timeout caps how long idle can be deferred on a busy page;
+    // Safari has no requestIdleCallback, so it gets a plain delay.
+    const settle = () => {
+      if (readyState) return
+      readyState = true
+      emit()
+    }
+    const idle = 'requestIdleCallback' in window
+    const handle = idle ? window.requestIdleCallback(settle, { timeout: 3000 }) : window.setTimeout(settle, 1500)
+
+    // A subscribed visitor's SDK keeps their subscription current; nothing on
+    // screen waits for it, so it runs once the page has fully loaded and gone idle.
+    let syncHandle: number | undefined
+    const sync = () => {
       NotificationService.initialize()
         .catch(() => {})
-        .then(() => {
-          refreshPermission()
-          if (readyState) return
-          readyState = true
-          emit()
-        })
+        .then(refreshPermission)
+    }
+    const scheduleSync = () => {
+      syncHandle = idle ? window.requestIdleCallback(sync, { timeout: 10000 }) : window.setTimeout(sync, 5000)
+    }
+    if (permissionState === 'granted') {
+      if (document.readyState === 'complete') scheduleSync()
+      else window.addEventListener('load', scheduleSync, { once: true })
     }
 
-    // The timeout caps how long idle can be deferred on a busy page; Safari
-    // has no requestIdleCallback, so it gets a plain delay.
-    const idle = 'requestIdleCallback' in window
-    const handle = idle ? window.requestIdleCallback(start, { timeout: 3000 }) : window.setTimeout(start, 1500)
     return () => {
       if (idle) window.cancelIdleCallback(handle as number)
       else window.clearTimeout(handle as number)
+      window.removeEventListener('load', scheduleSync)
+      if (syncHandle !== undefined) {
+        if (idle) window.cancelIdleCallback(syncHandle)
+        else window.clearTimeout(syncHandle)
+      }
     }
   }, [])
 
   const requestPermission = useCallback(async () => {
+    if (pendingState) return
     setError(false)
+    pendingState = true
+    emit()
     try {
+      // Loads the SDK on first use; resolves 'unavailable' if it can't load.
       await NotificationService.requestPermission()
       refreshPermission()
     } catch {
       setError(true)
+    } finally {
+      pendingState = false
+      emit()
     }
   }, [])
 
@@ -126,6 +151,7 @@ export function useNotificationPermission() {
     supported: state !== 'unsupported',
     dismissed,
     ready,
+    pending,
     error,
     requestPermission,
     dismiss,

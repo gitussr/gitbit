@@ -1,11 +1,20 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Menu, Search, X } from 'lucide-react'
 import { GitBitLogo } from '@/components/GitBitLogo'
 import { NotificationBell } from '@/components/NotificationBell'
-import { SearchPalette } from '@/components/SearchPalette'
 import { IconButton } from '@/components/ui/IconButton'
 import { cn } from '@/utils/cn'
+
+/**
+ * Search needs the whole knowledge base, which is most of what the content
+ * layer weighs — too much to make every page load pay for a palette most
+ * visits never open. It loads on intent (hover, focus, touch on the button)
+ * or on open, and the service worker precaches it for next time.
+ */
+const loadSearchPalette = () => import('@/components/SearchPalette')
+const SearchPalette = lazy(() => loadSearchPalette().then((module) => ({ default: module.SearchPalette })))
+const warmSearch = () => void loadSearchPalette()
 
 const primaryNav = [
   { to: '/quick', label: 'Quick' },
@@ -111,6 +120,9 @@ export function Layout() {
               label="Search"
               size="sm"
               onClick={() => setSearchOpen(true)}
+              onPointerEnter={warmSearch}
+              onFocus={warmSearch}
+              onTouchStart={warmSearch}
             />
             <NotificationBell />
           </div>
@@ -140,7 +152,11 @@ export function Layout() {
         <Outlet />
       </main>
 
-      {searchOpen && <SearchPalette onClose={() => setSearchOpen(false)} />}
+      {searchOpen && (
+        <Suspense fallback={null}>
+          <SearchPalette onClose={() => setSearchOpen(false)} />
+        </Suspense>
+      )}
     </div>
   )
 }
