@@ -44,6 +44,13 @@ export interface CommandConsoleProps {
   banner?: string[]
   /** Offers a button that expands the window to fill the screen (shown below `lg`). */
   expandable?: boolean
+  /**
+   * Full screen, controlled from outside — for a caller that ties it to
+   * something else, like browser history so the back button exits it.
+   * Leave both unset and the console keeps the state itself.
+   */
+  expanded?: boolean
+  onExpandedChange?: (expanded: boolean) => void
   label?: string
   placeholder?: string
   className?: string
@@ -170,6 +177,8 @@ export function CommandConsole({
   label = 'Command',
   placeholder = 'type a command',
   expandable = false,
+  expanded: expandedProp,
+  onExpandedChange,
   className,
 }: CommandConsoleProps) {
   const inputId = useId()
@@ -179,13 +188,19 @@ export function CommandConsole({
   const scrollRef = useRef<HTMLDivElement>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const windowRef = useRef<HTMLDivElement>(null)
-  const [expanded, setExpanded] = useState(false)
-  // The dock's height at the moment of expanding, measured before the window leaves it.
-  const heldHeight = useRef(0)
-  const toggleExpanded = () => {
-    if (!expanded) heldHeight.current = rootRef.current?.getBoundingClientRect().height ?? 0
-    setExpanded(!expanded)
+  const [expandedState, setExpandedState] = useState(false)
+  const expanded = expandedProp ?? expandedState
+  const setExpanded = (next: boolean) => {
+    if (expandedProp === undefined) setExpandedState(next)
+    onExpandedChange?.(next)
   }
+
+  // The dock's height while docked, kept current so that whenever it expands
+  // — by this button or from outside — the space it leaves can be held.
+  const heldHeight = useRef(0)
+  useLayoutEffect(() => {
+    if (!expanded && rootRef.current) heldHeight.current = rootRef.current.getBoundingClientRect().height
+  })
   const [value, setValue] = useState('')
   // Walking back through history: where we are, and what was being typed before we started.
   const [recall, setRecall] = useState<{ index: number; draft: string } | null>(null)
@@ -247,6 +262,12 @@ export function CommandConsole({
     const html = document.documentElement
     const overflow = html.style.overflow
     html.style.overflow = 'hidden'
+    // The page's scroll is ours until it's back: if full screen is tied to a
+    // history entry, leaving it by Back makes the browser restore a scroll
+    // position it saved while the page was locked, and it lands elsewhere.
+    const scrollY = window.scrollY
+    const restoration = window.history.scrollRestoration
+    window.history.scrollRestoration = 'manual'
     const restoreInert = inertEverythingBut(win)
 
     const viewport = window.visualViewport
@@ -271,6 +292,8 @@ export function CommandConsole({
       win.style.height = ''
       root.style.height = ''
       html.style.overflow = overflow
+      window.scrollTo(0, scrollY)
+      window.history.scrollRestoration = restoration
       restoreInert()
     }
   }, [expanded])
@@ -395,7 +418,7 @@ export function CommandConsole({
           {expandable && (
             <button
               type="button"
-              onClick={toggleExpanded}
+              onClick={() => setExpanded(!expanded)}
               aria-pressed={expanded}
               aria-label={expanded ? 'Exit full screen' : 'Expand terminal to full screen'}
               className={cn(titleButton, !expanded && 'lg:hidden')}

@@ -13,6 +13,7 @@ import { getScenarioSummary, type ScenarioSummary } from '@/content/visualizer/c
 import type { ScenarioAction } from '@/content/visualizer/scenarios'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { useHighWaterHeight } from '@/hooks/useHighWaterHeight'
+import { useHistoryFlag } from '@/hooks/useHistoryFlag'
 import { useScrollPaddingBottom } from '@/hooks/useScrollPaddingBottom'
 import { complete, currentBranch, suggest, type RepoState, type ResetLayer } from '@/services/git-sim'
 import { announceTransition, announceUndo, discardedBy } from './announce'
@@ -107,6 +108,10 @@ function Workspace({ scenario }: { scenario?: ScenarioSummary }) {
   const dock = useRef<HTMLDivElement>(null)
   useScrollPaddingBottom(dock)
   const { container: columnRef, content: columnContentRef } = useHighWaterHeight(state.history.length === 0)
+
+  // Full-screen terminal as a history entry: Android's back button (or a
+  // browser's) exits it, the way it would in a native app.
+  const [terminalFull, setTerminalFull] = useHistoryFlag('terminalFullScreen')
 
   // After an undo, the entry now at the end of history didn't just happen —
   // nothing did, except the undo. It gets no highlight and no description.
@@ -456,6 +461,8 @@ function Workspace({ scenario }: { scenario?: ScenarioSummary }) {
         <CommandConsole
           title="project — git (simulated)"
           expandable
+          expanded={terminalFull}
+          onExpandedChange={setTerminalFull}
           banner={TERMINAL_BANNER}
           prompt={promptFor(state.repo)}
           placeholder="type a git command"

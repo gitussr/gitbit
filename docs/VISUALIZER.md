@@ -127,6 +127,15 @@ also don't build two products).
   first, then exits. The dock holds its height meanwhile, so the page comes
   back exactly where it was (verified: same scroll position, zero
   unexpected layout shift).
+- Full screen is a browser history entry (`hooks/useHistoryFlag.ts`, via
+  React Router so the router's stack stays in step), so **Back exits it**
+  — Android's button, a browser's, a swipe-back — and stays on the page.
+  Exiting with the button or Esc steps back over that entry, so it never
+  lingers for a later Back to land on; if this session didn't push it (a
+  reload), it's cleared in place, so exiting can never navigate away. A
+  reload opens docked. While expanded the console owns the page's scroll
+  (`history.scrollRestoration = 'manual'`, restored on exit), so a popped
+  entry can't restore a position saved while the page was locked.
 - **Nothing moves when a command runs.** Measured with the browser's
   layout-shift API, the worst command went from 0.53 (phone) to 0.01.
   What it takes: the terminal never changes height; it scrolls its own
