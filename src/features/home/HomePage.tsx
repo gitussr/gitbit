@@ -38,13 +38,13 @@ export default function HomePage() {
             incantations and start making sense.
           </Text>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-2.5">
-            {/* White border here only: the default ink border disappears into the ink hero, shrinking the lime by 2px a side next to "Browse commands". */}
+            {/* Lime border: the default ink one disappears into the ink hero, shrinking the lime by 2px a side next to "Browse commands"; lime keeps it one solid block. */}
             <ButtonLink
               to="/learn"
               variant="highlight"
               size="lg"
               trailingIcon={<ArrowRight aria-hidden="true" />}
-              className="border-feature-text"
+              className="border-highlight"
             >
               Start learning
             </ButtonLink>
