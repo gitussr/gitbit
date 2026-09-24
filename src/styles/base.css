@@ -82,6 +82,24 @@ mark {
   border: 2px solid var(--color-background);
 }
 
+/* Touch-only devices: no scrollbar at all, like a native app. Styling
+   ::-webkit-scrollbar above opts Chromium out of its auto-hiding overlay
+   scrollbar, so on Android it drew a permanent bar that took width from the
+   page. Scrolling itself is untouched — swipe, momentum and keyboard all
+   work — and the one sideways-scrolling area (the Visualizer's commit graph)
+   carries its own fade cue. Anything with a mouse keeps the scrollbar. */
+@media (hover: none) and (pointer: coarse) {
+  * {
+    scrollbar-width: none;
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
+
 /* Subtle grid background signature (Section 15). Static: no animation. */
 @utility bg-grid {
   /* A fallback rather than a declaration here, so bg-grid-feature wins regardless of utility order. */
