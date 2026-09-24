@@ -115,6 +115,18 @@ also don't build two products).
   typing (a phone has no Tab key), and Run. Focus stays in the prompt
   after Run, so a phone keyboard stays up. Scrollback: 160px on phones,
   208px from `sm`, 96px on short landscape screens.
+- Below `lg` a title-bar button (a real 32px target — the traffic lights
+  stay decorative) expands the terminal to **full screen**. The window is
+  portalled to `<body>`: inside the dock it would be trapped in the sticky
+  wrapper's stacking context, under the site header, whatever its z-index.
+  It's the same component, so the typed line and history carry over. While
+  expanded it's an `aria-modal` dialog, everything else is `inert`, the page
+  stops scrolling, and it's sized to the *visual* viewport — the part above
+  an on-screen keyboard — staying anchored to its bottom as the keyboard
+  comes up, so the prompt and Run are never hidden. Esc clears a typed line
+  first, then exits. The dock holds its height meanwhile, so the page comes
+  back exactly where it was (verified: same scroll position, zero
+  unexpected layout shift).
 - **Nothing moves when a command runs.** Measured with the browser's
   layout-shift API, the worst command went from 0.53 (phone) to 0.01.
   What it takes: the terminal never changes height; it scrolls its own

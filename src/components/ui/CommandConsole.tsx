@@ -1,5 +1,6 @@
-import { Check, Copy, CornerDownLeft, Eraser } from 'lucide-react'
+import { Check, Copy, CornerDownLeft, Eraser, Maximize2, Minimize2 } from 'lucide-react'
 import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { createPortal } from 'react-dom'
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
 import { cn } from '@/utils/cn'
 import { ScrollX } from './ScrollX'
@@ -41,6 +42,8 @@ export interface CommandConsoleProps {
   title?: string
   /** Dim lines at the top of the scrollback, where a shell prints its login banner. */
   banner?: string[]
+  /** Offers a button that expands the window to fill the screen (shown below `lg`). */
+  expandable?: boolean
   label?: string
   placeholder?: string
   className?: string
@@ -114,6 +117,27 @@ function Entry({ entry, latest }: { entry: ConsoleEntry; latest: boolean }) {
 }
 
 /**
+ * Makes everything on the page except `keep` (and its ancestors) inert —
+ * unreachable by Tab, pointer or screen reader — and returns the undo.
+ * Used while the terminal fills the screen: what's behind it can't be
+ * seen, so it mustn't be reachable either.
+ */
+function inertEverythingBut(keep: HTMLElement): () => void {
+  const changed: HTMLElement[] = []
+  for (let node: HTMLElement | null = keep; node && node !== document.body; node = node.parentElement) {
+    for (const sibling of Array.from(node.parentElement?.children ?? [])) {
+      if (sibling !== node && sibling instanceof HTMLElement && !sibling.inert) {
+        sibling.inert = true
+        changed.push(sibling)
+      }
+    }
+  }
+  return () => {
+    for (const element of changed) element.inert = false
+  }
+}
+
+/**
  * A terminal window for running simulated commands (Visualizer Section 9).
  *
  * It looks and behaves like one, so it reads as one: macOS window chrome,
@@ -145,6 +169,7 @@ export function CommandConsole({
   banner = [],
   label = 'Command',
   placeholder = 'type a command',
+  expandable = false,
   className,
 }: CommandConsoleProps) {
   const inputId = useId()
@@ -152,6 +177,15 @@ export function CommandConsole({
   const hintId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const windowRef = useRef<HTMLDivElement>(null)
+  const [expanded, setExpanded] = useState(false)
+  // The dock's height at the moment of expanding, measured before the window leaves it.
+  const heldHeight = useRef(0)
+  const toggleExpanded = () => {
+    if (!expanded) heldHeight.current = rootRef.current?.getBoundingClientRect().height ?? 0
+    setExpanded(!expanded)
+  }
   const [value, setValue] = useState('')
   // Walking back through history: where we are, and what was being typed before we started.
   const [recall, setRecall] = useState<{ index: number; draft: string } | null>(null)
@@ -190,6 +224,69 @@ export function CommandConsole({
   }, [value])
 
   const focusInput = () => inputRef.current?.focus({ preventScroll: true })
+
+  /*
+   * Full screen. The window is portalled to <body>: inside the dock it would
+   * be trapped in the sticky wrapper's stacking context, below the site
+   * header, whatever its z-index. What's typed and the history live in this
+   * component's state, so they carry over the move.
+   *
+   * - Sized to the *visual* viewport, which is the part above an on-screen
+   *   keyboard: sized to the layout viewport, the prompt and Run would sit
+   *   behind the keyboard on a phone.
+   * - The page behind stops scrolling, and becomes inert.
+   * - The dock keeps its height while the window is lifted out of it, so the
+   *   page behind doesn't reflow (and isn't somewhere else on the way back).
+   */
+  useLayoutEffect(() => {
+    const root = rootRef.current
+    const win = windowRef.current
+    if (!expanded || !root || !win) return
+
+    root.style.height = `${heldHeight.current}px`
+    const html = document.documentElement
+    const overflow = html.style.overflow
+    html.style.overflow = 'hidden'
+    const restoreInert = inertEverythingBut(win)
+
+    const viewport = window.visualViewport
+    const fit = () => {
+      if (!viewport) return
+      // Anchored to the bottom, as a terminal is when its window shrinks: the
+      // keyboard coming up must not push the prompt out of view.
+      const el = scrollRef.current
+      const fromBottom = el ? el.scrollHeight - el.scrollTop - el.clientHeight : 0
+      win.style.top = `${viewport.offsetTop}px`
+      win.style.height = `${viewport.height}px`
+      if (el) el.scrollTop = el.scrollHeight - el.clientHeight - fromBottom
+    }
+    fit()
+    viewport?.addEventListener('resize', fit)
+    viewport?.addEventListener('scroll', fit)
+
+    return () => {
+      viewport?.removeEventListener('resize', fit)
+      viewport?.removeEventListener('scroll', fit)
+      win.style.top = ''
+      win.style.height = ''
+      root.style.height = ''
+      html.style.overflow = overflow
+      restoreInert()
+    }
+  }, [expanded])
+
+  // Either way, the window just moved (into <body>, or back into the dock):
+  // it's a fresh element, so put the newest lines in view and the caret back.
+  const moved = useRef(false)
+  useLayoutEffect(() => {
+    if (!moved.current) {
+      moved.current = true
+      return
+    }
+    const el = scrollRef.current
+    if (el) el.scrollTop = el.scrollHeight
+    inputRef.current?.focus({ preventScroll: true })
+  }, [expanded])
 
   const run = (input: string) => {
     const command = input.trim()
@@ -234,26 +331,50 @@ export function CommandConsole({
     }
   }
 
+  // 32px square at least: a real tap target, unlike the 12px traffic lights.
+  const titleButton =
+    'inline-flex h-8 min-w-8 items-center justify-center gap-1.5 px-1.5 text-xs text-white/60 transition-colors duration-150 hover:text-terminal-text'
+
   const chip =
     'inline-flex h-7 shrink-0 items-center border border-white/25 px-2 text-xs whitespace-nowrap text-terminal-text transition-colors duration-150 hover:border-terminal-prompt hover:text-terminal-prompt'
 
-  return (
-    // The page-coloured band above the dock gives whatever scrolls behind it
-    // a clean edge, instead of the stage running straight into the window.
-    <div className={cn('z-10 bg-background pt-3', className)}>
-      {/* While the prompt has focus the window takes the page's focus outline,
-          since the input inside draws none of its own. */}
-      <div className="flex flex-col border-2 border-accent bg-terminal-bg font-mono text-sm shadow-brutal-sm outline-offset-2 has-[input:focus]:outline-3 has-[input:focus]:outline-accent">
-        {/* Title bar. The traffic lights quote macOS so it reads as "terminal"
-            at a glance; they're decorative and do nothing. */}
-        <div className="grid h-8 shrink-0 grid-cols-[1fr_auto_1fr] items-center border-b border-white/10 px-3">
-          <span className="flex items-center gap-2" aria-hidden="true">
-            <span className="size-3 rounded-full bg-terminal-close" />
-            <span className="size-3 rounded-full bg-terminal-minimize" />
-            <span className="size-3 rounded-full bg-terminal-zoom" />
-          </span>
-          <p className="truncate px-2 text-center text-xs text-white/60">{title}</p>
-          {onClear ? (
+  const terminal = (
+    <div
+      ref={windowRef}
+      role={expanded ? 'dialog' : undefined}
+      aria-modal={expanded || undefined}
+      aria-label={expanded ? title : undefined}
+      onKeyDown={(event) => {
+        // Esc on an empty line leaves full screen; with text on the line,
+        // the input's own handler clears it first.
+        if (event.key === 'Escape' && expanded && !event.defaultPrevented) {
+          event.preventDefault()
+          setExpanded(false)
+        }
+      }}
+      className={cn(
+        'flex flex-col bg-terminal-bg font-mono text-sm',
+        expanded
+          ? 'fixed inset-x-0 top-0 z-modal h-dvh pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]'
+          : 'border-2 border-accent shadow-brutal-sm outline-offset-2 has-[input:focus]:outline-3 has-[input:focus]:outline-accent',
+      )}
+    >
+      {/* Title bar. The traffic lights quote macOS so it reads as "terminal"
+          at a glance; they're decorative and do nothing. */}
+      <div
+        className={cn(
+          'grid shrink-0 grid-cols-[1fr_auto_1fr] items-center border-b border-white/10 pr-1 pl-3',
+          expanded ? 'h-11' : 'h-8',
+        )}
+      >
+        <span className="flex items-center gap-2" aria-hidden="true">
+          <span className="size-3 rounded-full bg-terminal-close" />
+          <span className="size-3 rounded-full bg-terminal-minimize" />
+          <span className="size-3 rounded-full bg-terminal-zoom" />
+        </span>
+        <p className="truncate px-2 text-center text-xs text-white/60">{title}</p>
+        <span className="flex items-center justify-self-end">
+          {onClear && (
             <button
               type="button"
               onClick={() => {
@@ -261,124 +382,150 @@ export function CommandConsole({
                 focusInput()
               }}
               disabled={entries.length === 0}
-              className="inline-flex h-7 items-center gap-1.5 justify-self-end px-1.5 text-xs text-white/60 transition-colors duration-150 hover:text-terminal-text disabled:opacity-40"
+              className={cn(titleButton, 'disabled:opacity-40')}
             >
               <Eraser className="size-3.5" aria-hidden="true" />
               <span className="hidden sm:inline">Clear</span>
               <span className="sr-only sm:hidden">Clear</span>
             </button>
-          ) : (
-            <span />
           )}
-        </div>
-
-        {/* The window. Fixed height: running a command scrolls this, never the page.
-            A click anywhere in it puts you at the prompt — unless you were selecting text. */}
-        <div
-          ref={scrollRef}
-          onClick={() => {
-            if (!window.getSelection()?.toString()) focusInput()
-          }}
-          className="relative h-40 cursor-text overflow-y-auto overscroll-contain px-3 py-2 sm:h-52 [@media(max-height:32rem)]:h-24"
-        >
-          <div role="log" aria-live="off" aria-label="Command history" className="flex flex-col gap-2.5">
-            {banner.length > 0 && (
-              <div className="text-white/60">
-                {banner.map((line) => (
-                  <p key={line}>{line}</p>
-                ))}
-              </div>
-            )}
-            <ol className="flex flex-col gap-2.5">
-              {entries.map((entry, index) => (
-                <Entry key={entry.id} entry={entry} latest={index === entries.length - 1} />
-              ))}
-            </ol>
-          </div>
-
-          <form
-            id={formId}
-            className="mt-2.5 flex items-baseline gap-2"
-            onSubmit={(event) => {
-              event.preventDefault()
-              run(value)
-            }}
-          >
-            <label htmlFor={inputId} className="sr-only">
-              {label}
-            </label>
-            <Prompt text={prompt} />
-            <input
-              ref={inputRef}
-              id={inputId}
-              value={value}
-              onChange={(event) => {
-                setValue(event.target.value)
-                setRecall(null)
-              }}
-              onKeyDown={onKeyDown}
-              placeholder={placeholder}
-              aria-describedby={hintId}
-              autoComplete="off"
-              autoCapitalize="off"
-              autoCorrect="off"
-              spellCheck={false}
-              enterKeyHint="go"
-              // No box round a terminal line: the window takes the focus ring
-              // (data-focus-ring, base.css) and the caret marks the spot.
-              // 16px below `sm`: anything smaller and mobile Safari zooms on focus.
-              className="min-w-0 flex-1 bg-transparent text-base text-terminal-text caret-terminal-prompt placeholder:text-white/35 sm:text-sm"
-              data-focus-ring="container"
-            />
-          </form>
-        </div>
-
-        {/* Footer: always one row. Completions while typing (tap or Tab to take
-            one), the commands that make sense next otherwise, and Run. */}
-        <div id={hintId} className="flex h-11 shrink-0 items-center gap-2 border-t border-white/10 pr-1.5 pl-3">
-          <ScrollX label={candidates.length > 0 ? 'Completions' : 'Suggested commands'} className="min-w-0 flex-1">
-            <div className="flex w-max items-center gap-2 py-1" role="group" aria-label={candidates.length > 0 ? 'Completions' : 'Suggested commands'}>
-              {candidates.length > 0 ? (
-                <>
-                  <span className="text-xs text-white/60">Tab</span>
-                  {candidates.slice(0, 6).map((candidate) => (
-                    <button
-                      key={candidate}
-                      type="button"
-                      onClick={() => {
-                        setValue(candidate)
-                        focusInput()
-                      }}
-                      className={cn(chip, 'text-terminal-accent')}
-                    >
-                      {candidate.trim()}
-                    </button>
-                  ))}
-                </>
-              ) : suggestions.length > 0 ? (
-                <>
-                  <span className="text-xs text-white/60">Try</span>
-                  {suggestions.map((suggestion) => (
-                    <button key={suggestion} type="button" onClick={() => run(suggestion)} className={chip}>
-                      {suggestion}
-                    </button>
-                  ))}
-                </>
-              ) : (
-                <span className="text-xs text-white/60">↑/↓ history · Tab completes · Esc clears the line</span>
-              )}
-            </div>
-          </ScrollX>
-          <button
-            type="submit"
-            form={formId}
-            className="inline-flex h-8 shrink-0 items-center gap-1.5 border-2 border-terminal-prompt bg-terminal-prompt px-3 text-xs font-bold text-terminal-bg transition-colors duration-150 hover:bg-transparent hover:text-terminal-prompt"
-          >
-            Run
-            <CornerDownLeft className="size-3.5" aria-hidden="true" />
-          </button>
-        </div>
+          {/* Full screen is for small screens, where the docked window is
+              small; on a wide one there's no need. Always shown once
+              expanded, so nobody is stranded in it by a resize. */}
+          {expandable && (
+            <button
+              type="button"
+              onClick={toggleExpanded}
+              aria-pressed={expanded}
+              aria-label={expanded ? 'Exit full screen' : 'Expand terminal to full screen'}
+              className={cn(titleButton, !expanded && 'lg:hidden')}
+            >
+              {expanded ? <Minimize2 className="size-4" aria-hidden="true" /> : <Maximize2 className="size-4" aria-hidden="true" />}
+            </button>
+          )}
+        </span>
       </div>
+
+      {/* The window. Fixed height: running a command scrolls this, never the page.
+          A click anywhere in it puts you at the prompt — unless you were selecting text. */}
+      <div
+        ref={scrollRef}
+        onClick={() => {
+          if (!window.getSelection()?.toString()) focusInput()
+        }}
+        className={cn(
+          'relative cursor-text overflow-y-auto overscroll-contain px-3 py-2',
+          expanded ? 'min-h-0 flex-1' : 'h-40 sm:h-52 [@media(max-height:32rem)]:h-24',
+        )}
+      >
+        <div role="log" aria-live="off" aria-label="Command history" className="flex flex-col gap-2.5">
+          {banner.length > 0 && (
+            <div className="text-white/60">
+              {banner.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+            </div>
+          )}
+          <ol className="flex flex-col gap-2.5">
+            {entries.map((entry, index) => (
+              <Entry key={entry.id} entry={entry} latest={index === entries.length - 1} />
+            ))}
+          </ol>
+        </div>
+
+        <form
+          id={formId}
+          className="mt-2.5 flex items-baseline gap-2"
+          onSubmit={(event) => {
+            event.preventDefault()
+            run(value)
+          }}
+        >
+          <label htmlFor={inputId} className="sr-only">
+            {label}
+          </label>
+          <Prompt text={prompt} />
+          <input
+            ref={inputRef}
+            id={inputId}
+            value={value}
+            onChange={(event) => {
+              setValue(event.target.value)
+              setRecall(null)
+            }}
+            onKeyDown={onKeyDown}
+            placeholder={placeholder}
+            aria-describedby={hintId}
+            autoComplete="off"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+            enterKeyHint="go"
+            // No box round a terminal line: the window takes the focus ring
+            // (data-focus-ring, base.css) and the caret marks the spot.
+            // 16px below `sm`: anything smaller and mobile Safari zooms on focus.
+            className="min-w-0 flex-1 bg-transparent text-base text-terminal-text caret-terminal-prompt placeholder:text-white/35 sm:text-sm"
+            data-focus-ring="container"
+          />
+        </form>
+      </div>
+
+      {/* Footer: always one row. Completions while typing (tap or Tab to take
+          one), the commands that make sense next otherwise, and Run. */}
+      <div id={hintId} className="flex h-11 shrink-0 items-center gap-2 border-t border-white/10 pr-1.5 pl-3">
+        <ScrollX label={candidates.length > 0 ? 'Completions' : 'Suggested commands'} className="min-w-0 flex-1">
+          <div className="flex w-max items-center gap-2 py-1" role="group" aria-label={candidates.length > 0 ? 'Completions' : 'Suggested commands'}>
+            {candidates.length > 0 ? (
+              <>
+                <span className="text-xs text-white/60">Tab</span>
+                {candidates.slice(0, 6).map((candidate) => (
+                  <button
+                    key={candidate}
+                    type="button"
+                    onClick={() => {
+                      setValue(candidate)
+                      focusInput()
+                    }}
+                    className={cn(chip, 'text-terminal-accent')}
+                  >
+                    {candidate.trim()}
+                  </button>
+                ))}
+              </>
+            ) : suggestions.length > 0 ? (
+              <>
+                <span className="text-xs text-white/60">Try</span>
+                {suggestions.map((suggestion) => (
+                  <button key={suggestion} type="button" onClick={() => run(suggestion)} className={chip}>
+                    {suggestion}
+                  </button>
+                ))}
+              </>
+            ) : (
+              <span className="text-xs text-white/60">↑/↓ history · Tab completes · Esc clears the line</span>
+            )}
+          </div>
+        </ScrollX>
+        <button
+          type="submit"
+          form={formId}
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 border-2 border-terminal-prompt bg-terminal-prompt px-3 text-xs font-bold text-terminal-bg transition-colors duration-150 hover:bg-transparent hover:text-terminal-prompt"
+        >
+          Run
+          <CornerDownLeft className="size-3.5" aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  )
+
+  return (
+    // The page-coloured band above the dock gives whatever scrolls behind it
+    // a clean edge, instead of the stage running straight into the window.
+    <div ref={rootRef} className={cn('z-10 bg-background pt-3', className)}>
+      {/* While the prompt has focus the window takes the page's focus outline,
+          since the input inside draws none of its own. Expanded, it's the
+          whole screen, so neither border nor outline has anywhere to go. */}
+      {expanded ? createPortal(terminal, document.body) : terminal}
     </div>
   )
 }

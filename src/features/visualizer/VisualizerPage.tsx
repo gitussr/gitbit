@@ -455,6 +455,7 @@ function Workspace({ scenario }: { scenario?: ScenarioSummary }) {
       <div ref={dock} className="sticky bottom-[env(safe-area-inset-bottom)] z-10 -mb-10 sm:-mb-12">
         <CommandConsole
           title="project — git (simulated)"
+          expandable
           banner={TERMINAL_BANNER}
           prompt={promptFor(state.repo)}
           placeholder="type a git command"
