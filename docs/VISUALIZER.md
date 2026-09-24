@@ -286,9 +286,10 @@ input → parse → validate → execute → reduce → animate → explain → 
    `history`.
 5. **Animate** by mapping events to motion (table below).
 6. **Explain** fills the four beginner questions (§29).
-7. **Aha** surfaces if the event maps to an existing `AhaCard`.
-8. **Recall** offers a question occasionally — never twice in a row, and
-   only the first time an event type occurs (§26: "use selectively").
+7. **Aha** surfaces the first time a change matches a moment rule
+   (see [Aha and Recall](#aha-and-recall)).
+8. **Recall** offers that moment's Quiz question — never twice in a row
+   (§26: "use selectively").
 
 Commands that fail still enter the history and still get explained. A
 rejected command is a lesson, not an error state.
@@ -353,8 +354,8 @@ repo's own content/UI rule). The Explainer resolves events to content:
 | What a command means | `GitCommand.humanMeaning` / `whatHappens` / `mentalModel` |
 | Where it moves things | `commandStateTransitions[slug]` in `content/states.ts` |
 | The misconception | `GitCommand.commonMistake` |
-| Aha moments | Existing `AhaCard`s, matched by slug |
-| Recall questions | Existing `QuizQuestion`s, filtered to the concepts in play |
+| Aha moments | Existing `AhaCard`s, by slug, from `content/visualizer/moments.ts` |
+| Recall questions | Existing `QuizQuestion`s, by slug, from the same rules |
 
 `content/states.ts` already carries `{from, to, summary}` for 19
 commands. That's most of "where did it move?" written and reviewed
@@ -364,6 +365,36 @@ Genuinely new prose — per-variant `reset --soft/--mixed/--hard` notes,
 fast-forward vs. merge-commit copy, validation-failure explanations —
 goes in a new typed `src/content/visualizer/` module. Plain data, no
 JSX, same as every other content folder.
+
+## Aha and Recall
+
+§25 and §26, built on the same two ideas as scenarios: judged by what
+happened, derived from history.
+
+`content/visualizer/moments.ts` is plain data. Each rule is an
+`Expectation` — the type scenario steps use, judged by the same `meets()`
+— pointing at an existing `AhaCard` slug and/or an existing
+`QuizQuestion` slug. Rules carry no prose, so the Visualizer teaches in
+the Aha and Quiz modules' own words (§41). The one question written for
+it, §26's "where is it now?" (`where-staged-changes-wait`), went into the
+Quiz bank, where /quiz asks it too.
+
+`features/visualizer/moments.ts` walks the history. For each change the
+first rule with something *new* to show wins, so rules run specific to
+general: a conflicting pull is about the conflict, `switch -c` about the
+branch it made. An Aha card appears the first time only, even when two
+rules share it. A Recall is never asked straight after another; one
+skipped for that reason is asked the next time its moment comes round.
+Nothing is stored — undo takes a moment away and redo brings it back,
+like scenario progress — and only a change that *just happened* gets
+one, never the entry an undo exposed.
+
+Both render in the Explainer column below "What just happened":
+`AhaMoment` (the statement and explanation; the card's usual picture is
+left out, since the stage beside it is the picture) and `RecallCard`
+(`ChoiceList`, one try, the Quiz's explanation, no score). They load as
+their own chunk. `moments.test.ts` checks every slug a rule names exists
+and pins the selection rules.
 
 ## Scenarios
 
@@ -521,9 +552,11 @@ inherits full offline support from the existing Workbox precache.
 
 ## Testing
 
-Vitest, added as a dev dependency, `npm run test`. Engine only —
+Vitest, added as a dev dependency, `npm run test`. The engine —
 `parse`, `validate`, each command reducer, emitted events, and
-end-to-end command sequences asserting the final `RepoState`.
+end-to-end command sequences asserting the final `RepoState` — plus the
+Visualizer's pure feature logic (`features/visualizer/*.test.ts`: which
+Aha and Recall a history earns).
 
 No DOM or component tests: one package, not four, and the engine is
 where a wrong answer would actually teach someone something false.

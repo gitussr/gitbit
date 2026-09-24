@@ -39,6 +39,16 @@ export const quizQuestions: QuizQuestion[] = [
     difficulty: 'beginner',
   },
   {
+    slug: 'where-staged-changes-wait',
+    prompt: 'You just ran git add on a file. Where is the version of it that your next commit will record?',
+    choices: ['Only in the Working Directory', 'In the Staging Area', 'Already in the Local Repository', 'On the remote'],
+    correctIndex: 1,
+    explanation:
+      "git add copies the file, exactly as it is right now, into the Staging Area. It's still on disk too, but the Staging Area holds the version the next commit will record — and nothing is in history until you commit.",
+    relatedConcepts: ['staging-area'],
+    difficulty: 'beginner',
+  },
+  {
     slug: 'staging-area-purpose',
     prompt: "You've changed three files but only want to commit one of them right now. What lets you do that?",
     choices: ['git commit --only', 'The staging area — git add just the one file', 'You have to commit all three together', 'git branch a temporary branch first'],

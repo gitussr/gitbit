@@ -8,8 +8,9 @@ import path from 'node:path'
  * into the build config would put a dev dependency on the critical path of
  * every deploy. The cost is repeating the `@` alias in four lines here.
  *
- * Tests cover `src/services/git-sim/**` only — the engine is pure
- * functions, and it is where a wrong answer would teach someone something
+ * Tests cover `src/services/git-sim/**` and the Visualizer's pure feature
+ * logic (`src/features/visualizer/*.test.ts`). Both are pure
+ * functions, and they are where a wrong answer would teach someone something
  * false about Git (see docs/VISUALIZER.md).
  */
 export default defineConfig({
@@ -17,7 +18,7 @@ export default defineConfig({
     alias: { '@': path.resolve(import.meta.dirname, './src') },
   },
   test: {
-    include: ['src/services/git-sim/**/*.test.ts'],
+    include: ['src/services/git-sim/**/*.test.ts', 'src/features/visualizer/**/*.test.ts'],
     environment: 'node',
   },
 })

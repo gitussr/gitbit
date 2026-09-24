@@ -97,12 +97,15 @@ anatomy breakdown per Section 29), TerminalBlock (ink simulated
 terminal, Section 4), Alert, Tooltip, Tabs/TabPanel, Breadcrumbs,
 Pagination (+`ProgressRing`), Dialog (built on native `<dialog>`),
 Toast/`ToastProvider`/`useToast`, EmptyState, LoadingState/`Skeleton`,
-ErrorState, Typography (`Heading`/`Text`).
+ErrorState, Typography (`Heading`/`Text`), ChoiceList (one question's
+answer buttons — GitBit Quiz and the Visualizer's Quick Recall share it).
 
 Content-bound cards (`src/components/cards`) compose those primitives
 against the typed content shapes in `src/content/types.ts`: `CommandCard`,
 `LessonCard`, `AhaTile` (named to avoid colliding with the `AhaCard`
-content type), `QuizCard`, `SosCard`, `ModuleCard`.
+content type), `QuizCard`, `SosCard`, `ModuleCard`, and the Visualizer's
+`AhaMoment` (an Aha card surfacing in context, explanation included) and
+`RecallCard` (one Quiz question as a Quick Recall panel).
 
 ### Buttons
 

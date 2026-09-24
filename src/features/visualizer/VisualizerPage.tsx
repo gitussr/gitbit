@@ -28,6 +28,9 @@ const TimeMachine = lazy(() => import('./TimeMachine'))
  */
 const ScenarioRail = lazy(() => import('./ScenarioRail'))
 
+/** Aha and Quick Recall (Sections 25-26) — with the Aha and Quiz banks they read. */
+const LearningMoment = lazy(() => import('./LearningMoment'))
+
 /** How long a replay shows the "before" state before playing the step again. */
 const REPLAY_MS = 500
 
@@ -365,6 +368,14 @@ function Workspace({ scenario }: { scenario?: ScenarioSummary }) {
           </div>
 
           {reset && <ResetLayers event={reset} revealed={revealed} />}
+
+          {/* Only for a change that just happened: after an undo, the entry
+              now last didn't just happen, and it doesn't get to teach again. */}
+          {last && !replaying && (
+            <Suspense fallback={null}>
+              <LearningMoment history={state.history} />
+            </Suspense>
+          )}
 
           <div className="flex flex-col gap-3">
             <Button

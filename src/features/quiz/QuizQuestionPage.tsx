@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Check, X, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { quizQuestions, getQuizBySlug } from '@/services/content'
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
 import { Heading, Text } from '@/components/ui/Typography'
 import { Badge } from '@/components/ui/Badge'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
+import { ChoiceList } from '@/components/ui/ChoiceList'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { cn } from '@/utils/cn'
 
 const difficultyLabel = { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced' } as const
 
@@ -45,35 +45,7 @@ export default function QuizQuestionPage() {
         </Heading>
       </div>
 
-      <div role="group" aria-label="Answer choices" className="flex flex-col gap-2">
-        {quiz.choices.map((choice, choiceIndex) => {
-          const isSelected = selected === choiceIndex
-          const isRightAnswer = choiceIndex === quiz.correctIndex
-          const showState = answered && (isSelected || isRightAnswer)
-
-          return (
-            <button
-              key={choice}
-              type="button"
-              aria-pressed={isSelected}
-              disabled={answered}
-              onClick={() => setSelected(choiceIndex)}
-              className={cn(
-                'flex items-center justify-between gap-3 border-2 px-3.5 py-2.5 text-left text-sm font-bold transition-colors duration-150 ease-standard',
-                'disabled:cursor-default',
-                !answered && 'border-accent bg-surface shadow-brutal-sm hover:bg-accent-subtle',
-                showState && isRightAnswer && 'border-safe-border bg-safe-subtle text-foreground',
-                showState && isSelected && !isRightAnswer && 'border-danger-border bg-danger-subtle text-foreground',
-                answered && !isSelected && !isRightAnswer && 'border-accent bg-surface text-foreground-tertiary',
-              )}
-            >
-              {choice}
-              {showState && isRightAnswer && <Check className="size-4 shrink-0" aria-hidden="true" />}
-              {showState && isSelected && !isRightAnswer && <X className="size-4 shrink-0" aria-hidden="true" />}
-            </button>
-          )
-        })}
-      </div>
+      <ChoiceList choices={quiz.choices} correctIndex={quiz.correctIndex} selected={selected} onSelect={setSelected} />
 
       {answered && (
         <Alert variant={isCorrect ? 'success' : 'info'} title={isCorrect ? "That's it" : 'Not quite'}>
