@@ -78,7 +78,7 @@ function FlowArrow({ command, active }: { command: string; active: boolean }) {
       <span
         className={cn(
           'font-mono text-xs font-bold whitespace-nowrap',
-          active ? 'bg-accent px-1.5 py-0.5 text-highlight' : 'text-foreground-tertiary',
+          active ? 'bg-accent px-1.5 py-0.5 text-on-accent' : 'text-foreground-tertiary',
         )}
       >
         {command}
@@ -172,7 +172,7 @@ export function GitStateHop({ from, to, command, destructive = false, className 
       </div>
 
       <div aria-hidden="true" className="flex shrink-0 items-center justify-center gap-1.5 py-1.5 sm:flex-col sm:gap-1 sm:px-2">
-        <span className="bg-accent px-1.5 py-0.5 font-mono text-xs font-bold whitespace-nowrap text-highlight">{command}</span>
+        <span className="bg-accent px-1.5 py-0.5 font-mono text-xs font-bold whitespace-nowrap text-on-accent">{command}</span>
         <ArrowRight className="size-4 shrink-0 rotate-90 text-accent sm:rotate-0" />
       </div>
 

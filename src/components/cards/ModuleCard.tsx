@@ -15,7 +15,7 @@ export interface ModuleCardProps {
 export function ModuleCard({ to, icon: Icon, title, description }: ModuleCardProps) {
   return (
     <Link to={to} className={cardClassName(true, 'group flex items-center gap-3 p-3')}>
-      <span className="flex size-9 shrink-0 items-center justify-center bg-accent text-highlight">
+      <span className="flex size-9 shrink-0 items-center justify-center bg-accent text-on-accent">
         <Icon className="size-4.5" aria-hidden="true" />
       </span>
       <span className="flex min-w-0 flex-1 flex-col">

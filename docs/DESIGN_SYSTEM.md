@@ -71,12 +71,33 @@ personal project.
 
 ## Theming
 
-There is one theme. The design is defined light (white page, ink and
-lime), and dark mode was removed along with `ThemeProvider`,
-`ThemeToggle` and `useTheme`. `tokens.css` has no
-`prefers-color-scheme` or `data-theme` blocks, so an OS dark preference
-renders the same page. The PWA `theme_color`/`background_color` and the
-`theme-color` meta are white.
+Light is the default and the defined design (white page, ink and lime).
+Dark is opt-in: a reader picks it, or picks "System" to follow the OS.
+An OS set to dark does **not** switch anyone who hasn't chosen.
+
+- `tokens.css` holds one `:root[data-theme='dark']` block that redefines
+  the same `--gb-*` variables, so components never branch on the theme.
+  In dark the page is ink, text is bone, cards are a deep olive, and lime
+  moves to the hard shadows, icons (`accent-strong`) and the current-page
+  highlight. Every dark text pair is measured WCAG AA or better (figures in
+  the block's comment).
+- `text-on-accent` is the text/icon colour on a `bg-accent` fill (lime on
+  ink in light, ink on bone in dark). Use it there, not `text-highlight`,
+  which stays lime in both themes because it also sits on the always-ink
+  hero and code chips. Lime surfaces (`bg-highlight`) carry
+  `text-highlight-ink` so they keep ink text in dark.
+- The shadow, focus ring and selection colours are tokens too
+  (`--gb-shadow`, `--gb-focus`, `--gb-selection-*`).
+- `services/theme.ts` owns the preference (`light`/`dark`/`system`,
+  stored in `localStorage` under `gitbit-theme`; light is stored as
+  nothing), writes `data-theme` on `<html>` and the `theme-color` meta.
+  `hooks/useTheme.ts` reads it. An inline script in `index.html` applies it
+  before first paint — keep the two in step.
+- Controls: `ThemeToggle` (desktop header, one tap between light and dark)
+  and `ThemeSwitcher` (phone menu, all three choices on a
+  `SegmentedControl`).
+- The PWA manifest's `theme_color`/`background_color` stay white: a
+  manifest can't vary by theme, and light is the default.
 
 ## Visual language (Section 15-19)
 
@@ -101,6 +122,11 @@ ErrorState, Typography (`Heading`/`Text`), ChoiceList (one question's
 answer buttons — GitBit Quiz and the Visualizer's Quick Recall share it),
 ScrollX (a contained horizontal scroll whose far edge fades as the cue,
 focusable only while it actually scrolls — for content that can't wrap),
+SegmentedControl (a radio group of all-visible choices, one tab stop,
+arrow keys select — the theme picker), NavTile (icon chip, label and hint
+as a navigation tile; the current page goes lime and reads "You're here"),
+Sheet (a full-screen modal on native `<dialog>` for phone views that
+replace the page; locks page scroll, routes Escape through `onClose`),
 Legend (a closed-by-default key to a diagram: sections of swatch, label
 and meaning in a `<dl>`; swatches come from the primitive that draws the
 real mark — `LaneNodeSwatch`, `LaneEdgeSwatch`, `FileStatusSwatch`,

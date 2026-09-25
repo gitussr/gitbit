@@ -34,7 +34,7 @@ export default function SosDetailPage() {
       <ol className="flex flex-col gap-3.5">
         {guide.steps.map((step, index) => (
           <li key={index} className="flex gap-3">
-            <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center border-2 border-accent bg-highlight font-mono text-xs font-bold text-foreground">
+            <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center border-2 border-accent bg-highlight font-mono text-xs font-bold text-highlight-ink">
               {index + 1}
             </span>
             <div className="flex min-w-0 flex-1 flex-col gap-2">

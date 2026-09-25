@@ -18,8 +18,8 @@ const variantStyles: Record<BranchLabelVariant, string> = {
   branch: 'border-solid bg-surface text-foreground',
   // Ink with lime text, not lime: the panel HEAD lives in turns lime when
   // something lands in it, and HEAD must be the thing that stays visible then.
-  current: 'border-solid bg-accent text-highlight',
-  head: 'border-solid bg-accent text-highlight',
+  current: 'border-solid bg-accent text-on-accent',
+  head: 'border-solid bg-accent text-on-accent',
   remote: 'border-dashed bg-surface text-foreground-secondary',
 }
 

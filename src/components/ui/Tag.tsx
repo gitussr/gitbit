@@ -17,7 +17,7 @@ export const Tag = forwardRef<HTMLButtonElement, TagProps>(function Tag(
       aria-pressed={selected}
       className={cn(
         'inline-flex h-8 items-center border-2 border-accent px-3 text-body-sm font-bold transition-colors duration-150 ease-standard',
-        selected ? 'bg-accent text-highlight' : 'bg-surface text-foreground hover:bg-accent-subtle',
+        selected ? 'bg-accent text-on-accent' : 'bg-surface text-foreground hover:bg-accent-subtle',
         className,
       )}
       {...props}

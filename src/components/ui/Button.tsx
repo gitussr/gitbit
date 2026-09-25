@@ -19,7 +19,7 @@ const raised =
   'border-accent shadow-brutal-sm hover:-translate-x-0.5 hover:translate-y-0.5 hover:shadow-brutal-sm-pressed active:-translate-x-[3px] active:translate-y-[3px] active:shadow-none'
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: cn(raised, 'bg-accent text-highlight'),
+  primary: cn(raised, 'bg-accent text-on-accent'),
   secondary: cn(raised, 'bg-surface text-foreground'),
   danger: cn(raised, 'bg-danger-subtle text-foreground'),
   highlight: cn(raised, 'bg-highlight text-highlight-ink'),

@@ -1,22 +1,11 @@
 import { Link } from 'react-router-dom'
-import { Terminal, BookOpen, Lightbulb, HelpCircle, LifeBuoy, TerminalSquare, Bell, GitCompareArrows, GitCommitVertical, ArrowRight } from 'lucide-react'
+import { Lightbulb, ArrowRight } from 'lucide-react'
+import { navModules } from '@/app/navigation'
 import { Heading, Text } from '@/components/ui/Typography'
 import { ButtonLink } from '@/components/ui/Button'
 import { cardClassName } from '@/components/ui/Card'
 import { ModuleCard } from '@/components/cards'
 import { ahaCards } from '@/services/content'
-
-const modules = [
-  { to: '/visualizer', icon: GitCommitVertical, title: 'GitBit Visualizer', description: 'Run a command, watch the repository change.' },
-  { to: '/quick', icon: Terminal, title: 'GitBit Quick', description: 'Fast, searchable command cheat sheet.' },
-  { to: '/compare', icon: GitCompareArrows, title: 'GitBit Compare', description: 'Two commands that sound alike, side by side.' },
-  { to: '/learn', icon: BookOpen, title: 'GitBit Learn', description: 'A structured path from basics to branching.' },
-  { to: '/aha', icon: Lightbulb, title: 'GitBit Aha', description: 'Short ideas that fix a wrong mental model.' },
-  { to: '/quiz', icon: HelpCircle, title: 'GitBit Quiz', description: 'Knowledge checks that test understanding.' },
-  { to: '/sos', icon: LifeBuoy, title: 'GitBit SOS', description: '"I messed up Git." Calm, step-by-step fixes.' },
-  { to: '/terminal', icon: TerminalSquare, title: 'GitBit Terminal', description: 'See what a command actually does.' },
-  { to: '/daily', icon: Bell, title: 'GitBit Daily', description: 'One small, useful thing about Git — daily.' },
-]
 
 export default function HomePage() {
   const featuredAha = ahaCards[0]
@@ -60,8 +49,8 @@ export default function HomePage() {
           Everything GitBit
         </Heading>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {modules.map((mod) => (
-            <ModuleCard key={mod.to} {...mod} />
+          {navModules.map((mod) => (
+            <ModuleCard key={mod.to} to={mod.to} icon={mod.icon} title={`GitBit ${mod.label}`} description={mod.description} />
           ))}
         </div>
       </section>
@@ -71,7 +60,7 @@ export default function HomePage() {
           to={`/aha/${featuredAha.slug}`}
           className={cardClassName(true, 'group flex items-center gap-4 p-5 sm:p-6')}
         >
-          <span className="flex size-10 shrink-0 items-center justify-center bg-accent text-highlight">
+          <span className="flex size-10 shrink-0 items-center justify-center bg-accent text-on-accent">
             <Lightbulb className="size-5" aria-hidden="true" />
           </span>
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">

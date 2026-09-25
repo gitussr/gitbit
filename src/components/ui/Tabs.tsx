@@ -59,7 +59,7 @@ export function Tabs({ items, value, onChange, className }: TabsProps) {
             onClick={() => onChange(item.value)}
             className={cn(
               'px-3 py-1.5 text-sm font-bold transition-colors duration-150 ease-standard',
-              selected ? 'bg-accent text-highlight' : 'text-foreground hover:bg-accent-subtle',
+              selected ? 'bg-accent text-on-accent' : 'text-foreground hover:bg-accent-subtle',
             )}
           >
             {item.label}

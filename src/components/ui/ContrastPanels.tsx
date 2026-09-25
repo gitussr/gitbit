@@ -47,7 +47,7 @@ function Panel({
         <span
           className={cn(
             'flex size-5 shrink-0 items-center justify-center border-2 border-accent',
-            highlighted ? 'bg-accent text-highlight' : 'bg-surface text-foreground',
+            highlighted ? 'bg-accent text-on-accent' : 'bg-surface text-foreground',
           )}
         >
           {icon}

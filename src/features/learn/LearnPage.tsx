@@ -30,7 +30,7 @@ export default function LearnPage() {
           const itemCount = getConceptsForLevel(level).length + getCommandsForLevel(level).length
           return (
             <Link key={level.slug} to={`/learn/${level.slug}`} className={cardClassName(true, 'flex gap-3')}>
-              <span className="flex size-9 shrink-0 items-center justify-center bg-accent font-mono text-sm font-bold text-highlight">
+              <span className="flex size-9 shrink-0 items-center justify-center bg-accent font-mono text-sm font-bold text-on-accent">
                 {level.order}
               </span>
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">

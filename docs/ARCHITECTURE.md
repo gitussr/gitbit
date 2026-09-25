@@ -51,7 +51,9 @@ code ships on another feature's page.
 
 ```
 src/
-  app/                 Router config, root layout/shell, app-level providers
+  app/                 Router config, root layout/shell, app-level providers,
+                       and `navigation.ts` — every module once, read by the
+                       header, the phone menu and the home grid
   components/          Design System primitives (Phase 3) — shared, presentational, content-agnostic
   features/            One folder per product module; owns its routes + feature-specific UI
     home/

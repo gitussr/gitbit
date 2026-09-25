@@ -37,9 +37,16 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
         className,
       )}
     >
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b-2 border-accent bg-highlight px-4 py-3">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b-2 border-accent bg-highlight px-4 py-3 text-highlight-ink">
         <h2 className="text-base font-bold">{title}</h2>
-        <IconButton icon={<X aria-hidden="true" />} label="Close" size="sm" onClick={onClose} />
+        <IconButton
+          icon={<X aria-hidden="true" />}
+          label="Close"
+          size="sm"
+          // The header is lime in both themes, so the button keeps ink rather than following the page text.
+          className="text-highlight-ink hover:border-highlight-ink hover:bg-highlight-hover"
+          onClick={onClose}
+        />
       </div>
       <div className="p-4">{children}</div>
     </dialog>

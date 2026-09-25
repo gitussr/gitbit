@@ -42,10 +42,11 @@ video {
   max-width: 100%;
 }
 
-/* Ink, not lime: most text sits on lime cards, where a lime selection would vanish. */
+/* Ink, not lime, in light: most text sits on lime cards, where a lime
+   selection would vanish. Dark flips it (tokens.css). */
 ::selection {
-  background: var(--color-palette-ink);
-  color: var(--color-palette-lime);
+  background: var(--gb-selection-bg);
+  color: var(--gb-selection-text);
 }
 
 mark {
@@ -55,9 +56,9 @@ mark {
 }
 
 /* Focus states — always visible, never suppressed (Section 24). A lime
-   halo inside an ink ring, so it shows on white, lime and ink grounds alike. */
+   halo inside an ink ring (bone in dark), so it shows on every ground. */
 :focus-visible {
-  outline: 3px solid var(--color-palette-ink);
+  outline: 3px solid var(--gb-focus);
   outline-offset: 2px;
   box-shadow: 0 0 0 2px var(--color-palette-lime);
 }
@@ -133,7 +134,7 @@ mark {
    The name is kept so call sites didn't need to change. */
 @utility glass {
   background: var(--color-surface);
-  border: 2px solid var(--color-palette-ink);
+  border: 2px solid var(--color-border-strong);
 }
 
 /* Page layout as a three-track grid: gutter | content | gutter. Pages sit in

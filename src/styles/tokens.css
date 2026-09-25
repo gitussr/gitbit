@@ -11,7 +11,12 @@
  * #e4ff30, on a white page. Cards are lime with a 2px ink border, square
  * corners and a hard ink shadow offset down-left; code sits in ink chips.
  *
- * One theme only — the design is defined light, and there is no dark mode.
+ * Two themes. Light is the default and the defined design; dark is opt-in
+ * (the theme switcher in the header/menu, `services/theme.ts`) and is a
+ * `:root[data-theme='dark']` block at the end of this file that redefines
+ * the same variables — components never branch on the theme. In dark, the
+ * page is ink, text is bone, cards are a deep olive, and lime moves to the
+ * shadows, icons and highlights so the brand colour still carries the look.
  *
  * Token *names* are kept from the earlier multi-colour system so components
  * didn't have to change vocabulary: `accent` is now ink (the colour that
@@ -53,6 +58,10 @@
   --color-accent-strong: var(--gb-accent-strong);
   --color-accent-subtle: var(--gb-accent-subtle);
   --color-accent-border: var(--gb-accent-border);
+  /* Text and icons on a `bg-accent` fill: lime on ink in light, ink on bone
+     in dark. Not `text-highlight` — that stays lime in both themes, because
+     it also sits on the always-ink hero and code chips. */
+  --color-on-accent: var(--gb-on-accent);
 
   --color-card: var(--gb-card);
   --color-card-hover: var(--gb-card-hover);
@@ -113,10 +122,10 @@
      shadow from the reference design; `-sm` is for controls; `-pressed` is
      the hover/active state, paired with a translate toward the shadow so
      the element reads as being pushed in. */
-  --shadow-brutal: -7.778px 7.778px 0 0 var(--gb-palette-ink);
-  --shadow-brutal-pressed: -3px 3px 0 0 var(--gb-palette-ink);
-  --shadow-brutal-sm: -3px 3px 0 0 var(--gb-palette-ink);
-  --shadow-brutal-sm-pressed: -1px 1px 0 0 var(--gb-palette-ink);
+  --shadow-brutal: -7.778px 7.778px 0 0 var(--gb-shadow);
+  --shadow-brutal-pressed: -3px 3px 0 0 var(--gb-shadow);
+  --shadow-brutal-sm: -3px 3px 0 0 var(--gb-shadow);
+  --shadow-brutal-sm-pressed: -1px 1px 0 0 var(--gb-shadow);
   --shadow-xs: var(--shadow-brutal-sm);
   --shadow-sm: var(--shadow-brutal-sm);
   --shadow-md: var(--shadow-brutal);
@@ -147,6 +156,35 @@
       transform: translateY(0);
     }
   }
+
+  /* A full-screen sheet (the mobile menu) unfolds down from the header it
+     replaces, and its tiles follow a beat behind, staggered by index. Both
+     are `motion-safe:` only. `both` holds a staggered tile invisible until
+     its turn instead of flashing in first. */
+  --animate-sheet-in: sheet-in var(--duration-base) var(--ease-out-soft);
+  --animate-tile-in: tile-in var(--duration-slow) var(--ease-out-soft) both;
+
+  @keyframes sheet-in {
+    from {
+      opacity: 0;
+      transform: translateY(-0.75rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes tile-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
 }
 
 :root {
@@ -170,6 +208,13 @@
   --gb-accent-strong: var(--gb-palette-ink);
   --gb-accent-subtle: var(--gb-palette-lime);
   --gb-accent-border: var(--gb-palette-ink);
+  --gb-on-accent: var(--gb-palette-lime);
+
+  /* Hard shadow, focus outline and text selection — ink in light. */
+  --gb-shadow: var(--gb-palette-ink);
+  --gb-focus: var(--gb-palette-ink);
+  --gb-selection-bg: var(--gb-palette-ink);
+  --gb-selection-text: var(--gb-palette-lime);
 
   --gb-card: var(--gb-palette-lime);
   --gb-card-hover: #d9f51f;
@@ -234,4 +279,78 @@
   --duration-slow: 360ms;
 
   color-scheme: light;
+}
+
+/*
+ * Dark theme — opt-in, never automatic unless the reader picks "System".
+ * Same variable names, so every utility above follows. Text pairs checked
+ * numerically for WCAG AA: bone #f4f5ea is 16.7:1 on the page, 13.4:1 on a
+ * card; secondary 11.5:1 / 9.2:1; tertiary 7.8:1 / 6.3:1; each status
+ * colour is 7:1+ on its own subtle fill. Lime on a card is 13.0:1.
+ */
+:root[data-theme='dark'] {
+  --gb-bg: #14150d;
+  --gb-bg-subtle: #1a1b12;
+  --gb-surface: #1f2015;
+  --gb-surface-hover: #2a2c1d;
+  --gb-border: #e8e9d8;
+  --gb-border-strong: #e8e9d8;
+
+  --gb-text: #f4f5ea;
+  --gb-text-secondary: #cdcebd;
+  --gb-text-tertiary: #a9ab98;
+  --gb-text-inverse: var(--gb-palette-ink);
+
+  --gb-accent: #f4f5ea;
+  /* Icons and small emphasis go lime on dark — the brand colour's new home. */
+  --gb-accent-strong: var(--gb-palette-lime);
+  --gb-accent-subtle: #383c16;
+  --gb-accent-border: #4a4c3a;
+  --gb-on-accent: var(--gb-palette-ink);
+
+  --gb-shadow: var(--gb-palette-lime);
+  --gb-focus: #f4f5ea;
+  --gb-selection-bg: var(--gb-palette-lime);
+  --gb-selection-text: var(--gb-palette-ink);
+
+  --gb-card: #272a17;
+  --gb-card-hover: #30341b;
+
+  --gb-info: #8dbdff;
+  --gb-info-strong: #8dbdff;
+  --gb-info-subtle: #16263d;
+  --gb-info-border: #e8e9d8;
+
+  --gb-safe: #6ee39a;
+  --gb-safe-subtle: #15301f;
+  --gb-safe-border: #e8e9d8;
+
+  --gb-caution: #f7c35c;
+  --gb-caution-subtle: #36290c;
+  --gb-caution-border: #e8e9d8;
+
+  --gb-danger: #ff8f8f;
+  --gb-danger-subtle: #3d1717;
+  --gb-danger-border: #e8e9d8;
+
+  /* Lime surfaces keep ink text in both themes. */
+  --gb-highlight: var(--gb-palette-lime);
+  --gb-highlight-hover: #d9f51f;
+  --gb-highlight-ink: var(--gb-palette-ink);
+
+  /* The ink band and code chips sit a step darker than the page so they
+     still read as their own ground. */
+  --gb-feature: #0b0c06;
+  --gb-feature-hover: #26281b;
+  --gb-feature-border: #e8e9d8;
+  --gb-feature-text: #ffffff;
+  --gb-feature-text-secondary: #d7d8c8;
+
+  --gb-code-bg: #0b0c06;
+  --gb-code-text: #ffffff;
+  --gb-code-muted: #b9baa9;
+
+  --gb-terminal-bg: #0b0c06;
+
+  color-scheme: dark;
 }

@@ -12,6 +12,18 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="GitBit" />
     <title>GitBit — Git, one bit at a time.</title>
+    <!-- Theme before first paint. Mirrors src/services/theme.ts (storage key,
+         light default, "system" following the OS, theme-color values) —
+         change both together. -->
+    <script>
+      try {
+        var p = localStorage.getItem('gitbit-theme')
+        if (p === 'dark' || (p === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.dataset.theme = 'dark'
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#14150d')
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

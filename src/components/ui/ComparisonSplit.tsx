@@ -31,7 +31,7 @@ export function ComparisonSplit({ left, right, className }: ComparisonSplitProps
 
       {/* Decorative: the heading above already names the pair as "X vs. Y". */}
       <div className="flex items-center justify-center" aria-hidden="true">
-        <span className="flex size-9 shrink-0 items-center justify-center border-2 border-accent bg-accent font-mono text-body-sm font-bold text-highlight">
+        <span className="flex size-9 shrink-0 items-center justify-center border-2 border-accent bg-accent font-mono text-body-sm font-bold text-on-accent">
           vs
         </span>
       </div>

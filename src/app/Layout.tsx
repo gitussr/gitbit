@@ -1,9 +1,13 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Menu, Search, X } from 'lucide-react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
+import { NavLink, Outlet } from 'react-router-dom'
+import { Menu, Search } from 'lucide-react'
+import { headerNav } from '@/app/navigation'
 import { GitBitLogo } from '@/components/GitBitLogo'
+import { MobileMenu, MOBILE_MENU_ID } from '@/components/MobileMenu'
 import { NotificationBell } from '@/components/NotificationBell'
+import { ThemeToggle } from '@/components/ThemeSwitcher'
 import { IconButton } from '@/components/ui/IconButton'
+import { useHistoryFlag } from '@/hooks/useHistoryFlag'
 import { cn } from '@/utils/cn'
 
 /**
@@ -15,16 +19,6 @@ import { cn } from '@/utils/cn'
 const loadSearchPalette = () => import('@/components/SearchPalette')
 const SearchPalette = lazy(() => loadSearchPalette().then((module) => ({ default: module.SearchPalette })))
 const warmSearch = () => void loadSearchPalette()
-
-const primaryNav = [
-  { to: '/quick', label: 'Quick' },
-  { to: '/learn', label: 'Learn' },
-  { to: '/aha', label: 'Aha' },
-  { to: '/quiz', label: 'Quiz' },
-  { to: '/sos', label: 'SOS' },
-  { to: '/visualizer', label: 'Visualizer' },
-  { to: '/daily', label: 'Daily' },
-]
 
 const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
   cn(
@@ -40,18 +34,15 @@ const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
  * and Design System primitives (components/ui) — no one-off styling.
  *
  * Below `md`, seven nav items don't fit inline (Section 18: nothing should
- * rely on undiscoverable horizontal scroll) — a menu button replaces them.
+ * rely on undiscoverable horizontal scroll) — a menu button opens the
+ * full-screen `MobileMenu` instead. Its open state lives in a history entry,
+ * so Back closes it and any navigation (a tile, search, a link) leaves it
+ * behind.
  */
 export function Layout() {
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useHistoryFlag('menu')
   const [searchOpen, setSearchOpen] = useState(false)
-  const location = useLocation()
-  const [lastPathname, setLastPathname] = useState(location.pathname)
-
-  if (location.pathname !== lastPathname) {
-    setLastPathname(location.pathname)
-    setMenuOpen(false)
-  }
+  const closeMenu = useCallback(() => setMenuOpen(false), [setMenuOpen])
 
   /* Section 20: search is keyboard-reachable from anywhere. Cmd/Ctrl-K is the
      convention readers already have from their editor, so it's the one to match. */
@@ -66,33 +57,27 @@ export function Layout() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
-  useEffect(() => {
-    if (!menuOpen) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMenuOpen(false)
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [menuOpen])
-
   return (
     <div className="safe-x flex min-h-svh flex-col bg-background">
       <a
         href="#main-content"
-        className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-3 focus-visible:left-3 focus-visible:z-tooltip focus-visible:bg-accent focus-visible:px-3 focus-visible:py-2 focus-visible:text-sm focus-visible:text-highlight"
+        className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-3 focus-visible:left-3 focus-visible:z-tooltip focus-visible:bg-accent focus-visible:px-3 focus-visible:py-2 focus-visible:text-sm focus-visible:text-on-accent"
       >
         Skip to content
       </a>
 
-      <header className="safe-top glass sticky top-0 z-header border-x-0 border-t-0">
+      {/* `!`: the `glass` utility's `border` shorthand is emitted after these, so without it the header had a border on all four sides. */}
+      <header className="safe-top glass sticky top-0 z-header border-x-0! border-t-0!">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6">
           <IconButton
-            icon={menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
-            label={menuOpen ? 'Close menu' : 'Open menu'}
+            icon={<Menu aria-hidden="true" />}
+            label="Open menu"
             aria-expanded={menuOpen}
+            aria-controls={MOBILE_MENU_ID}
+            aria-haspopup="dialog"
             size="sm"
             className="shrink-0 md:hidden"
-            onClick={() => setMenuOpen((open) => !open)}
+            onClick={() => setMenuOpen(true)}
           />
 
           {/* `flex`, not the default inline flow: the logo's inline-flex box sits on
@@ -104,7 +89,7 @@ export function Layout() {
 
           <nav aria-label="Primary" className="hidden min-w-0 flex-1 md:block">
             <ul className="flex items-center gap-1">
-              {primaryNav.map((item) => (
+              {headerNav.map((item) => (
                 <li key={item.to}>
                   <NavLink to={item.to} className={navLinkClassName}>
                     {item.label}
@@ -115,6 +100,8 @@ export function Layout() {
           </nav>
 
           <div className="flex flex-1 shrink-0 items-center justify-end gap-1 md:flex-none">
+            {/* Phones get all three theme choices in the menu; the header stays at search + bell. */}
+            <ThemeToggle className="hidden md:inline-flex" />
             <IconButton
               icon={<Search aria-hidden="true" />}
               label="Search"
@@ -127,20 +114,6 @@ export function Layout() {
             <NotificationBell />
           </div>
         </div>
-
-        {menuOpen && (
-          <nav aria-label="Primary" className="glass border-x-0 border-b-0 px-4 py-3 md:hidden">
-            <ul className="flex flex-col gap-1">
-              {primaryNav.map((item) => (
-                <li key={item.to}>
-                  <NavLink to={item.to} className={(state) => cn(navLinkClassName(state), 'flex h-10 w-full px-3 text-sm')}>
-                    {item.label}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        )}
       </header>
 
       {/* Bottom padding adds the safe-area inset rather than using `safe-bottom`, which would replace it with 0 on most phones. */}
@@ -151,6 +124,15 @@ export function Layout() {
       >
         <Outlet />
       </main>
+
+      <MobileMenu
+        open={menuOpen}
+        onClose={closeMenu}
+        onSearch={() => {
+          closeMenu()
+          setSearchOpen(true)
+        }}
+      />
 
       {searchOpen && (
         <Suspense fallback={null}>
