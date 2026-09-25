@@ -89,8 +89,11 @@ An OS set to dark does **not** switch anyone who hasn't chosen.
 - The shadow, focus ring and selection colours are tokens too
   (`--gb-shadow`, `--gb-focus`, `--gb-selection-*`).
 - `services/theme.ts` owns the preference (`light`/`dark`/`system`,
-  stored in `localStorage` under `gitbit-theme`; light is stored as
-  nothing), writes `data-theme` on `<html>` and the `theme-color` meta.
+  stored in `localStorage` under `gitbit-theme-v2`; light is stored as
+  nothing). The `-v2` matters: the first dark mode used `gitbit-theme`
+  with a `system` default, and honouring those leftovers put early
+  visitors in dark without their choosing — the old key is ignored and
+  deleted), writes `data-theme` on `<html>` and the `theme-color` meta.
   `hooks/useTheme.ts` reads it. An inline script in `index.html` applies it
   before first paint — keep the two in step.
 - Controls: `ThemeToggle` (desktop header, one tap between light and dark)

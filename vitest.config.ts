@@ -11,14 +11,15 @@ import path from 'node:path'
  * Tests cover `src/services/git-sim/**` and the Visualizer's pure feature
  * logic (`src/features/visualizer/*.test.ts`). Both are pure
  * functions, and they are where a wrong answer would teach someone something
- * false about Git (see docs/VISUALIZER.md).
+ * false about Git (see docs/VISUALIZER.md). Plus `services/theme.test.ts`,
+ * which pins the light-by-default rule.
  */
 export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(import.meta.dirname, './src') },
   },
   test: {
-    include: ['src/services/git-sim/**/*.test.ts', 'src/features/visualizer/**/*.test.ts'],
+    include: ['src/services/git-sim/**/*.test.ts', 'src/features/visualizer/**/*.test.ts', 'src/services/theme.test.ts'],
     environment: 'node',
   },
 })

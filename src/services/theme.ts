@@ -16,7 +16,16 @@
 export type ThemePreference = 'light' | 'dark' | 'system'
 export type ResolvedTheme = 'light' | 'dark'
 
-export const THEME_STORAGE_KEY = 'gitbit-theme'
+/**
+ * Versioned on purpose. GitBit's first dark mode (removed in the ink-and-lime
+ * redesign) stored its preference under `gitbit-theme` and defaulted to
+ * `system`, so early visitors still carry that value. Reading it would put
+ * them in dark whenever their OS is dark — overriding the light default
+ * without their ever choosing it here. Only a choice made in the current
+ * switcher counts; the old key is ignored and cleared.
+ */
+export const THEME_STORAGE_KEY = 'gitbit-theme-v2'
+const LEGACY_THEME_STORAGE_KEY = 'gitbit-theme'
 
 /** The browser chrome colour (`<meta name="theme-color">`) for each theme — the page background. */
 const THEME_COLOR: Record<ResolvedTheme, string> = { light: '#ffffff', dark: '#14150d' }
@@ -29,6 +38,7 @@ function isPreference(value: unknown): value is ThemePreference {
 
 export function readThemePreference(): ThemePreference {
   try {
+    localStorage.removeItem(LEGACY_THEME_STORAGE_KEY)
     const stored = localStorage.getItem(THEME_STORAGE_KEY)
     return isPreference(stored) ? stored : 'light'
   } catch {

@@ -17,7 +17,9 @@
          change both together. -->
     <script>
       try {
-        var p = localStorage.getItem('gitbit-theme')
+        // v2: the old dark mode's `gitbit-theme` (default "system") must not count as a choice.
+        localStorage.removeItem('gitbit-theme')
+        var p = localStorage.getItem('gitbit-theme-v2')
         if (p === 'dark' || (p === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)) {
           document.documentElement.dataset.theme = 'dark'
           document.querySelector('meta[name="theme-color"]').setAttribute('content', '#14150d')
