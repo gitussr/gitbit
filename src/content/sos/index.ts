@@ -197,4 +197,33 @@ export const sosGuides: SosGuide[] = [
     ],
     relatedConcepts: ['commit', 'head'],
   },
+  {
+    slug: 'push-rejected-file-too-large',
+    situation: 'My push was rejected because a file is too large',
+    reassurance: "Don't worry — nothing was uploaded and nothing is lost. GitHub refused the whole push, so your commits are still safe on your machine, waiting for a fix.",
+    dangerLevel: 'caution',
+    steps: [
+      {
+        instruction: 'Turn on Git LFS for this machine (once per machine is enough).',
+        command: 'git lfs install',
+        explanation: 'GitHub rejects any normal file over 100 MB. Git LFS stores big files separately and commits only a small pointer, so the limit no longer applies to them.',
+      },
+      {
+        instruction: 'Tell LFS which files to handle, by pattern.',
+        command: 'git lfs track "*.zip"',
+        explanation: "Use the extension of your big file. This adds a rule to .gitattributes — commit that file too, so everyone else's clone follows the same rule.",
+      },
+      {
+        instruction: "The big file is already inside a commit you haven't pushed? Move it into LFS in those commits too.",
+        command: 'git lfs migrate import --include="*.zip"',
+        explanation: 'Tracking only affects new commits, so the old commit would still be rejected. This rewrites your unpushed commits on the current branch so the file becomes an LFS pointer in them as well.',
+      },
+      {
+        instruction: 'Push again.',
+        command: 'git push',
+        explanation: 'Your commits upload as usual and the real file goes to LFS storage. Free plans include only a small LFS storage and bandwidth allowance, so a few large backups can use it up.',
+      },
+    ],
+    relatedConcepts: ['git-lfs', 'remote'],
+  },
 ]

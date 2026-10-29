@@ -161,4 +161,16 @@ export const ahaCards: AhaCard[] = [
     },
     relatedConcepts: ['tracked-vs-untracked', 'uncommitted-changes'],
   },
+  {
+    slug: 'lfs-commits-a-pointer',
+    statement: 'With Git LFS, your commit holds a ticket, not the file.',
+    explanation:
+      "A file tracked by Git LFS never enters your Git history. The commit records a tiny text pointer — a few lines naming the file's size and fingerprint — and the real content travels to separate LFS storage when you push. That is why a 1 GB video can sit in a repository whose history is still small, and why GitHub's 100 MB limit stops applying to it.",
+    visual: {
+      kind: 'contrast',
+      sounds: 'LFS squeezes the big file down so Git can store it.',
+      actually: 'Git stores a pointer of about 130 bytes. The full file lives in LFS storage and is fetched back when you check it out.',
+    },
+    relatedConcepts: ['git-lfs', 'commit'],
+  },
 ]

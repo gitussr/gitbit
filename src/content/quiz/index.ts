@@ -206,4 +206,19 @@ export const quizQuestions: QuizQuestion[] = [
     explanation: 'git bisect binary-searches through the range, checking out a midpoint commit for you to test as good or bad — it narrows 40 commits down to the culprit in about 5-6 steps instead of 40.',
     difficulty: 'advanced',
   },
+  {
+    slug: 'lfs-after-commit-quiz',
+    prompt: 'GitHub rejected your push because of a 150 MB file. You run git lfs track on its extension, commit, and push again — and it is rejected again. Why?',
+    choices: [
+      'Git LFS only works on paid GitHub plans',
+      'The earlier commit still contains the full file, and tracking does not change old commits',
+      'git lfs track has to be run after git push',
+      'Git LFS has the same 100 MB limit',
+    ],
+    correctIndex: 1,
+    explanation:
+      'git push sends every new commit, including the one that already holds the full 150 MB file. git lfs track only affects commits made from then on. Rewrite the unpushed commits with git lfs migrate import (or undo and re-commit them) so the file becomes an LFS pointer there too.',
+    relatedConcepts: ['git-lfs', 'commit'],
+    difficulty: 'intermediate',
+  },
 ]

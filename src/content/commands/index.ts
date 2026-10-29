@@ -400,4 +400,23 @@ export const commands: GitCommand[] = [
     dangerLevel: 'safe',
     relatedCommands: ['git branch', 'git switch'],
   },
+  {
+    slug: 'git-lfs-track',
+    command: 'git lfs track',
+    humanMeaning: '"Files like this are too big for normal Git — store them with LFS instead."',
+    technicalMeaning: 'Adds a file pattern to .gitattributes so that matching files are committed as Git LFS pointers and their real content is uploaded to LFS storage on push.',
+    whenToUse: "Before committing a large or binary file, such as a backup, a video, or a design file, especially anything near or over GitHub's 100 MB per-file limit.",
+    syntax: 'git lfs track "<pattern>"',
+    example: 'git lfs track "*.zip"',
+    whatHappens: 'Git LFS writes a rule into .gitattributes. From your next commit on, any file matching the pattern is stored in history as a small pointer, and git push uploads the real file to LFS storage.',
+    mentalModel: 'Telling the coat check which items to take — anything matching the pattern gets a ticket instead of a seat at the table.',
+    commonMistake: "Forgetting the quotes, or forgetting to commit .gitattributes. Without quotes your shell may expand the pattern into today's file names; without the committed .gitattributes, nobody else's clone knows those files are in LFS.",
+    dangerLevel: 'safe',
+    relatedCommands: ['git add', 'git commit', 'git push'],
+    anatomy: [
+      { token: 'git lfs', explanation: 'The Git LFS extension. Run git lfs install once per machine to switch it on.' },
+      { token: 'track', explanation: 'Adds a tracking rule. git lfs track with no pattern lists the current rules.' },
+      { token: '"*.zip"', explanation: 'The file pattern to hand to LFS. Quote it so your shell passes it through unchanged.' },
+    ],
+  },
 ]

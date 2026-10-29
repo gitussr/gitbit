@@ -293,4 +293,21 @@ export const concepts: GitConcept[] = [
     relatedCommands: ['git stash', 'git switch', 'git restore'],
     relatedConcepts: ['uncommitted-changes', 'working-directory'],
   },
+  {
+    slug: 'git-lfs',
+    term: 'Git LFS (Large File Storage)',
+    category: 'collaboration',
+    plainEnglish: 'An add-on that keeps huge files out of your Git history and stores them somewhere built for big files.',
+    mentalModel: 'A coat check. Your repository keeps the little numbered ticket; the heavy coat hangs in a separate room until someone asks for it.',
+    technicalExplanation:
+      'Git LFS is an extension to Git. For any file pattern you tell it to track, it swaps the real file for a small text pointer when you commit, and uploads the real content to a separate LFS store on the host (GitHub, GitLab, and others) when you push. Cloning or checking out downloads the real file again and puts it back on disk, so day to day the file looks normal. The tracking rules live in a .gitattributes file that you commit like any other file.',
+    example: 'git lfs track "*.zip"',
+    whenToUse: 'When a repository needs files that are very large or binary and change as a whole — backups, videos, design files, datasets. GitHub rejects any single normal file over 100 MB, so LFS is the usual way to push one.',
+    whatHappens: 'Your commit records a pointer of about 130 bytes. On push, the real file goes to LFS storage, where GitHub allows up to 2 GB per file on free plans.',
+    commonMistake: 'Running git lfs track after the big file is already committed. Tracking only affects new commits — the old commit still holds the full file, so the push is still rejected until that commit is rewritten.',
+    difficulty: 'intermediate',
+    relatedCommands: ['git lfs track', 'git push', 'git add'],
+    relatedConcepts: ['remote', 'commit', 'git-vs-github'],
+    ahaPotential: true,
+  },
 ]

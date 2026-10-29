@@ -35,8 +35,8 @@ export const learnLevels: LearnLevel[] = [
     order: 2,
     title: 'Git + GitHub',
     description: 'How your local repository connects to a shared one online.',
-    conceptSlugs: ['git-vs-github', 'remote', 'origin'],
-    commandSlugs: ['git-clone', 'git-remote', 'git-push', 'git-pull', 'git-fetch'],
+    conceptSlugs: ['git-vs-github', 'remote', 'origin', 'git-lfs'],
+    commandSlugs: ['git-clone', 'git-remote', 'git-push', 'git-pull', 'git-fetch', 'git-lfs-track'],
   },
   {
     slug: 'level-3-branching',
